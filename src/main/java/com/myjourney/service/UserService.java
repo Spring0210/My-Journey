@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -25,11 +27,15 @@ public class UserService {
         return "Registration successful";
     }
 
-    public String login(User user) {
+    public Map<String, Object> login(User user) {
         Optional<User> optionalUser = userRepository.findByUsername(user.getUsername());
         if (optionalUser.isPresent() && encoder.matches(user.getPassword(), optionalUser.get().getPassword())) {
-            return "Login successful";
+            Map<String, Object> result = new HashMap<>();
+            result.put("message", "Login successful");
+            result.put("userId", optionalUser.get().getId());
+            result.put("username", user.getUsername());
+            return result;
         }
-        return "Login failed";
+        throw  new RuntimeException("Login failed");
     }
 }

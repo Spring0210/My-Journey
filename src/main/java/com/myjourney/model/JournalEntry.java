@@ -18,7 +18,11 @@ public class JournalEntry {
     @Column(columnDefinition = "TEXT")
     private String content;
 
+    @Column(nullable = false)
     private LocalDate entryDate;
+
+    @Column(name = "image_path")
+    private String imagePath;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -62,5 +66,13 @@ public class JournalEntry {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public String getImagePath() {
+        return imagePath;
+    }
+
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
     }
 }

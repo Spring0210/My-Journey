@@ -5,6 +5,8 @@ import com.myjourney.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api")
 @CrossOrigin
@@ -19,7 +21,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public String login(@RequestBody User user) {
+    public Map<String, Object> login(@RequestBody User user) {
         return userService.login(user);
     }
 }
