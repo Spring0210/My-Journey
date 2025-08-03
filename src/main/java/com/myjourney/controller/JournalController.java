@@ -133,9 +133,4 @@ public class JournalController {
                 .filter(e -> e.getEntryDate().equals(date))
                 .toList();
     }
-
-
-
-
-
 }
