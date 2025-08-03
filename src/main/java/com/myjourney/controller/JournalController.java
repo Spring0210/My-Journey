@@ -14,7 +14,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/entries")
@@ -96,4 +99,43 @@ public class JournalController {
     public List<JournalEntry> searchEntries(@RequestParam Integer userId, @RequestParam(required = false) String keyword, @RequestParam(required = false) String date) {
         return journalService.searchEntries(userId, keyword, date);
     }
+
+    //Calendar
+    @GetMapping("/calendar/{userId}")
+    public List<Map<String, Object>> getCalendarEntries(@PathVariable Integer userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<JournalEntry> entries = journalService.getEntriesByUser(user);
+
+        List<Map<String, Object>> events = new ArrayList<>();
+
+        for (JournalEntry entry : entries) {
+            Map<String, Object> event = new HashMap<>();
+            event.put("id", entry.getId());
+            event.put("title", entry.getTitle());
+            event.put("start", entry.getEntryDate().toString()); // required by FullCalendar
+            events.add(event);
+        }
+
+        return events;
+    }
+
+    // Get all journal entries for a specific user on a specific date
+    @GetMapping("/user/{userId}/entries/date/{entryDate}")
+    public List<JournalEntry> getEntriesByDate(
+            @PathVariable Integer userId,
+            @PathVariable String entryDate
+    ) {
+        User user = userRepository.findById(userId).orElseThrow();
+        LocalDate date = LocalDate.parse(entryDate);
+        return journalService.getEntriesByUser(user).stream()
+                .filter(e -> e.getEntryDate().equals(date))
+                .toList();
+    }
+
+
+
+
+
 }
