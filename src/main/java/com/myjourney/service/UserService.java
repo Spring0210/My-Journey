@@ -36,6 +36,17 @@ public class UserService {
             result.put("username", user.getUsername());
             return result;
         }
-        throw  new RuntimeException("Login failed");
+        throw new RuntimeException("Login failed");
+    }
+
+    public String resetPassword(String username, String newPassword) {
+        Optional<User> optionalUser = userRepository.findByUsername(username);
+        if(optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            user.setPassword(encoder.encode(newPassword));
+            userRepository.save(user);
+            return "Password reset successful";
+        }
+        return "User not found";
     }
 }
