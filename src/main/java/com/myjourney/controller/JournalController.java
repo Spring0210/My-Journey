@@ -5,6 +5,7 @@ import com.myjourney.model.User;
 import com.myjourney.repository.UserRepository;
 import com.myjourney.service.JournalService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,10 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/entries")
@@ -55,14 +53,14 @@ public class JournalController {
         return journalService.createEntry(entry);
     }
 
-
+    //Get all entries of the user
     @GetMapping("/{userId}")
     public List<JournalEntry> getUserEntries(@PathVariable Integer userId) {
         User user = userRepository.findById(userId).orElseThrow();
         return journalService.getEntriesByUser(user);
     }
 
-    //Modify Journal
+    //Modify entry
     @PostMapping("/edit/{entryId}")
     public JournalEntry editEntry(
             @PathVariable Integer entryId,
@@ -90,6 +88,7 @@ public class JournalController {
         return journalService.createEntry(existing); // save
     }
 
+    //Delete entry
     @DeleteMapping("/{entryId}")
     public void deleteEntry(@PathVariable Integer entryId) {
         journalService.deleteEntry(entryId);
@@ -133,4 +132,15 @@ public class JournalController {
                 .filter(e -> e.getEntryDate().equals(date))
                 .toList();
     }
+
+    // Get a single entry by its id (avoid conflict with /api/entries/{userId})
+    @GetMapping("/entry/{entryId}")
+    public ResponseEntity<JournalEntry> getEntryById(@PathVariable Integer entryId) {
+        return journalService.getEntryById(entryId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+
+
 }

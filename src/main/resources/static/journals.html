@@ -1,41 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Your Journals</title>
+  <link rel="stylesheet" href="/css/journals.css" />
   <script defer src="js/journals.js"></script>
 </head>
 
 <body>
-  <h2>Welcome, <span id="user"></span></h2>
+<header class="topbar">
+  <div class="topbar__left">
+    <h1 class="brand">Journey</h1>
+    <span class="welcome">Welcome, <strong id="user"></strong></span>
+  </div>
+  <div class="topbar__right">
+    <a class="btn btn--ghost" href="/calendar.html">📅 View Calendar</a>
+    <button id="toggleFormBtn" class="btn">➕ New Entry</button>
+  </div>
+</header>
 
+<main class="container">
   <!-- Search form -->
-  <div id="searchForm" style="margin-top: 20px;">
-    <input type="text" id="searchKeyword" placeholder="Search keyword">
-    <input type="date" id="searchDate">
-    <button id="searchBtn">Search</button>
-    <button id="clearBtn">Clear</button>
-  </div>
+  <section class="card card--soft">
+    <div id="searchForm" class="searchbar">
+      <input type="text" id="searchKeyword" placeholder="Search keyword" />
+      <input type="date" id="searchDate" />
+      <button id="searchBtn" class="btn btn--primary">Search</button>
+      <button id="clearBtn" class="btn btn--ghost">Clear</button>
+    </div>
+  </section>
 
+  <!-- Journal entry form -->
+  <section id="entryForm" class="card" style="display:none;">
+    <h3 class="card__title">Create a New Journal Entry</h3>
+    <div class="form-grid">
+      <label>
+        <span class="label">Title</span>
+        <input type="text" id="title" placeholder="Title" required />
+      </label>
 
-  <!-- Toggle new journal entry form -->
-  <button id="toggleFormBtn">➕ New Entry</button>
+      <label class="full">
+        <span class="label">Content</span>
+        <textarea id="content" placeholder="Content" required></textarea>
+      </label>
 
-  <!-- Calendar View -->
-   <a href="/calendar.html">📅 View Calendar</a>
+      <label>
+        <span class="label">Image</span>
+        <input type="file" id="image" accept="image/*" />
+      </label>
 
-  <!-- Journal entry form (hidden by default) -->
-  <div id="entryForm" style="display:none; margin-top: 10px;">
-    <h3>Create a New Journal Entry</h3>
-    <input type="text" id="title" placeholder="Title" required><br><br>
-    <textarea id="content" placeholder="Content" required></textarea><br><br>
-    <input type="file" id="image" accept="image/*"><br><br>
-    <input type="date" id="entryDate" required><br><br>
-    <button id="submitEntry">Submit</button>
-  </div>
+      <label>
+        <span class="label">Date</span>
+        <input type="date" id="entryDate" required />
+      </label>
+    </div>
 
-  <div id="journalList"></div>
+    <div class="actions">
+      <button id="submitEntry" class="btn btn--primary">Submit</button>
+    </div>
+  </section>
+
+  <!-- Journal List -->
+  <section id="journalList" class="cards"></section>
+</main>
 </body>
-
 </html>

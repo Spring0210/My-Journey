@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Journal Entry Detail</title>
+  <link rel="stylesheet" href="css/detail.css" />
+  <script defer src="js/detail.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <button id="backBtn" class="link-btn">← Back</button>
+  <h2>Journal Entry Detail</h2>
+</header>
+
+<main class="container">
+  <section class="meta">
+    <label>
+      <span>Title</span>
+      <input id="title" type="text" placeholder="Entry title" />
+    </label>
+
+    <label>
+      <span>Date</span>
+      <input id="entryDate" type="date" />
+    </label>
+  </section>
+
+  <section class="content">
+    <label>
+      <span>Content</span>
+      <textarea id="content" placeholder="Write something..."></textarea>
+    </label>
+  </section>
+
+  <section class="media">
+    <div class="current-image">
+      <span>Current Image</span>
+      <div id="imageBox">
+        <!-- filled dynamically -->
+      </div>
+    </div>
+
+    <div class="uploader">
+      <span>Replace / Upload Image</span>
+      <input id="imageInput" type="file" accept="image/*" />
+      <div id="previewBox" class="preview"></div>
+    </div>
+  </section>
+
+  <section class="actions">
+    <button id="saveBtn" class="primary">Save</button>
+    <button id="deleteBtn" class="danger">Delete</button>
+  </section>
+</main>
+</body>
+</html>

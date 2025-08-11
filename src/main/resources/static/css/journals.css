@@ -1,0 +1,158 @@
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background-color: #f5f7fa;
+    color: #333;
+    margin: 0;
+    padding: 20px;
+}
+
+
+h2 {
+    font-size: 24px;
+    color: #222;
+    margin-bottom: 10px;
+}
+
+/* Search Form */
+#searchForm {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+}
+
+#searchForm input, #searchForm button {
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+#searchForm button {
+    cursor: pointer;
+    background: #4a90e2;
+    color: white;
+    border: none;
+    transition: background 0.3s ease;
+}
+
+#searchForm button:hover {
+    background: #357ABD;
+}
+
+/* New Entry Button */
+#toggleFormBtn, a[href="/calendar.html"] {
+    display: inline-block;
+    padding: 10px 15px;
+    margin-top: 10px;
+    font-size: 14px;
+    border-radius: 6px;
+    background: #27ae60;
+    color: white;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+#toggleFormBtn:hover, a[href="/calendar.html"]:hover {
+    background: #1e874b;
+}
+
+/* Card Styles */
+.card {
+    background: white;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.card h3 {
+    margin-top: 0;
+    color: #2c3e50;
+}
+
+.card small {
+    display: block;
+    color: #888;
+    margin-bottom: 10px;
+}
+
+/* Card Images */
+.card img {
+    max-width: 100%;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+/* Button Styles */
+button.edit-btn {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 5px;
+    transition: background 0.3s ease;
+}
+
+button.edit-btn:hover {
+    background: #2980b9;
+}
+
+button.delete-btn {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+button.delete-btn:hover {
+    background: #c0392b;
+}
+
+/* Entry Form Styles */
+#entryForm {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+#entryForm input, #entryForm textarea {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+#entryForm button {
+    background: #27ae60;
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#entryForm button:hover {
+    background: #1e874b;
+}

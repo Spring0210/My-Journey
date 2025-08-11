@@ -20,6 +20,7 @@ function renderEntryList(entries) {
 
     entries.forEach(entry => {
         const div = document.createElement('div');
+        div.className = 'card';
         div.innerHTML = `
       <h3>${entry.title}</h3>
       <p>${entry.content}</p>
@@ -33,6 +34,11 @@ function renderEntryList(entries) {
       <button class="delete-btn" data-id="${entry.id}">🗑 Delete</button>
       <hr/>
     `;
+        div.addEventListener('click', (e) => {
+            if(!e.target.closest('button')){
+                window.location.href = `detail.html?id=${entry.id}`;
+            }
+        })
         list.appendChild(div);
     });
 }
@@ -87,31 +93,6 @@ document.getElementById('submitEntry').addEventListener('click', () => {
 
 
 });
-
-// Load all entries for the current user
-fetch(`http://localhost:8080/api/entries/${userId}`)
-    .then(res => res.json())
-    .then(entries => {
-        const list = document.getElementById('journalList');
-        entries.forEach(entry => {
-            const div = document.createElement('div');
-            div.innerHTML = `
-        <h3>${entry.title}</h3>
-        <p>${entry.content}</p>
-        <small>${entry.entryDate}</small>
-        ${entry.imagePath ? `<img src="${imageBaseUrl}${entry.imagePath}" width="300"><br>` : ""}
-        <button class="edit-btn" data-id="${entry.id}" 
-            data-title="${entry.title}" 
-            data-content="${entry.content}" 
-            data-date="${entry.entryDate}">✏ Edit</button>
-        <button class="delete-btn" data-id="${entry.id}">🗑 Delete</button>
-        <hr/>
-      `;
-
-            list.appendChild(div);
-        });
-    });
-
 
 //Edit entry
 let editingEntryId = null; // track editing mode
@@ -181,4 +162,5 @@ document.getElementById('clearBtn').addEventListener('click', () => {
     loadAllEntries(); // reload all
 });
 
+document.addEventListener('DOMContentLoaded', loadAllEntries);
 
