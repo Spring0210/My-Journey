@@ -7,10 +7,10 @@ form.addEventListener('submit', e => {
 
     const username = document.getElementById('username').value.trim();
     const newPassword = document.getElementById('newPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
+    const confirmNewPassword = document.getElementById('confirmNewPassword').value;
 
     // Check if passwords match
-    if (newPassword !== confirmPassword) {
+    if (newPassword !== confirmNewPassword) {
         alert("Passwords do not match.");
         return;
     }

@@ -1,114 +1,18 @@
-/* Basic layout styles */
-body {
-    font-family: system-ui, -apple-system, Arial, sans-serif;
-    margin: 0;
-    color: #222;
-    background: #f6f7fb;
+.meta{
+  display:grid; gap:14px;
+  grid-template-columns: 2fr 1fr;
+  margin-bottom: 12px;
 }
-
-.topbar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 18px;
-    background: #ffffff;
-    border-bottom: 1px solid #eaeaea;
+.content{ margin: 14px 0; }
+.media{
+  display:grid; gap:16px; grid-template-columns: 1fr 1fr;
 }
-
-.link-btn {
-    border: none;
-    background: transparent;
-    color: #3b82f6;
-    cursor: pointer;
-    font-size: 14px;
+.current-image, .uploader{
+  background: var(--card); border:1px solid var(--border);
+  border-radius: var(--radius); padding: 12px;
 }
-
-.container {
-    max-width: 900px;
-    margin: 28px auto;
-    padding: 0 16px;
+#imageBox img, #previewBox img{
+  display:block; width:100%; height:auto; border-radius:12px; border:1px solid var(--border);
+  margin-top:8px;
 }
-
-section {
-    margin-bottom: 20px;
-}
-
-.meta, .content, .media, .actions {
-    background: #fff;
-    border: 1px solid #ececec;
-    border-radius: 10px;
-    padding: 16px;
-}
-
-label {
-    display: block;
-    margin-bottom: 12px;
-}
-
-label span {
-    display: block;
-    font-size: 13px;
-    color: #666;
-    margin-bottom: 8px;
-}
-
-input[type="text"],
-input[type="date"],
-textarea {
-    width: 100%;
-    box-sizing: border-box;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 10px 12px;
-    font-size: 14px;
-    background: #fafafa;
-}
-
-textarea {
-    min-height: 180px;
-    line-height: 1.5;
-    resize: vertical;
-}
-
-.current-image img,
-.preview img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
-    border: 1px solid #eee;
-}
-
-.current-image {
-    margin-bottom: 14px;
-}
-
-.uploader input[type="file"] {
-    display: block;
-    margin: 8px 0 10px;
-}
-
-.actions {
-    display: flex;
-    gap: 10px;
-}
-
-.primary {
-    background: #2563eb;
-    color: #fff;
-    border: none;
-    padding: 10px 14px;
-    border-radius: 8px;
-    cursor: pointer;
-}
-
-.danger {
-    background: #ef4444;
-    color: #fff;
-    border: none;
-    padding: 10px 14px;
-    border-radius: 8px;
-    cursor: pointer;
-}
-
-.primary:hover { background: #1d4ed8; }
-.danger:hover  { background: #dc2626; }
+.actions{ margin-top: 14px; display:flex; gap:10px; }

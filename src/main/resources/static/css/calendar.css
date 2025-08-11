@@ -1,16 +1,14 @@
-.topbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 18px;
-  background: #fff;
-  border-bottom: 1px solid #eee;
+/* Page-specific styles for FullCalendar container */
+#calendar{
+  width:min(1120px, 92vw);
+  margin: 18px auto;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 12px;
 }
 
-.link-btn {
-  border: none;
-  background: transparent;
-  color: #2563eb;
-  cursor: pointer;
-  font-size: 14px;
-}
+/* FullCalendar default overrides (optional) */
+.fc .fc-toolbar-title{ font-size: 18px; }
+.fc .fc-button{ border-radius:10px; }

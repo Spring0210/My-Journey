@@ -1,3 +1,4 @@
+<!--
 <!DOCTYPE html>
 <html lang="en">
 
@@ -20,4 +21,56 @@
     </form>
 </body>
 
+</html>-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Sign in · Journey</title>
+    <link rel="stylesheet" href="/css/auth.css" />
+    <script defer src="/js/login.js"></script>
+</head>
+<body>
+<main class="auth-shell">
+    <section class="card" aria-label="Login form">
+        <div class="brand">
+            <div class="logo">J</div>
+            <h1>Journey</h1>
+        </div>
+
+        <h2 style="margin:4px 0 16px 0">Welcome back</h2>
+
+        <form id="loginForm" class="form" novalidate>
+            <!-- Username -->
+            <div>
+                <label class="label" for="username">Username</label>
+                <input class="input" id="username" name="username" type="text" placeholder="Enter your username" required />
+                <!-- Inline error if needed -->
+                <div class="error" id="err-username" hidden><!-- Filled by JS --></div>
+            </div>
+
+            <!-- Password -->
+            <div>
+                <label class="label" for="password">Password</label>
+                <input class="input" id="password" name="password" type="password" placeholder="••••••••" required />
+                <div class="helper">
+                    <span></span>
+                    <a class="link" href="/forgot-password.html">Forgot password?</a>
+                </div>
+                <div class="error" id="err-password" hidden></div>
+            </div>
+
+            <button class="btn" type="submit">Sign in</button>
+        </form>
+
+        <div class="hr"></div>
+        <div class="helper">
+            <span>New here?</span>
+            <a class="btn-ghost" href="/register.html">Create an account</a>
+        </div>
+
+        <p class="footer">© Journey</p>
+    </section>
+</main>
+</body>
 </html>

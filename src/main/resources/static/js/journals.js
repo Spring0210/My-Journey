@@ -20,7 +20,7 @@ function renderEntryList(entries) {
 
     entries.forEach(entry => {
         const div = document.createElement('div');
-        div.className = 'card';
+        div.className = 'card card-entry'; 
         div.innerHTML = `
       <h3>${entry.title}</h3>
       <p>${entry.content}</p>
