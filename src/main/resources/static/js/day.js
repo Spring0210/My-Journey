@@ -20,23 +20,46 @@ function renderDayEntries(entries) {
   entries.forEach(entry => {
     const card = document.createElement("div");
     card.className = "card";
+    
+    // Handle multiple images display
+    let imagesHtml = '';
+    if (entry.imagePaths) {
+      const imagePaths = entry.imagePaths.split(',').filter(path => path.trim());
+      if (imagePaths.length > 0) {
+        imagesHtml = '<div class="entry-images">';
+        imagePaths.forEach(path => {
+          imagesHtml += `<img src="${IMAGE_BASE}${path.trim()}" alt="entry image">`;
+        });
+        imagesHtml += '</div>';
+      }
+    }
+    
     card.innerHTML = `
       <h3><a class="title" href="detail.html?id=${entry.id}">${entry.title}</a></h3>
       <div class="meta">${entry.entryDate}</div>
       <p>${entry.content ?? ""}</p>
-      ${entry.imagePath ? `<img src="${IMAGE_BASE}${entry.imagePath}" alt="entry image">` : ""}
+      ${imagesHtml}
     `;
+    
+    // Add click event for the entire card
+    card.addEventListener('click', (e) => {
+      if(!e.target.closest('a') && e.target.tagName !== 'IMG'){
+        window.location.href = `detail.html?id=${entry.id}`;
+      }
+    });
+    
+    // Add click events for images
+    addImageClickEvents(card);
+    
     list.appendChild(card);
   });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("backBtn").addEventListener("click", () => {
-    if (document.referrer) history.back();
-    else window.location.href = "calendar.html";
-  });
-
+  // Get user info from layout manager
   const userId = localStorage.getItem("userId");
+  const username = localStorage.getItem("username");
+  
   const dateStr = getDateParam();
   document.getElementById("dayText").textContent = dateStr || "";
 
@@ -47,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Fetch entries for the given user and date
-  fetch(`${API_BASE}/api/entries/user/${userId}/entries/date/${dateStr}`)
+  apiRequest(`${API_BASE}/api/entries/user/${userId}/entries/date/${dateStr}`)
     .then(res => res.json())
     .then(renderDayEntries)
     .catch(err => {

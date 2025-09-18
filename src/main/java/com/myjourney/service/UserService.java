@@ -2,8 +2,9 @@ package com.myjourney.service;
 
 import com.myjourney.model.User;
 import com.myjourney.repository.UserRepository;
+import com.myjourney.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -16,37 +17,55 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private JwtUtil jwtUtil;
 
     public String register(User user) {
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             return "Username already exists";
         }
-        user.setPassword(encoder.encode(user.getPassword()));
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
         return "Registration successful";
     }
 
     public Map<String, Object> login(User user) {
-        Optional<User> optionalUser = userRepository.findByUsername(user.getUsername());
-        if (optionalUser.isPresent() && encoder.matches(user.getPassword(), optionalUser.get().getPassword())) {
-            Map<String, Object> result = new HashMap<>();
-            result.put("message", "Login successful");
-            result.put("userId", optionalUser.get().getId());
-            result.put("username", user.getUsername());
-            return result;
+        Map<String, Object> response = new HashMap<>();
+        
+        Optional<User> existingUser = userRepository.findByUsername(user.getUsername());
+        if (existingUser.isEmpty()) {
+            response.put("error", "Invalid credentials");
+            return response;
         }
-        throw new RuntimeException("Login failed");
+        
+        User dbUser = existingUser.get();
+        if (!passwordEncoder.matches(user.getPassword(), dbUser.getPassword())) {
+            response.put("error", "Invalid credentials");
+            return response;
+        }
+        
+        String token = jwtUtil.generateToken(user.getUsername(), dbUser.getId());
+        
+        response.put("message", "Login successful");
+        response.put("token", token);
+        response.put("username", dbUser.getUsername());
+        response.put("userId", dbUser.getId());
+        
+        return response;
     }
 
     public String resetPassword(String username, String newPassword) {
-        Optional<User> optionalUser = userRepository.findByUsername(username);
-        if(optionalUser.isPresent()) {
-            User user = optionalUser.get();
-            user.setPassword(encoder.encode(newPassword));
-            userRepository.save(user);
-            return "Password reset successful";
+        Optional<User> user = userRepository.findByUsername(username);
+        if (user.isEmpty()) {
+            return "User not found";
         }
-        return "User not found";
+        
+        User existingUser = user.get();
+        existingUser.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(existingUser);
+        return "Password reset successful";
     }
 }

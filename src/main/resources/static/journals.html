@@ -2,25 +2,72 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Your Journals</title>
+  <title>Your Journals - Journey</title>
   <link rel="stylesheet" href="/css/ui.css" /> 
   <link rel="stylesheet" href="/css/journals.css" />
+  <script defer src="js/api.js"></script>
+  <script defer src="js/image-utils.js"></script>
+  <script defer src="js/layout.js"></script>
   <script defer src="js/journals.js"></script>
 </head>
 
 <body>
-<header class="topbar">
-  <div class="topbar__left">
-    <h1 class="brand">Journey</h1>
-    <span class="welcome">Welcome, <strong id="user"></strong></span>
-  </div>
-  <div class="topbar__right">
-    <a class="btn btn--ghost" href="/calendar.html">📅 View Calendar</a>
-    <button id="toggleFormBtn" class="btn">➕ New Entry</button>
-  </div>
-</header>
+<div class="app-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="/journals.html" class="sidebar-brand">
+        <div class="logo">J</div>
+        Journey
+      </a>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Main</div>
+        <a href="/dashboard.html" class="nav-item">
+          <span class="icon">🏠</span>
+          Dashboard
+        </a>
+        <a href="/journals.html" class="nav-item">
+          <span class="icon">📝</span>
+          My Journals
+        </a>
+        <a href="/calendar.html" class="nav-item">
+          <span class="icon">📅</span>
+          Calendar View
+        </a>
+      </div>
+    </nav>
+    
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar"></div>
+        <div class="user-details">
+          <h4></h4>
+          <p></p>
+        </div>
+      </div>
+      <button class="signout-btn">Sign Out</button>
+    </div>
+  </aside>
 
-<main class="container">
+  <!-- Main Content -->
+  <main class="main-content">
+    <header class="header">
+      <div class="header-left">
+        <button class="sidebar-toggle">☰</button>
+        <h1 class="header-title">My Journals</h1>
+      </div>
+      <div class="header-right">
+        <button id="toggleFormBtn" class="btn btn--primary">
+          <span>➕</span>
+          New Entry
+        </button>
+      </div>
+    </header>
+
+    <div class="content">
   <!-- Search form -->
   <section class="card card--soft">
     <div id="searchForm" class="searchbar">
@@ -46,9 +93,12 @@
       </label>
 
       <label>
-        <span class="label">Image</span>
-        <input type="file" id="image" accept="image/*" />
+        <span class="label">Images (Multiple)</span>
+        <input type="file" id="images" accept="image/*" multiple />
+        <small>You can select multiple images at once</small>
       </label>
+      
+      <div id="imagePreview" class="image-preview"></div>
 
       <label>
         <span class="label">Date</span>
@@ -61,8 +111,10 @@
     </div>
   </section>
 
-  <!-- Journal List -->
-  <section id="journalList" class="cards"></section>
-</main>
+      <!-- Journal List -->
+      <section id="journalList" class="cards"></section>
+    </div>
+  </main>
+</div>
 </body>
 </html>

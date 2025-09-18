@@ -1,20 +1,13 @@
 const API_BASE = "http://localhost:8080";
 
-
-const backBtn = document.getElementById('backBtn');
-if (backBtn) {
-    backBtn.addEventListener('click', () => {
-        window.location.href = "journals.html";
-    });
-}
+// Get user info from layout manager
+const username = localStorage.getItem('username');
+const userId = localStorage.getItem('userId');
 
 document.addEventListener('DOMContentLoaded', function () {
-    const username = localStorage.getItem('username');
-    const userId = localStorage.getItem('userId');
-    document.getElementById('user').textContent = username;
 
     // Load all entries to render events on the calendar
-    fetch(`${API_BASE}/api/entries/${userId}`)
+    apiRequest(`${API_BASE}/api/entries/${userId}`)
         .then(res => res.json())
         .then(entries => {
             const events = entries.map(e => ({

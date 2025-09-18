@@ -34,7 +34,7 @@ public class JournalController {
             @RequestParam String title,
             @RequestParam String content,
             @RequestParam String entryDate,
-            @RequestParam(required = false) MultipartFile image
+            @RequestParam(required = false) MultipartFile[] images
     ) throws IOException {
         User user = userRepository.findById(userId).orElseThrow();
         JournalEntry entry = new JournalEntry();
@@ -43,11 +43,19 @@ public class JournalController {
         entry.setEntryDate(LocalDate.parse(entryDate));
         entry.setUser(user);
 
-        if (image != null && !image.isEmpty()) {
-            String filename = System.currentTimeMillis() + "_" + image.getOriginalFilename();
-            Path path = Paths.get("uploads", filename);
-            Files.copy(image.getInputStream(), path);
-            entry.setImagePath("/uploads/" + filename);
+        if (images != null && images.length > 0) {
+            List<String> imagePaths = new ArrayList<>();
+            for (MultipartFile image : images) {
+                if (image != null && !image.isEmpty()) {
+                    String filename = System.currentTimeMillis() + "_" + image.getOriginalFilename();
+                    Path path = Paths.get("uploads", filename);
+                    Files.copy(image.getInputStream(), path);
+                    imagePaths.add("/uploads/" + filename);
+                }
+            }
+            if (!imagePaths.isEmpty()) {
+                entry.setImagePathList(imagePaths);
+            }
         }
 
         return journalService.createEntry(entry);
@@ -67,7 +75,7 @@ public class JournalController {
             @RequestParam String title,
             @RequestParam String content,
             @RequestParam String entryDate,
-            @RequestParam(required = false) MultipartFile image
+            @RequestParam(required = false) MultipartFile[] images
     ) throws IOException {
         JournalEntry existing = journalService.getEntryById(entryId).orElseThrow();
 
@@ -75,14 +83,40 @@ public class JournalController {
         existing.setContent(content);
         existing.setEntryDate(LocalDate.parse(entryDate));
 
-        if (image != null && !image.isEmpty()) {
-            String filename = System.currentTimeMillis() + "_" + image.getOriginalFilename();
-            Path path = Paths.get("uploads").resolve(filename);
-            if (!Files.exists(path.getParent())) {
-                Files.createDirectories(path.getParent());
+        if (images != null && images.length > 0) {
+            // Delete old image files
+            List<String> oldPaths = existing.getImagePathList();
+            if (oldPaths != null) {
+                for (String oldPath : oldPaths) {
+                    try {
+                        Path oldFilePath = Paths.get(oldPath.substring(1)); // Remove leading /
+                        if (Files.exists(oldFilePath)) {
+                            Files.delete(oldFilePath);
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Failed to delete old image: " + e.getMessage());
+                    }
+                }
             }
-            Files.copy(image.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-            existing.setImagePath("/uploads/" + filename);
+            
+            // Save new images
+            List<String> imagePaths = new ArrayList<>();
+            for (MultipartFile image : images) {
+                if (image != null && !image.isEmpty()) {
+                    String filename = System.currentTimeMillis() + "_" + image.getOriginalFilename();
+                    Path path = Paths.get("uploads").resolve(filename);
+                    if (!Files.exists(path.getParent())) {
+                        Files.createDirectories(path.getParent());
+                    }
+                    Files.copy(image.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+                    imagePaths.add("/uploads/" + filename);
+                }
+            }
+            if (!imagePaths.isEmpty()) {
+                existing.setImagePathList(imagePaths);
+            } else {
+                existing.setImagePaths(null);
+            }
         }
 
         return journalService.createEntry(existing); // save
@@ -90,7 +124,24 @@ public class JournalController {
 
     //Delete entry
     @DeleteMapping("/{entryId}")
-    public void deleteEntry(@PathVariable Integer entryId) {
+    public void deleteEntry(@PathVariable Integer entryId) throws IOException {
+        JournalEntry entry = journalService.getEntryById(entryId).orElseThrow();
+        
+        // Delete all related image files
+        List<String> imagePaths = entry.getImagePathList();
+        if (imagePaths != null) {
+            for (String imagePath : imagePaths) {
+                try {
+                    Path filePath = Paths.get(imagePath.substring(1)); // Remove leading /
+                    if (Files.exists(filePath)) {
+                        Files.delete(filePath);
+                    }
+                } catch (Exception e) {
+                    System.err.println("Failed to delete image: " + e.getMessage());
+                }
+            }
+        }
+        
         journalService.deleteEntry(entryId);
     }
 
@@ -141,6 +192,66 @@ public class JournalController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    // Delete single image
+    @PostMapping("/delete-image")
+    public ResponseEntity<String> deleteImage(@RequestBody Map<String, Object> request) {
+        try {
+            Integer entryId = (Integer) request.get("entryId");
+            String imagePath = (String) request.get("imagePath");
+            
+            JournalEntry entry = journalService.getEntryById(entryId).orElseThrow();
+            List<String> imagePaths = entry.getImagePathList();
+            
+            if (imagePaths.remove(imagePath)) {
+                entry.setImagePathList(imagePaths);
+                journalService.createEntry(entry);
+                
+                // Delete physical file
+                try {
+                    Path filePath = Paths.get(imagePath.substring(1)); // Remove leading /
+                    if (Files.exists(filePath)) {
+                        Files.delete(filePath);
+                    }
+                } catch (Exception e) {
+                    System.err.println("Failed to delete image file: " + e.getMessage());
+                }
+                
+                return ResponseEntity.ok("Image deleted successfully");
+            } else {
+                return ResponseEntity.badRequest().body("Image not found");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error deleting image: " + e.getMessage());
+        }
+    }
 
+    // Add images to existing entry
+    @PostMapping("/add-images/{entryId}")
+    public ResponseEntity<JournalEntry> addImagesToEntry(
+            @PathVariable Integer entryId,
+            @RequestParam("images") MultipartFile[] images
+    ) throws IOException {
+        try {
+            JournalEntry entry = journalService.getEntryById(entryId).orElseThrow();
+            List<String> existingPaths = entry.getImagePathList();
+            
+            List<String> newPaths = new ArrayList<>();
+            for (MultipartFile image : images) {
+                if (image != null && !image.isEmpty()) {
+                    String filename = System.currentTimeMillis() + "_" + image.getOriginalFilename();
+                    Path path = Paths.get("uploads", filename);
+                    Files.copy(image.getInputStream(), path);
+                    newPaths.add("/uploads/" + filename);
+                }
+            }
+            
+            existingPaths.addAll(newPaths);
+            entry.setImagePathList(existingPaths);
+            
+            return ResponseEntity.ok(journalService.createEntry(entry));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
+    }
 
 }

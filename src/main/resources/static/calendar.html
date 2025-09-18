@@ -2,25 +2,76 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"/>
-    <title>Calendar View</title>
+    <title>Calendar View - Journey</title>
     <link rel="stylesheet" href="/css/ui.css"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.8/index.global.min.css" rel="stylesheet"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.8/index.global.min.js"></script>
+    <script defer src="/js/api.js"></script>
+    <script defer src="/js/layout.js"></script>
     <script defer src="/js/calendar.js"></script>
-
     <link href="/css/calendar.css" rel="stylesheet"/>
 </head>
 
 <body>
+<div class="app-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="/journals.html" class="sidebar-brand">
+        <div class="logo">J</div>
+        Journey
+      </a>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Main</div>
+        <a href="/dashboard.html" class="nav-item">
+          <span class="icon">🏠</span>
+          Dashboard
+        </a>
+        <a href="/journals.html" class="nav-item">
+          <span class="icon">📝</span>
+          My Journals
+        </a>
+        <a href="/calendar.html" class="nav-item">
+          <span class="icon">📅</span>
+          Calendar View
+        </a>
+      </div>
+    </nav>
+    
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar"></div>
+        <div class="user-details">
+          <h4></h4>
+          <p></p>
+        </div>
+      </div>
+      <button class="signout-btn">Sign Out</button>
+    </div>
+  </aside>
 
-<header class="topbar">
-    <button id="backBtn" class="link-btn">← Back</button>
-    <h2>📅 Journal Calendar for <span id="user"></span></h2>
-</header>
+  <!-- Main Content -->
+  <main class="main-content">
+    <header class="header">
+      <div class="header-left">
+        <button class="sidebar-toggle">☰</button>
+        <h1 class="header-title">Calendar View</h1>
+      </div>
+      <div class="header-right">
+        <a href="/journals.html" class="btn btn--ghost">
+          <span>📝</span>
+          Back to Journals
+        </a>
+      </div>
+    </header>
 
-<div id="calendar"></div>
-
-
+    <div class="content">
+      <div id="calendar"></div>
+    </div>
+  </main>
+</div>
 </body>
-
 </html>

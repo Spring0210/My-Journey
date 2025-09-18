@@ -1,8 +1,11 @@
 package com.myjourney.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "journal_entry")
@@ -21,8 +24,8 @@ public class JournalEntry {
     @Column(nullable = false)
     private LocalDate entryDate;
 
-    @Column(name = "image_path")
-    private String imagePath;
+    @Column(name = "image_paths", columnDefinition = "TEXT")
+    private String imagePaths; // Store multiple image paths, separated by commas
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -68,11 +71,36 @@ public class JournalEntry {
         this.user = user;
     }
 
-    public String getImagePath() {
-        return imagePath;
+    public String getImagePaths() {
+        return imagePaths;
     }
 
-    public void setImagePath(String imagePath) {
-        this.imagePath = imagePath;
+    public void setImagePaths(String imagePaths) {
+        this.imagePaths = imagePaths;
     }
+
+    // Get image path list
+    public List<String> getImagePathList() {
+        if (imagePaths == null || imagePaths.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<String> paths = new ArrayList<>();
+        for (String path : imagePaths.split(",")) {
+            if (!path.trim().isEmpty()) {
+                paths.add(path.trim());
+            }
+        }
+        return paths;
+    }
+
+    // Set image path list
+    public void setImagePathList(List<String> imagePathList) {
+        if (imagePathList == null || imagePathList.isEmpty()) {
+            this.imagePaths = null;
+        } else {
+            this.imagePaths = String.join(",", imagePathList);
+        }
+    }
+
+    // Note: Backward compatibility methods removed as we've fully migrated to multi-image support
 }

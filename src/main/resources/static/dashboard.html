@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard - Journey</title>
+  <link rel="stylesheet" href="/css/ui.css" />
+  <script defer src="js/api.js"></script>
+  <script defer src="js/layout.js"></script>
+  <script defer src="js/dashboard.js"></script>
+</head>
+<body>
+<div class="app-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="/dashboard.html" class="sidebar-brand">
+        <div class="logo">J</div>
+        Journey
+      </a>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Main</div>
+        <a href="/dashboard.html" class="nav-item">
+          <span class="icon">🏠</span>
+          Dashboard
+        </a>
+        <a href="/journals.html" class="nav-item">
+          <span class="icon">📝</span>
+          My Journals
+        </a>
+        <a href="/calendar.html" class="nav-item">
+          <span class="icon">📅</span>
+          Calendar View
+        </a>
+      </div>
+    </nav>
+    
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar"></div>
+        <div class="user-details">
+          <h4></h4>
+          <p></p>
+        </div>
+      </div>
+      <button class="signout-btn">Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <header class="header">
+      <div class="header-left">
+        <button class="sidebar-toggle">☰</button>
+        <h1 class="header-title">Dashboard</h1>
+      </div>
+      <div class="header-right">
+        <a href="/journals.html" class="btn btn--primary">
+          <span>📝</span>
+          New Entry
+        </a>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- Welcome Section -->
+      <section class="card">
+        <h2 class="card__title">Welcome back!</h2>
+        <p>Here's an overview of your journal entries and recent activity.</p>
+      </section>
+
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">📝</div>
+          <div class="stat-content">
+            <h3 id="totalEntries">0</h3>
+            <p>Total Entries</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📅</div>
+          <div class="stat-content">
+            <h3 id="thisMonthEntries">0</h3>
+            <p>This Month</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📸</div>
+          <div class="stat-content">
+            <h3 id="totalImages">0</h3>
+            <p>Total Images</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🔥</div>
+          <div class="stat-content">
+            <h3 id="streakDays">0</h3>
+            <p>Day Streak</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Entries -->
+      <section class="card">
+        <h2 class="card__title">Recent Entries</h2>
+        <div id="recentEntries" class="recent-entries">
+          <div class="loading">Loading recent entries...</div>
+        </div>
+        <div class="text-center mt-2">
+          <a href="/journals.html" class="btn btn--ghost">View All Entries</a>
+        </div>
+      </section>
+
+      <!-- Quick Actions -->
+      <section class="card">
+        <h2 class="card__title">Quick Actions</h2>
+        <div class="quick-actions">
+          <a href="/journals.html" class="quick-action">
+            <div class="quick-action-icon">📝</div>
+            <div class="quick-action-content">
+              <h4>Write New Entry</h4>
+              <p>Start documenting your thoughts and experiences</p>
+            </div>
+          </a>
+          <a href="/calendar.html" class="quick-action">
+            <div class="quick-action-icon">📅</div>
+            <div class="quick-action-content">
+              <h4>View Calendar</h4>
+              <p>Browse your entries by date</p>
+            </div>
+          </a>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</body>
+</html>

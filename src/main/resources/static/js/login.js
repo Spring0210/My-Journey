@@ -11,13 +11,18 @@ document.getElementById('loginForm').addEventListener('submit', (e) => {
         .then(res => res.json())
         .then(result => {
             if (result.message === 'Login successful') {
-                // store login information
+                // store login information including JWT token
                 localStorage.setItem('username', result.username);
                 localStorage.setItem('userId', result.userId);
-                window.location.href = 'journals.html';
+                localStorage.setItem('token', result.token);
+                window.location.href = 'dashboard.html';
             } else {
-                alert('Login failed');
+                alert(result.error || 'Login failed');
             }
+        })
+        .catch(error => {
+            console.error('Login error:', error);
+            alert('Login failed');
         });
 
 });
