@@ -12,7 +12,14 @@ function apiRequest(url, options = {}) {
         headers: getAuthHeaders()
     };
     
-    const finalOptions = { ...defaultOptions, ...options };
+    const finalOptions = { 
+        ...defaultOptions, 
+        ...options,
+        headers: {
+            ...defaultOptions.headers,
+            ...options.headers
+        }
+    };
     
     return fetch(url, finalOptions)
         .then(response => {

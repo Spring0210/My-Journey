@@ -38,7 +38,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/login", "/api/register", "/api/reset-password").permitAll()
                 .requestMatchers("/", "/login.html", "/register.html", "/forgot-password.html", 
-                               "/journals.html", "/calendar.html", "/day.html", "/detail.html").permitAll()
+                               "/journals.html", "/calendar.html", "/day.html", "/detail.html", "/debug-auth.html").permitAll()
                 .requestMatchers("/css/**", "/js/**", "/uploads/**", "/static/**").permitAll()
                 .requestMatchers("/api/entries/**").authenticated()
                 .anyRequest().permitAll()

@@ -1,5 +1,10 @@
 // Image viewing and management utility functions
 
+// Check if the URL is a Cloudinary URL
+function isCloudinaryUrl(url) {
+    return url && (url.startsWith('http://') || url.startsWith('https://')) && url.includes('cloudinary.com');
+}
+
 // Create image modal for viewing large images
 function createImageModal() {
     if (document.getElementById('imageModal')) {
@@ -68,7 +73,7 @@ function createImageManagement(entry, container) {
         const imageItem = document.createElement('div');
         imageItem.className = 'image-item';
         imageItem.innerHTML = `
-            <img src="http://localhost:8080${path.trim()}" alt="Entry image">
+            <img src="${isCloudinaryUrl(path.trim()) ? path.trim() : 'http://localhost:8080' + path.trim()}" alt="Entry image">
             <button class="delete-btn" data-index="${index}" data-path="${path.trim()}">&times;</button>
         `;
         
