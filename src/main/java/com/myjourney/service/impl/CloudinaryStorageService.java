@@ -23,6 +23,8 @@ public class CloudinaryStorageService implements CloudStorageService {
     @Override
     public String uploadFile(MultipartFile file, String folder) {
         try {
+            System.out.println("Starting upload to Cloudinary - File: " + file.getOriginalFilename() + ", Folder: " + folder);
+            
             // Configure upload options
             Map<String, Object> uploadOptions = new HashMap<>();
             uploadOptions.put("folder", folder != null ? folder : "my-journey");
@@ -36,10 +38,15 @@ public class CloudinaryStorageService implements CloudStorageService {
                 uploadOptions
             );
             
+            String url = (String) result.get("secure_url");
+            System.out.println("Successfully uploaded to Cloudinary: " + url);
+            
             // Return the secure URL
-            return (String) result.get("secure_url");
+            return url;
             
         } catch (IOException e) {
+            System.err.println("Failed to upload file to Cloudinary: " + e.getMessage());
+            e.printStackTrace();
             throw new RuntimeException("Failed to upload file to Cloudinary", e);
         }
     }

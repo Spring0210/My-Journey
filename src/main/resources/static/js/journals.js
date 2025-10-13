@@ -31,7 +31,10 @@ function renderEntryList(entries) {
                 // Show only first 2 images in card
                 const displayImages = imagePaths.slice(0, 2);
                 displayImages.forEach(path => {
-                    imagesHtml += `<img src="http://localhost:8080${path.trim()}" alt="Entry image">`;
+                    const trimmedPath = path.trim();
+                    // Check if it's already a full URL (Cloudinary) or needs localhost prefix
+                    const imageSrc = trimmedPath.startsWith('http') ? trimmedPath : `http://localhost:8080${trimmedPath}`;
+                    imagesHtml += `<img src="${imageSrc}" alt="Entry image">`;
                 });
                 // Show count if there are more images
                 if (imagePaths.length > 2) {

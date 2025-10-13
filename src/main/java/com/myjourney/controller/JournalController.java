@@ -4,16 +4,13 @@ import com.myjourney.model.JournalEntry;
 import com.myjourney.model.User;
 import com.myjourney.repository.UserRepository;
 import com.myjourney.service.JournalService;
+import com.myjourney.service.CloudStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -28,6 +25,9 @@ public class JournalController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private CloudStorageService cloudStorageService;
+
     @PostMapping("/{userId}")
     public JournalEntry createEntry(
             @PathVariable Integer userId,
@@ -36,29 +36,31 @@ public class JournalController {
             @RequestParam String entryDate,
             @RequestParam(required = false) MultipartFile[] images
     ) throws IOException {
-        User user = userRepository.findById(userId).orElseThrow();
-        JournalEntry entry = new JournalEntry();
-        entry.setTitle(title);
-        entry.setContent(content);
-        entry.setEntryDate(LocalDate.parse(entryDate));
-        entry.setUser(user);
+        try {
+            User user = userRepository.findById(userId).orElseThrow();
+            JournalEntry entry = new JournalEntry();
+            entry.setTitle(title);
+            entry.setContent(content);
+            entry.setEntryDate(LocalDate.parse(entryDate));
+            entry.setUser(user);
 
-        if (images != null && images.length > 0) {
-            List<String> imagePaths = new ArrayList<>();
-            for (MultipartFile image : images) {
-                if (image != null && !image.isEmpty()) {
-                    String filename = System.currentTimeMillis() + "_" + image.getOriginalFilename();
-                    Path path = Paths.get("uploads", filename);
-                    Files.copy(image.getInputStream(), path);
-                    imagePaths.add("/uploads/" + filename);
+            if (images != null && images.length > 0) {
+                System.out.println("Uploading " + images.length + " images to Cloudinary...");
+                List<String> imageUrls = cloudStorageService.uploadFiles(images, "my-journey/journals");
+                System.out.println("Uploaded images URLs: " + imageUrls);
+                if (!imageUrls.isEmpty()) {
+                    entry.setImagePathList(imageUrls);
                 }
             }
-            if (!imagePaths.isEmpty()) {
-                entry.setImagePathList(imagePaths);
-            }
-        }
 
-        return journalService.createEntry(entry);
+            JournalEntry savedEntry = journalService.createEntry(entry);
+            System.out.println("Entry saved successfully with ID: " + savedEntry.getId());
+            return savedEntry;
+        } catch (Exception e) {
+            System.err.println("Error creating entry: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     //Get all entries of the user
@@ -84,36 +86,16 @@ public class JournalController {
         existing.setEntryDate(LocalDate.parse(entryDate));
 
         if (images != null && images.length > 0) {
-            // Delete old image files
-            List<String> oldPaths = existing.getImagePathList();
-            if (oldPaths != null) {
-                for (String oldPath : oldPaths) {
-                    try {
-                        Path oldFilePath = Paths.get(oldPath.substring(1)); // Remove leading /
-                        if (Files.exists(oldFilePath)) {
-                            Files.delete(oldFilePath);
-                        }
-                    } catch (Exception e) {
-                        System.err.println("Failed to delete old image: " + e.getMessage());
-                    }
-                }
+            // Delete old images from cloud storage
+            List<String> oldUrls = existing.getImagePathList();
+            if (oldUrls != null && !oldUrls.isEmpty()) {
+                cloudStorageService.deleteFiles(oldUrls);
             }
             
-            // Save new images
-            List<String> imagePaths = new ArrayList<>();
-            for (MultipartFile image : images) {
-                if (image != null && !image.isEmpty()) {
-                    String filename = System.currentTimeMillis() + "_" + image.getOriginalFilename();
-                    Path path = Paths.get("uploads").resolve(filename);
-                    if (!Files.exists(path.getParent())) {
-                        Files.createDirectories(path.getParent());
-                    }
-                    Files.copy(image.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-                    imagePaths.add("/uploads/" + filename);
-                }
-            }
-            if (!imagePaths.isEmpty()) {
-                existing.setImagePathList(imagePaths);
+            // Upload new images to cloud storage
+            List<String> imageUrls = cloudStorageService.uploadFiles(images, "my-journey/journals");
+            if (!imageUrls.isEmpty()) {
+                existing.setImagePathList(imageUrls);
             } else {
                 existing.setImagePaths(null);
             }
@@ -127,19 +109,10 @@ public class JournalController {
     public void deleteEntry(@PathVariable Integer entryId) throws IOException {
         JournalEntry entry = journalService.getEntryById(entryId).orElseThrow();
         
-        // Delete all related image files
-        List<String> imagePaths = entry.getImagePathList();
-        if (imagePaths != null) {
-            for (String imagePath : imagePaths) {
-                try {
-                    Path filePath = Paths.get(imagePath.substring(1)); // Remove leading /
-                    if (Files.exists(filePath)) {
-                        Files.delete(filePath);
-                    }
-                } catch (Exception e) {
-                    System.err.println("Failed to delete image: " + e.getMessage());
-                }
-            }
+        // Delete all related images from cloud storage
+        List<String> imageUrls = entry.getImagePathList();
+        if (imageUrls != null && !imageUrls.isEmpty()) {
+            cloudStorageService.deleteFiles(imageUrls);
         }
         
         journalService.deleteEntry(entryId);
@@ -197,24 +170,17 @@ public class JournalController {
     public ResponseEntity<String> deleteImage(@RequestBody Map<String, Object> request) {
         try {
             Integer entryId = (Integer) request.get("entryId");
-            String imagePath = (String) request.get("imagePath");
+            String imageUrl = (String) request.get("imagePath");
             
             JournalEntry entry = journalService.getEntryById(entryId).orElseThrow();
-            List<String> imagePaths = entry.getImagePathList();
+            List<String> imageUrls = entry.getImagePathList();
             
-            if (imagePaths.remove(imagePath)) {
-                entry.setImagePathList(imagePaths);
+            if (imageUrls.remove(imageUrl)) {
+                entry.setImagePathList(imageUrls);
                 journalService.createEntry(entry);
                 
-                // Delete physical file
-                try {
-                    Path filePath = Paths.get(imagePath.substring(1)); // Remove leading /
-                    if (Files.exists(filePath)) {
-                        Files.delete(filePath);
-                    }
-                } catch (Exception e) {
-                    System.err.println("Failed to delete image file: " + e.getMessage());
-                }
+                // Delete image from cloud storage
+                cloudStorageService.deleteFile(imageUrl);
                 
                 return ResponseEntity.ok("Image deleted successfully");
             } else {
@@ -233,20 +199,12 @@ public class JournalController {
     ) throws IOException {
         try {
             JournalEntry entry = journalService.getEntryById(entryId).orElseThrow();
-            List<String> existingPaths = entry.getImagePathList();
+            List<String> existingUrls = entry.getImagePathList();
             
-            List<String> newPaths = new ArrayList<>();
-            for (MultipartFile image : images) {
-                if (image != null && !image.isEmpty()) {
-                    String filename = System.currentTimeMillis() + "_" + image.getOriginalFilename();
-                    Path path = Paths.get("uploads", filename);
-                    Files.copy(image.getInputStream(), path);
-                    newPaths.add("/uploads/" + filename);
-                }
-            }
+            List<String> newUrls = cloudStorageService.uploadFiles(images, "my-journey/journals");
             
-            existingPaths.addAll(newPaths);
-            entry.setImagePathList(existingPaths);
+            existingUrls.addAll(newUrls);
+            entry.setImagePathList(existingUrls);
             
             return ResponseEntity.ok(journalService.createEntry(entry));
         } catch (Exception e) {

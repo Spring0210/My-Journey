@@ -105,7 +105,10 @@ function loadRecentEntries(entries) {
             if (imagePaths.length > 0) {
                 imagesHtml = '<div class="entry-images">';
                 imagePaths.slice(0, 3).forEach(path => {
-                    imagesHtml += `<img src="${API_BASE}${path.trim()}" alt="Entry image">`;
+                    const trimmedPath = path.trim();
+                    // Check if it's already a full URL (Cloudinary) or needs localhost prefix
+                    const imageSrc = trimmedPath.startsWith('http') ? trimmedPath : `${API_BASE}${trimmedPath}`;
+                    imagesHtml += `<img src="${imageSrc}" alt="Entry image">`;
                 });
                 if (imagePaths.length > 3) {
                     imagesHtml += `<span class="more-images">+${imagePaths.length - 3}</span>`;

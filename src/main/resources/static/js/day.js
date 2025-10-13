@@ -28,7 +28,10 @@ function renderDayEntries(entries) {
       if (imagePaths.length > 0) {
         imagesHtml = '<div class="entry-images">';
         imagePaths.forEach(path => {
-          imagesHtml += `<img src="${IMAGE_BASE}${path.trim()}" alt="entry image">`;
+          const trimmedPath = path.trim();
+          // Check if it's already a full URL (Cloudinary) or needs localhost prefix
+          const imageSrc = trimmedPath.startsWith('http') ? trimmedPath : `${IMAGE_BASE}${trimmedPath}`;
+          imagesHtml += `<img src="${imageSrc}" alt="entry image">`;
         });
         imagesHtml += '</div>';
       }
