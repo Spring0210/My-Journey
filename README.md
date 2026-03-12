@@ -197,12 +197,44 @@ By default, images are stored locally in the `uploads/` directory. For productio
 3. **Images**: Use cloud storage (AWS S3, Cloudinary)
 4. **Frontend**: Deploy to Vercel, Netlify, or GitHub Pages
 
-### Docker Support
-```dockerfile
-FROM openjdk:17-jdk-slim
-COPY target/my-journey-*.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+### Docker Deployment
+
+The project includes `Dockerfile` and `docker-compose.yml` for containerized deployment.
+
+**Prerequisites:** Docker and Docker Compose installed on your server.
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Spring0210/My-Journey.git
+   cd My-Journey
+   ```
+
+2. **Create environment file**
+   ```bash
+   cp .env.example .env
+   ```
+   Edit `.env` and fill in your credentials:
+   ```env
+   MYSQL_ROOT_PASSWORD=yourpassword
+   CLOUDINARY_CLOUD_NAME=your_cloud_name
+   CLOUDINARY_API_KEY=your_api_key
+   CLOUDINARY_API_SECRET=your_api_secret
+   ```
+
+3. **Build and start all services**
+   ```bash
+   docker-compose up -d --build
+   ```
+   This will start both the MySQL database and the Spring Boot application.
+
+4. **Access the application**
+   - Open your browser and go to `http://your-server-ip:8080`
+
+**Useful commands:**
+```bash
+docker-compose logs -f app     # View application logs
+docker-compose down            # Stop all services
+docker-compose up -d           # Restart without rebuilding
 ```
 
 ## 🤝 Contributing
