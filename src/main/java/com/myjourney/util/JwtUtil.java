@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -14,12 +15,14 @@ import java.util.function.Function;
 
 @Component
 public class JwtUtil {
-    
-    private static final String SECRET_KEY = "mySecretKey123456789012345678901234567890"; // 32字符以上
-    private static final int JWT_EXPIRATION = 24 * 60 * 60 * 1000; // 24小时
-    
+
+    @Value("${jwt.secret}")
+    private String secretKey;
+
+    private static final int JWT_EXPIRATION = 24 * 60 * 60 * 1000; // 24h
+
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+        return Keys.hmacShaKeyFor(secretKey.getBytes());
     }
     
     public String generateToken(String username, Integer userId) {

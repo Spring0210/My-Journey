@@ -5,6 +5,7 @@ import com.myjourney.model.User;
 import com.myjourney.repository.UserRepository;
 import com.myjourney.service.JournalService;
 import com.myjourney.service.CloudStorageService;
+import com.myjourney.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,160 +29,213 @@ public class JournalController {
     @Autowired
     private CloudStorageService cloudStorageService;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    private Integer getJwtUserId(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return null;
+        }
+        try {
+            return jwtUtil.extractUserId(authHeader.substring(7));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     @PostMapping("/{userId}")
-    public JournalEntry createEntry(
+    public ResponseEntity<JournalEntry> createEntry(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Integer userId,
             @RequestParam String title,
             @RequestParam String content,
             @RequestParam String entryDate,
             @RequestParam(required = false) MultipartFile[] images
     ) throws IOException {
-        try {
-            User user = userRepository.findById(userId).orElseThrow();
-            JournalEntry entry = new JournalEntry();
-            entry.setTitle(title);
-            entry.setContent(content);
-            entry.setEntryDate(LocalDate.parse(entryDate));
-            entry.setUser(user);
-
-            if (images != null && images.length > 0) {
-                System.out.println("Uploading " + images.length + " images to Cloudinary...");
-                List<String> imageUrls = cloudStorageService.uploadFiles(images, "my-journey/journals");
-                System.out.println("Uploaded images URLs: " + imageUrls);
-                if (!imageUrls.isEmpty()) {
-                    entry.setImagePathList(imageUrls);
-                }
-            }
-
-            JournalEntry savedEntry = journalService.createEntry(entry);
-            System.out.println("Entry saved successfully with ID: " + savedEntry.getId());
-            return savedEntry;
-        } catch (Exception e) {
-            System.err.println("Error creating entry: " + e.getMessage());
-            e.printStackTrace();
-            throw e;
+        Integer jwtUserId = getJwtUserId(authHeader);
+        if (jwtUserId == null || !jwtUserId.equals(userId)) {
+            return ResponseEntity.status(403).build();
         }
-    }
 
-    //Get all entries of the user
-    @GetMapping("/{userId}")
-    public List<JournalEntry> getUserEntries(@PathVariable Integer userId) {
         User user = userRepository.findById(userId).orElseThrow();
-        return journalService.getEntriesByUser(user);
+        JournalEntry entry = new JournalEntry();
+        entry.setTitle(title);
+        entry.setContent(content);
+        entry.setEntryDate(LocalDate.parse(entryDate));
+        entry.setUser(user);
+
+        if (images != null && images.length > 0) {
+            List<String> imageUrls = cloudStorageService.uploadFiles(images, "my-journey/journals");
+            if (!imageUrls.isEmpty()) {
+                entry.setImagePathList(imageUrls);
+            }
+        }
+
+        return ResponseEntity.ok(journalService.createEntry(entry));
     }
 
-    //Modify entry
+    @GetMapping("/{userId}")
+    public ResponseEntity<List<JournalEntry>> getUserEntries(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @PathVariable Integer userId
+    ) {
+        Integer jwtUserId = getJwtUserId(authHeader);
+        if (jwtUserId == null || !jwtUserId.equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+        User user = userRepository.findById(userId).orElseThrow();
+        return ResponseEntity.ok(journalService.getEntriesByUser(user));
+    }
+
     @PostMapping("/edit/{entryId}")
-    public JournalEntry editEntry(
+    public ResponseEntity<JournalEntry> editEntry(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Integer entryId,
             @RequestParam String title,
             @RequestParam String content,
             @RequestParam String entryDate,
             @RequestParam(required = false) MultipartFile[] images
     ) throws IOException {
+        Integer jwtUserId = getJwtUserId(authHeader);
         JournalEntry existing = journalService.getEntryById(entryId).orElseThrow();
+
+        if (jwtUserId == null || !jwtUserId.equals(existing.getUser().getId())) {
+            return ResponseEntity.status(403).build();
+        }
 
         existing.setTitle(title);
         existing.setContent(content);
         existing.setEntryDate(LocalDate.parse(entryDate));
 
         if (images != null && images.length > 0) {
-            // Delete old images from cloud storage
             List<String> oldUrls = existing.getImagePathList();
             if (oldUrls != null && !oldUrls.isEmpty()) {
                 cloudStorageService.deleteFiles(oldUrls);
             }
-            
-            // Upload new images to cloud storage
             List<String> imageUrls = cloudStorageService.uploadFiles(images, "my-journey/journals");
             if (!imageUrls.isEmpty()) {
                 existing.setImagePathList(imageUrls);
             } else {
-                existing.setImagePaths(null);
+                existing.setImagePathList(null);
             }
         }
 
-        return journalService.createEntry(existing); // save
+        return ResponseEntity.ok(journalService.createEntry(existing));
     }
 
-    //Delete entry
     @DeleteMapping("/{entryId}")
-    public void deleteEntry(@PathVariable Integer entryId) throws IOException {
+    public ResponseEntity<Void> deleteEntry(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @PathVariable Integer entryId
+    ) throws IOException {
+        Integer jwtUserId = getJwtUserId(authHeader);
         JournalEntry entry = journalService.getEntryById(entryId).orElseThrow();
-        
-        // Delete all related images from cloud storage
+
+        if (jwtUserId == null || !jwtUserId.equals(entry.getUser().getId())) {
+            return ResponseEntity.status(403).build();
+        }
+
         List<String> imageUrls = entry.getImagePathList();
         if (imageUrls != null && !imageUrls.isEmpty()) {
             cloudStorageService.deleteFiles(imageUrls);
         }
-        
         journalService.deleteEntry(entryId);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/search")
-    public List<JournalEntry> searchEntries(@RequestParam Integer userId, @RequestParam(required = false) String keyword, @RequestParam(required = false) String date) {
-        return journalService.searchEntries(userId, keyword, date);
+    public ResponseEntity<List<JournalEntry>> searchEntries(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestParam Integer userId,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String date
+    ) {
+        Integer jwtUserId = getJwtUserId(authHeader);
+        if (jwtUserId == null || !jwtUserId.equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+        return ResponseEntity.ok(journalService.searchEntries(userId, keyword, date));
     }
 
-    //Calendar
     @GetMapping("/calendar/{userId}")
-    public List<Map<String, Object>> getCalendarEntries(@PathVariable Integer userId) {
+    public ResponseEntity<List<Map<String, Object>>> getCalendarEntries(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @PathVariable Integer userId
+    ) {
+        Integer jwtUserId = getJwtUserId(authHeader);
+        if (jwtUserId == null || !jwtUserId.equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-
         List<JournalEntry> entries = journalService.getEntriesByUser(user);
 
         List<Map<String, Object>> events = new ArrayList<>();
-
         for (JournalEntry entry : entries) {
             Map<String, Object> event = new HashMap<>();
             event.put("id", entry.getId());
             event.put("title", entry.getTitle());
-            event.put("start", entry.getEntryDate().toString()); // required by FullCalendar
+            event.put("start", entry.getEntryDate().toString());
             events.add(event);
         }
-
-        return events;
+        return ResponseEntity.ok(events);
     }
 
-    // Get all journal entries for a specific user on a specific date
     @GetMapping("/user/{userId}/entries/date/{entryDate}")
-    public List<JournalEntry> getEntriesByDate(
+    public ResponseEntity<List<JournalEntry>> getEntriesByDate(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Integer userId,
             @PathVariable String entryDate
     ) {
+        Integer jwtUserId = getJwtUserId(authHeader);
+        if (jwtUserId == null || !jwtUserId.equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
         User user = userRepository.findById(userId).orElseThrow();
         LocalDate date = LocalDate.parse(entryDate);
-        return journalService.getEntriesByUser(user).stream()
+        return ResponseEntity.ok(journalService.getEntriesByUser(user).stream()
                 .filter(e -> e.getEntryDate().equals(date))
-                .toList();
+                .toList());
     }
 
-    // Get a single entry by its id (avoid conflict with /api/entries/{userId})
     @GetMapping("/entry/{entryId}")
-    public ResponseEntity<JournalEntry> getEntryById(@PathVariable Integer entryId) {
+    public ResponseEntity<JournalEntry> getEntryById(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @PathVariable Integer entryId
+    ) {
+        Integer jwtUserId = getJwtUserId(authHeader);
         return journalService.getEntryById(entryId)
-                .map(ResponseEntity::ok)
+                .map(entry -> {
+                    if (jwtUserId == null || !jwtUserId.equals(entry.getUser().getId())) {
+                        return ResponseEntity.<JournalEntry>status(403).build();
+                    }
+                    return ResponseEntity.ok(entry);
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Delete single image
     @PostMapping("/delete-image")
-    public ResponseEntity<String> deleteImage(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<String> deleteImage(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestBody Map<String, Object> request
+    ) {
         try {
+            Integer jwtUserId = getJwtUserId(authHeader);
             Integer entryId = (Integer) request.get("entryId");
             String imageUrl = (String) request.get("imagePath");
-            
+
             JournalEntry entry = journalService.getEntryById(entryId).orElseThrow();
+
+            if (jwtUserId == null || !jwtUserId.equals(entry.getUser().getId())) {
+                return ResponseEntity.status(403).body("Forbidden");
+            }
+
             List<String> imageUrls = entry.getImagePathList();
-            
             if (imageUrls.remove(imageUrl)) {
                 entry.setImagePathList(imageUrls);
                 journalService.createEntry(entry);
-                
-                // Delete image from cloud storage
                 cloudStorageService.deleteFile(imageUrl);
-                
                 return ResponseEntity.ok("Image deleted successfully");
             } else {
                 return ResponseEntity.badRequest().body("Image not found");
@@ -191,25 +245,30 @@ public class JournalController {
         }
     }
 
-    // Add images to existing entry
     @PostMapping("/add-images/{entryId}")
     public ResponseEntity<JournalEntry> addImagesToEntry(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Integer entryId,
             @RequestParam("images") MultipartFile[] images
     ) throws IOException {
         try {
+            Integer jwtUserId = getJwtUserId(authHeader);
             JournalEntry entry = journalService.getEntryById(entryId).orElseThrow();
+
+            if (jwtUserId == null || !jwtUserId.equals(entry.getUser().getId())) {
+                return ResponseEntity.status(403).build();
+            }
+
             List<String> existingUrls = entry.getImagePathList();
-            
+            if (existingUrls == null) existingUrls = new ArrayList<>();
+
             List<String> newUrls = cloudStorageService.uploadFiles(images, "my-journey/journals");
-            
             existingUrls.addAll(newUrls);
             entry.setImagePathList(existingUrls);
-            
+
             return ResponseEntity.ok(journalService.createEntry(entry));
         } catch (Exception e) {
             return ResponseEntity.status(500).build();
         }
     }
-
 }
