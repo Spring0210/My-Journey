@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/entries")
@@ -205,14 +206,15 @@ public class JournalController {
             @PathVariable Integer entryId
     ) {
         Integer jwtUserId = getJwtUserId(authHeader);
-        return journalService.getEntryById(entryId)
-                .map(entry -> {
-                    if (jwtUserId == null || !jwtUserId.equals(entry.getUser().getId())) {
-                        return ResponseEntity.<JournalEntry>status(403).build();
-                    }
-                    return ResponseEntity.ok(entry);
-                })
-                .orElse(ResponseEntity.notFound().build());
+        Optional<JournalEntry> entryOpt = journalService.getEntryById(entryId);
+        if (entryOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        JournalEntry entry = entryOpt.get();
+        if (jwtUserId == null || !jwtUserId.equals(entry.getUser().getId())) {
+            return ResponseEntity.status(403).build();
+        }
+        return ResponseEntity.ok(entry);
     }
 
     @PostMapping("/delete-image")
