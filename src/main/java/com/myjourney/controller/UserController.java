@@ -5,7 +5,6 @@ import com.myjourney.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-
 import java.util.Map;
 
 @RestController
@@ -26,10 +25,20 @@ public class UserController {
         return userService.login(user);
     }
 
-    @PostMapping("reset-password")
+    // Step 1: Send reset code to email
+    @PostMapping("/forgot-password")
+    public String forgotPassword(@RequestBody Map<String, String> map) {
+        String username = map.get("username");
+        String email = map.get("email");
+        return userService.sendResetCode(username, email);
+    }
+
+    // Step 2: Verify code and reset password
+    @PostMapping("/reset-password")
     public String resetPassword(@RequestBody Map<String, String> map) {
         String username = map.get("username");
+        String code = map.get("code");
         String newPassword = map.get("newPassword");
-        return userService.resetPassword(username, newPassword);
+        return userService.verifyAndResetPassword(username, code, newPassword);
     }
 }
