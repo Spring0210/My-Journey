@@ -73,7 +73,7 @@ function createImageManagement(entry, container) {
         const imageItem = document.createElement('div');
         imageItem.className = 'image-item';
         imageItem.innerHTML = `
-            <img src="${isCloudinaryUrl(path.trim()) ? path.trim() : 'http://localhost:8080' + path.trim()}" alt="Entry image">
+            <img src="${isCloudinaryUrl(path.trim()) ? path.trim() : '' + path.trim()}" alt="Entry image">
             <button class="delete-btn" data-index="${index}" data-path="${path.trim()}">&times;</button>
         `;
         
@@ -102,7 +102,7 @@ async function deleteImage(entryId, imagePath, imageElement) {
     }
     
     try {
-        const response = await apiRequest(`http://localhost:8080/api/entries/delete-image`, {
+        const response = await apiRequest(`/api/entries/delete-image`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -145,7 +145,7 @@ async function addImagesToEntry(entryId, files) {
     }
     
     try {
-        const response = await apiRequestWithFile(`http://localhost:8080/api/entries/add-images/${entryId}`, formData);
+        const response = await apiRequestWithFile(`/api/entries/add-images/${entryId}`, formData);
         
         if (response.ok) {
             const updatedEntry = await response.json();

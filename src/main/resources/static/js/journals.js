@@ -1,4 +1,4 @@
-const imageBaseUrl = "http://localhost:8080";
+const imageBaseUrl = "";
 
 const username = localStorage.getItem('username');
 const userId = localStorage.getItem('userId');
@@ -35,7 +35,7 @@ function renderEntryList(entries) {
                 const displayImages = imagePaths.slice(0, 2);
                 displayImages.forEach(path => {
                     const trimmedPath = path.trim();
-                    const imageSrc = trimmedPath.startsWith('http') ? trimmedPath : `http://localhost:8080${trimmedPath}`;
+                    const imageSrc = trimmedPath.startsWith('http') ? trimmedPath : `${trimmedPath}`;
                     imagesHtml += `<img src="${imageSrc}" alt="Entry image">`;
                 });
                 if (imagePaths.length > 2) {

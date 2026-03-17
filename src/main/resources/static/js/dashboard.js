@@ -1,5 +1,5 @@
 // Dashboard functionality
-const API_BASE = "http://localhost:8080";
+const API_BASE = "";
 
 // Get user info from layout manager
 const username = localStorage.getItem('username');

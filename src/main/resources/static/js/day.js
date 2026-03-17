@@ -1,5 +1,5 @@
-const API_BASE = "http://localhost:8080";
-const IMAGE_BASE = "http://localhost:8080";
+const API_BASE = "";
+const IMAGE_BASE = "";
 
 // Read ?date=YYYY-MM-DD
 function getDateParam() {

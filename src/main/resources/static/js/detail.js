@@ -1,6 +1,6 @@
 // Base URL for backend resources (update if you deploy)
-const API_BASE = "http://localhost:8080";
-const IMAGE_BASE = "http://localhost:8080"; // used to prefix relative imagePath
+const API_BASE = "";
+const IMAGE_BASE = ""; // used to prefix relative imagePath
 
 // Parse query string to get entryId
 function getEntryId() {
