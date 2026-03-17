@@ -76,16 +76,18 @@ public class JournalController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<List<JournalEntry>> getUserEntries(
+    public ResponseEntity<Map<String, Object>> getUserEntries(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
-            @PathVariable Integer userId
+            @PathVariable Integer userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
         Integer jwtUserId = getJwtUserId(authHeader);
         if (jwtUserId == null || !jwtUserId.equals(userId)) {
             return ResponseEntity.status(403).build();
         }
         User user = userRepository.findById(userId).orElseThrow();
-        return ResponseEntity.ok(journalService.getEntriesByUser(user));
+        return ResponseEntity.ok(journalService.getEntriesByUserPaged(user, page, size));
     }
 
     @PostMapping("/edit/{entryId}")

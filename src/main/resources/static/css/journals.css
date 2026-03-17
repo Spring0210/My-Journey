@@ -3,6 +3,19 @@
 .searchbar{
   display:flex; gap:10px; flex-wrap:wrap;
 }
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px 0;
+}
+
+.pagination span {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
 .title-link{
   color: inherit; text-decoration:none;
 }

@@ -1,49 +1,50 @@
 const imageBaseUrl = "http://localhost:8080";
 
-// Get user info from layout manager
 const username = localStorage.getItem('username');
 const userId = localStorage.getItem('userId');
 
-// Load all entries for current user
-function loadAllEntries() {
-    apiRequest(`http://localhost:8080/api/entries/${userId}`)
+let currentPage = 0;
+const PAGE_SIZE = 10;
+let isSearchMode = false;
+
+// Load paginated entries
+function loadAllEntries(page = 0) {
+    isSearchMode = false;
+    apiRequest(`/api/entries/${userId}?page=${page}&size=${PAGE_SIZE}`)
         .then(res => res.json())
-        .then(entries => {
-            renderEntryList(entries);
+        .then(data => {
+            renderEntryList(data.content);
+            renderPagination(data.currentPage, data.totalPages);
         });
 }
 
 // Render entries in journalList div
 function renderEntryList(entries) {
     const list = document.getElementById('journalList');
-    list.innerHTML = ''; // clear old content
+    list.innerHTML = '';
 
     entries.forEach(entry => {
         const div = document.createElement('div');
-        div.className = 'card card-entry'; 
-        
-        // Handle multiple images display - show max 2 images in card
+        div.className = 'card card-entry';
+
         let imagesHtml = '';
         if (entry.imagePaths) {
             const imagePaths = entry.imagePaths.split(',').filter(path => path.trim());
             if (imagePaths.length > 0) {
                 imagesHtml = '<div class="entry-images">';
-                // Show only first 2 images in card
                 const displayImages = imagePaths.slice(0, 2);
                 displayImages.forEach(path => {
                     const trimmedPath = path.trim();
-                    // Check if it's already a full URL (Cloudinary) or needs localhost prefix
                     const imageSrc = trimmedPath.startsWith('http') ? trimmedPath : `http://localhost:8080${trimmedPath}`;
                     imagesHtml += `<img src="${imageSrc}" alt="Entry image">`;
                 });
-                // Show count if there are more images
                 if (imagePaths.length > 2) {
                     imagesHtml += `<div class="more-images-count">+${imagePaths.length - 2}</div>`;
                 }
                 imagesHtml += '</div>';
             }
         }
-        
+
         div.innerHTML = `
       <h3>${entry.title}</h3>
       <p>${entry.content}</p>
@@ -51,19 +52,43 @@ function renderEntryList(entries) {
       ${imagesHtml}
       <hr/>
     `;
-        
-        // Add click events for images
+
         addImageClickEvents(div);
-        
+
         div.addEventListener('click', (e) => {
-            if(!e.target.closest('button') && e.target.tagName !== 'IMG'){
+            if (!e.target.closest('button') && e.target.tagName !== 'IMG') {
                 window.location.href = `detail.html?id=${entry.id}`;
             }
-        })
+        });
         list.appendChild(div);
     });
 }
 
+function renderPagination(page, totalPages) {
+    const pagination = document.getElementById('pagination');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const pageInfo = document.getElementById('pageInfo');
+
+    if (totalPages <= 1) {
+        pagination.hidden = true;
+        return;
+    }
+
+    currentPage = page;
+    pagination.hidden = false;
+    pageInfo.textContent = `Page ${page + 1} of ${totalPages}`;
+    prevBtn.disabled = page === 0;
+    nextBtn.disabled = page >= totalPages - 1;
+}
+
+document.getElementById('prevBtn').addEventListener('click', () => {
+    if (currentPage > 0) loadAllEntries(currentPage - 1);
+});
+
+document.getElementById('nextBtn').addEventListener('click', () => {
+    loadAllEntries(currentPage + 1);
+});
 
 // Toggle the visibility of the entry form
 document.getElementById('toggleFormBtn').addEventListener('click', () => {
@@ -75,7 +100,7 @@ document.getElementById('toggleFormBtn').addEventListener('click', () => {
 document.getElementById('images').addEventListener('change', function(e) {
     const preview = document.getElementById('imagePreview');
     preview.innerHTML = '';
-    
+
     const files = e.target.files;
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -92,8 +117,7 @@ document.getElementById('images').addEventListener('change', function(e) {
     }
 });
 
-
-// Submit new journal entry to backend, if editingEntryId is not null, means editing journal.
+// Submit new journal entry
 document.getElementById('submitEntry').addEventListener('click', () => {
     const title = document.getElementById('title').value;
     const content = document.getElementById('content').value;
@@ -104,22 +128,20 @@ document.getElementById('submitEntry').addEventListener('click', () => {
     formData.append("title", title);
     formData.append("content", content);
     formData.append("entryDate", entryDate);
-    
-    // Add multiple images
+
     for (let i = 0; i < images.length; i++) {
         formData.append("images", images[i]);
     }
 
     const url = editingEntryId
-        ? `http://localhost:8080/api/entries/edit/${editingEntryId}`
-        : `http://localhost:8080/api/entries/${userId}`;
+        ? `/api/entries/edit/${editingEntryId}`
+        : `/api/entries/${userId}`;
 
     apiRequestWithFile(url, formData)
         .then(res => res.json())
         .then(() => {
             alert(editingEntryId ? "Entry updated." : "Entry created.");
 
-            // Reset form after submission
             editingEntryId = null;
             document.getElementById('title').value = '';
             document.getElementById('content').value = '';
@@ -127,7 +149,8 @@ document.getElementById('submitEntry').addEventListener('click', () => {
             document.getElementById('images').value = '';
             document.getElementById('imagePreview').innerHTML = '';
 
-            location.reload();
+            loadAllEntries(0);
+            document.getElementById('entryForm').style.display = 'none';
         })
         .catch(err => {
             alert("Upload failed.");
@@ -135,10 +158,8 @@ document.getElementById('submitEntry').addEventListener('click', () => {
         });
 });
 
-//Edit entry
-let editingEntryId = null; // track editing mode
+let editingEntryId = null;
 
-// Update form UI for editing
 document.addEventListener('click', function (e) {
     if (e.target.classList.contains('edit-btn')) {
         editingEntryId = e.target.getAttribute('data-id');
@@ -151,23 +172,18 @@ document.addEventListener('click', function (e) {
     }
 });
 
-
-//Delete entry
 document.addEventListener('click', function (e) {
     if (e.target.classList.contains('delete-btn')) {
         const entryId = e.target.getAttribute('data-id');
 
-        // Confirm before deleting
         const confirmDelete = confirm("Are you sure you want to delete this journal entry?");
         if (!confirmDelete) return;
 
-        apiRequest(`http://localhost:8080/api/entries/${entryId}`, {
-            method: 'DELETE'
-        })
+        apiRequest(`/api/entries/${entryId}`, { method: 'DELETE' })
             .then(res => {
                 if (res.ok) {
                     alert("Entry deleted.");
-                    location.reload(); // Refresh the page after deletion
+                    loadAllEntries(currentPage);
                 } else {
                     alert("Failed to delete entry.");
                 }
@@ -179,8 +195,11 @@ document.addEventListener('click', function (e) {
     }
 });
 
-// Handle search
+// Search (no pagination)
 document.getElementById('searchBtn').addEventListener('click', () => {
+    isSearchMode = true;
+    document.getElementById('pagination').hidden = true;
+
     const keyword = document.getElementById('searchKeyword').value;
     const date = document.getElementById('searchDate').value;
 
@@ -189,19 +208,18 @@ document.getElementById('searchBtn').addEventListener('click', () => {
     if (keyword) params.append("keyword", keyword);
     if (date) params.append("date", date);
 
-    apiRequest(`http://localhost:8080/api/entries/search?${params.toString()}`)
+    apiRequest(`/api/entries/search?${params.toString()}`)
         .then(res => res.json())
         .then(entries => {
-            renderEntryList(entries); // render filtered results
+            renderEntryList(entries);
         });
 });
 
-// Clear search and reload full list
+// Clear search → restore pagination
 document.getElementById('clearBtn').addEventListener('click', () => {
     document.getElementById('searchKeyword').value = '';
     document.getElementById('searchDate').value = '';
-    loadAllEntries(); // reload all
+    loadAllEntries(0);
 });
 
-document.addEventListener('DOMContentLoaded', loadAllEntries);
-
+document.addEventListener('DOMContentLoaded', () => loadAllEntries(0));

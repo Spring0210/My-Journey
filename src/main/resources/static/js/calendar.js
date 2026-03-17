@@ -7,14 +7,9 @@ const userId = localStorage.getItem('userId');
 document.addEventListener('DOMContentLoaded', function () {
 
     // Load all entries to render events on the calendar
-    apiRequest(`${API_BASE}/api/entries/${userId}`)
+    apiRequest(`${API_BASE}/api/entries/calendar/${userId}`)
         .then(res => res.json())
-        .then(entries => {
-            const events = entries.map(e => ({
-                title: e.title,
-                start: e.entryDate,
-                id: e.id
-            }));
+        .then(events => {
 
             const calendarEl = document.getElementById('calendar');
             const calendar = new FullCalendar.Calendar(calendarEl, {

@@ -7,8 +7,14 @@ import com.myjourney.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.Optional;
 
 @Service
@@ -25,7 +31,19 @@ public class JournalService {
     }
 
     public List<JournalEntry> getEntriesByUser(User user) {
-        return  journalRepository.findByUser(user);
+        return journalRepository.findByUser(user);
+    }
+
+    public Map<String, Object> getEntriesByUserPaged(User user, int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "entryDate"));
+        Page<JournalEntry> result = journalRepository.findByUser(user, pageable);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("content", result.getContent());
+        response.put("totalPages", result.getTotalPages());
+        response.put("totalElements", result.getTotalElements());
+        response.put("currentPage", result.getNumber());
+        return response;
     }
 
     public Optional<JournalEntry> getEntryById(Integer id) {
