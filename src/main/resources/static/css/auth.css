@@ -66,6 +66,7 @@ html.dark {
 /* ── Reset ── */
 *, *::before, *::after { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
@@ -216,11 +217,45 @@ body {
   margin: 8px 0;
 }
 
+/* ── Form title ── */
+.form-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 4px 0 20px;
+  letter-spacing: -0.3px;
+  color: var(--text);
+}
+
+/* ── Notice banner ── */
+.notice {
+  background: var(--primary);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 10px 14px;
+  border-radius: 10px;
+  opacity: 0.92;
+}
+
+/* ── Resend button variant ── */
+.resend-btn {
+  font-size: 13px;
+  height: 38px;
+  border-radius: 10px;
+  color: var(--muted);
+  border-color: var(--border);
+}
+.resend-btn:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: rgba(0,122,255,0.06);
+}
+
 /* ── Messages ── */
 .error {
   color: var(--danger);
   font-size: 13px;
-  margin-top: 4px;
+  min-height: 0;
 }
 
 .success {

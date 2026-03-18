@@ -72,9 +72,11 @@ step2Form.addEventListener('submit', e => {
     });
 });
 
-// Back to step 1
+// Resend code — go back to step 1 so user can re-submit
 backBtn.addEventListener('click', () => {
     step2Form.hidden = true;
     step1Form.hidden = false;
-    errStep1.hidden = true;
+    errStep1.textContent = '';
+    document.getElementById('code').value = '';
+    errStep2.textContent = '';
 });
