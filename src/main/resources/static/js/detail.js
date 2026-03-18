@@ -37,19 +37,15 @@ function setSaveStatus(text) {
 function attachImagePreview() {
     const input   = document.getElementById("imageInput");
     const preview = document.getElementById("previewBox");
-    const uploadBtn = document.getElementById("addImagesBtn");
 
     input.addEventListener("change", () => {
         preview.innerHTML = "";
-        const files = Array.from(input.files);
-        files.forEach(file => {
+        Array.from(input.files).forEach(file => {
             if (!file.type.startsWith('image/')) return;
             const img = document.createElement("img");
             img.src = URL.createObjectURL(file);
             preview.appendChild(img);
         });
-        // Show/hide the confirm upload button
-        uploadBtn.hidden = files.length === 0;
     });
 }
 
@@ -136,8 +132,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             btn.disabled    = true;
             btn.textContent = "Creating...";
             try {
-                const newEntry = await createEntry(userId);
-                window.location.href = `detail.html?id=${newEntry.id}`;
+                await createEntry(userId);
+                window.location.href = "journals.html";
             } catch (e) {
                 console.error(e);
                 alert("Failed to create entry.");
@@ -171,7 +167,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             await loadEntry(entryId);
             document.getElementById("imageInput").value     = "";
             document.getElementById("previewBox").innerHTML = "";
-            document.getElementById("addImagesBtn").hidden  = true;
             setSaveStatus("Saved");
             setTimeout(() => setSaveStatus(""), 2500);
         } catch (e) {
@@ -188,24 +183,5 @@ document.addEventListener("DOMContentLoaded", async () => {
         catch (e) { console.error(e); alert("Delete failed."); }
     });
 
-    document.getElementById("addImagesBtn").addEventListener("click", async () => {
-        const files = document.getElementById("imageInput").files;
-        if (files.length === 0) return;
-        const btn = document.getElementById("addImagesBtn");
-        btn.disabled    = true;
-        btn.textContent = "Uploading...";
-        try {
-            await addImagesToEntry(entryId, files);
-            await loadEntry(entryId);
-            document.getElementById("imageInput").value     = "";
-            document.getElementById("previewBox").innerHTML = "";
-            btn.hidden = true;
-        } catch (e) {
-            console.error(e);
-            alert("Upload failed.");
-        } finally {
-            btn.disabled    = false;
-            btn.textContent = "Upload Selected Photos";
-        }
-    });
+
 });
