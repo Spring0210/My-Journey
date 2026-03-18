@@ -114,10 +114,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // ── CREATE MODE ──────────────────────────────────────────────
     if (!entryId) {
-        document.getElementById("pageTitle").textContent  = "New Entry";
-        document.getElementById("saveBtn").textContent    = "Create Entry";
+        document.getElementById("pageTitle").textContent   = "New Entry";
+        document.getElementById("saveBtn").textContent     = "Create Entry";
         document.getElementById("deleteBtn").style.display = "none";
-        document.getElementById("imagesSection").style.display = "none";
+        // Hide the image count badge (no images yet) but keep upload zone visible
+        document.getElementById("imageCount").style.display = "none";
 
         // Default to today's date
         const today = new Date().toISOString().split('T')[0];

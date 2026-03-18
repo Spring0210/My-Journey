@@ -54,53 +54,57 @@
       </div>
       <div class="header-right">
         <span id="saveStatus" class="save-status"></span>
-        <button id="deleteBtn" class="btn btn--delete">Delete</button>
+        <button id="deleteBtn" class="btn--delete">Delete</button>
         <button id="saveBtn" class="btn btn--primary">Create Entry</button>
         <button id="backBtn" class="btn btn--ghost">Back</button>
       </div>
     </header>
 
     <div class="content">
+      <div class="detail-layout">
 
-      <!-- Document-style writing area -->
-      <div class="entry-editor">
-        <input id="title" type="text" class="title-input" placeholder="Untitled" autocomplete="off" />
-        <div class="entry-meta-bar">
-          <input id="entryDate" type="date" class="date-input" />
-          <span id="entryDateDisplay" class="date-display"></span>
+        <!-- Left: Writing area -->
+        <div class="entry-editor">
+          <input id="title" type="text" class="title-input" placeholder="Untitled" autocomplete="off" />
+          <div class="entry-meta-bar">
+            <input id="entryDate" type="date" class="date-input" />
+            <span id="entryDateDisplay" class="date-display"></span>
+          </div>
+          <textarea id="content" class="content-input" placeholder="Write your thoughts and experiences here..."></textarea>
         </div>
-        <textarea id="content" class="content-input" placeholder="Write your thoughts and experiences here..."></textarea>
+
+        <!-- Right: Photos -->
+        <div class="detail-sidebar">
+          <section class="images-card" id="imagesSection">
+            <div class="images-header">
+              <span class="images-title">Photos</span>
+              <span class="image-count" id="imageCount">0 photos</span>
+            </div>
+
+            <!-- Current photo grid -->
+            <div id="imageBox" class="image-gallery"></div>
+
+            <!-- Upload zone -->
+            <div class="upload-zone">
+              <input id="imageInput" type="file" accept="image/*" multiple class="file-input" />
+              <label for="imageInput" class="upload-label">
+                <div class="upload-icon-wrap">↑</div>
+                <strong>Add Photos</strong>
+                <small>Click to choose or drag &amp; drop</small>
+              </label>
+            </div>
+
+            <!-- Preview of selected files -->
+            <div id="previewBox" class="image-preview"></div>
+
+            <!-- Confirm upload, shown only after files are selected -->
+            <button id="addImagesBtn" class="btn btn--primary upload-confirm-btn" hidden>
+              Upload Photos
+            </button>
+          </section>
+        </div>
+
       </div>
-
-      <!-- Photos section -->
-      <section class="card images-card" id="imagesSection">
-        <div class="images-header">
-          <span class="images-title">Photos</span>
-          <span class="image-count" id="imageCount">0 photos</span>
-        </div>
-
-        <!-- Existing photo grid -->
-        <div id="imageBox" class="image-gallery"></div>
-
-        <!-- Upload zone -->
-        <div class="upload-zone">
-          <input id="imageInput" type="file" accept="image/*" multiple class="file-input" />
-          <label for="imageInput" class="upload-label">
-            <div class="upload-plus">+</div>
-            <span>Add Photos</span>
-            <small>Click to choose, or drag and drop</small>
-          </label>
-        </div>
-
-        <!-- Preview selected files -->
-        <div id="previewBox" class="image-preview"></div>
-
-        <!-- Confirm upload button, shown only when files are selected -->
-        <button id="addImagesBtn" class="btn btn--primary upload-confirm-btn" hidden>
-          Upload Selected Photos
-        </button>
-      </section>
-
     </div>
   </main>
 </div>

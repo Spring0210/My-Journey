@@ -1,23 +1,23 @@
 /* ================================================================
-   Detail page — document editor + photo management
+   Detail page — Journal entry editor
 ================================================================ */
 
 /* ── Header extras ── */
 .save-status {
   font-size: 12px;
-  color: var(--muted);
-  margin-right: 4px;
+  color: var(--success);
+  font-weight: 500;
 }
 
 .btn--delete {
   appearance: none;
-  border: 1px solid transparent;
+  border: none;
   background: transparent;
   color: var(--muted);
   font-size: 14px;
   font-weight: 500;
   font-family: inherit;
-  padding: 0 14px;
+  padding: 0 12px;
   height: 36px;
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -25,73 +25,101 @@
 }
 .btn--delete:hover {
   color: var(--danger);
-  background: rgba(255, 59, 48, 0.08);
-  border-color: rgba(255, 59, 48, 0.2);
+  background: rgba(255,59,48,0.08);
 }
 
-/* ── Document editor ── */
+/* ── Two-column layout on wide screens ── */
+.detail-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ── Document / writing card ── */
 .entry-editor {
   background: var(--card);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  margin-bottom: 16px;
+  box-shadow: var(--shadow-md);
   overflow: hidden;
+  position: relative;
 }
 
-.title-input {
+/* Blue accent strip at top */
+.entry-editor::before {
+  content: '';
+  display: block;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-2));
+}
+
+/* Override global input styles inside the editor */
+.entry-editor .title-input {
   display: block;
   width: 100%;
-  padding: 28px 32px 10px;
-  font-size: 28px;
+  padding: 24px 28px 8px;
+  font-size: 26px;
   font-weight: 700;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.4px;
   color: var(--text);
   background: transparent;
   border: none;
   outline: none;
   font-family: inherit;
   box-sizing: border-box;
+  box-shadow: none;
+  border-radius: 0;
 }
-.title-input::placeholder { color: var(--border); }
+.entry-editor .title-input::placeholder {
+  color: var(--muted);
+  opacity: 0.45;
+  font-weight: 600;
+}
 
 .entry-meta-bar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 0 32px 18px;
+  gap: 10px;
+  padding: 4px 28px 16px;
   border-bottom: 1px solid var(--separator);
 }
 
-.date-input {
-  appearance: none;
+/* Override global input[type="date"] */
+.entry-editor .date-input {
+  width: auto;
+  padding: 5px 12px;
   background: var(--primary-bg);
   border: 1px solid transparent;
+  border-radius: 20px;
   color: var(--primary);
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
-  padding: 5px 12px;
-  border-radius: 20px;
   outline: none;
   cursor: pointer;
   transition: border-color var(--transition), box-shadow var(--transition);
+  box-shadow: none;
 }
-.date-input:hover  { border-color: var(--primary); }
-.date-input:focus  { border-color: var(--primary); box-shadow: var(--ring); }
+.entry-editor .date-input:focus {
+  border-color: var(--primary);
+  box-shadow: var(--ring);
+  background: var(--primary-bg);
+}
 
 .date-display {
   font-size: 13px;
   color: var(--muted);
 }
 
-.content-input {
+/* Override global textarea */
+.entry-editor .content-input {
   display: block;
   width: 100%;
-  min-height: 320px;
-  padding: 20px 32px 36px;
+  min-height: 360px;
+  padding: 18px 28px 32px;
   font-size: 15px;
-  line-height: 1.8;
+  line-height: 1.85;
   color: var(--text);
   background: transparent;
   border: none;
@@ -99,23 +127,40 @@
   resize: vertical;
   font-family: inherit;
   box-sizing: border-box;
+  box-shadow: none;
+  border-radius: 0;
 }
-.content-input::placeholder { color: var(--muted); opacity: 0.6; }
+.entry-editor .content-input::placeholder {
+  color: var(--muted);
+  opacity: 0.5;
+}
+
+/* ── Right column ── */
+.detail-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 
 /* ── Photos card ── */
 .images-card {
-  margin-bottom: 24px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  margin-bottom: 0;
 }
 
 .images-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .images-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--text);
 }
@@ -123,71 +168,67 @@
 .image-count {
   background: var(--primary-bg);
   color: var(--primary);
-  font-size: 12px;
-  font-weight: 600;
-  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 9px;
   border-radius: 10px;
+  letter-spacing: 0.2px;
 }
 
 /* ── Existing photo grid ── */
 .image-gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 10px;
-  margin-bottom: 16px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 14px;
 }
 .image-gallery:empty { display: none; }
 
 .image-item {
   position: relative;
-  border-radius: 10px;
+  border-radius: 8px;
   overflow: hidden;
   aspect-ratio: 1;
   cursor: pointer;
   background: var(--muted-card);
-  transition: transform var(--transition), box-shadow var(--transition);
+  transition: transform var(--transition);
 }
-.image-item:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
-}
+.image-item:hover { transform: scale(1.02); }
 
 .image-item img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s;
 }
-.image-item:hover img { transform: scale(1.05); }
+.image-item:hover img { transform: scale(1.06); }
 
 .image-item .delete-btn {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  background: rgba(0,0,0,0.55);
+  top: 5px;
+  right: 5px;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(6px);
   color: white;
   border: none;
   border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  font-size: 14px;
+  width: 24px;
+  height: 24px;
+  font-size: 13px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transform: scale(0.8);
-  transition: opacity 0.2s, transform 0.2s, background 0.2s;
-  backdrop-filter: blur(8px);
+  transform: scale(0.7);
+  transition: opacity 0.15s, transform 0.15s, background 0.15s;
 }
 .image-item:hover .delete-btn {
   opacity: 1;
   transform: scale(1);
 }
-.image-item .delete-btn:hover {
-  background: var(--danger);
-}
+.image-item .delete-btn:hover { background: var(--danger); }
 
 /* ── Upload zone ── */
 .file-input { display: none; }
@@ -198,13 +239,14 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 28px;
-  border: 2px dashed var(--border);
+  padding: 20px 16px;
+  border: 1.5px dashed var(--border);
   border-radius: var(--radius);
   cursor: pointer;
   transition: all var(--transition);
   text-align: center;
   color: var(--muted);
+  background: var(--muted-card);
 }
 .upload-label:hover {
   border-color: var(--primary);
@@ -212,30 +254,39 @@
   color: var(--primary);
 }
 
-.upload-plus {
-  font-size: 28px;
-  font-weight: 300;
-  line-height: 1;
-  margin-bottom: 2px;
+.upload-icon-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: border-color var(--transition), background var(--transition);
+}
+.upload-label:hover .upload-icon-wrap {
+  border-color: var(--primary);
+  background: var(--primary-bg);
 }
 
-.upload-label span {
-  font-size: 14px;
+.upload-label strong {
+  font-size: 13px;
   font-weight: 600;
   color: inherit;
 }
-
 .upload-label small {
-  font-size: 12px;
-  opacity: 0.7;
+  font-size: 11px;
+  opacity: 0.65;
 }
 
-/* ── Upload preview ── */
+/* ── Preview thumbnails ── */
 .image-preview {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-  gap: 8px;
-  margin-top: 12px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 10px;
 }
 .image-preview:empty { display: none; }
 
@@ -243,29 +294,45 @@
   width: 100%;
   aspect-ratio: 1;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 7px;
   border: 2px solid var(--primary);
+  box-sizing: border-box;
 }
 
 /* ── Upload confirm button ── */
 .upload-confirm-btn {
   width: 100%;
-  margin-top: 12px;
+  margin-top: 10px;
   justify-content: center;
+  font-size: 13px;
+  height: 36px;
 }
 
-/* ── Responsive ── */
-@media (max-width: 768px) {
-  .title-input     { font-size: 22px; padding: 20px 20px 10px; }
-  .entry-meta-bar  { padding: 0 20px 14px; }
-  .content-input   { padding: 16px 20px 28px; }
-
-  .header-right .save-status { display: none; }
-  .header-right .btn--delete { display: none; } /* move to overflow menu on mobile */
-}
-
-@media (max-width: 480px) {
-  .image-gallery {
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+/* ── Responsive: stack on smaller screens ── */
+@media (max-width: 1100px) {
+  .detail-layout {
+    grid-template-columns: 1fr;
   }
+  .detail-sidebar {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .images-card {
+    flex: 1;
+    min-width: 280px;
+  }
+  .image-gallery {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .image-preview {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .entry-editor .title-input  { font-size: 20px; padding: 18px 18px 8px; }
+  .entry-meta-bar             { padding: 4px 18px 14px; }
+  .entry-editor .content-input{ padding: 14px 18px 24px; }
+  .detail-sidebar             { flex-direction: column; }
+  .image-gallery              { grid-template-columns: repeat(3, 1fr); }
 }
