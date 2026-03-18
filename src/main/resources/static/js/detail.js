@@ -1,6 +1,9 @@
 const API_BASE  = "";
 const IMAGE_BASE = "";
 
+// Pending files selected but not yet saved
+let pendingFiles = [];
+
 function getEntryId() {
     return new URL(window.location.href).searchParams.get("id");
 }
@@ -15,18 +18,14 @@ function updateDateDisplay(dateString) {
     });
 }
 
-function updateImageCount(imagePaths) {
+function updateImageCount(count) {
     const el = document.getElementById('imageCount');
     if (!el) return;
-    const count = imagePaths ? imagePaths.split(',').filter(p => p.trim()).length : 0;
-    el.textContent = `${count} photo${count !== 1 ? 's' : ''}`;
-}
-
-function renderCurrentImages(entry) {
-    const box = document.getElementById("imageBox");
-    box.innerHTML = "";
-    createImageManagement(entry, box);
-    updateImageCount(entry.imagePaths);
+    if (count === 0) {
+        el.textContent = '';
+    } else {
+        el.textContent = `${count} photo${count !== 1 ? 's' : ''}`;
+    }
 }
 
 function setSaveStatus(text) {
@@ -34,22 +33,88 @@ function setSaveStatus(text) {
     if (el) el.textContent = text;
 }
 
-function attachImagePreview() {
-    const input   = document.getElementById("imageInput");
-    const preview = document.getElementById("previewBox");
+// ── Unified photo grid renderer ──────────────────────────────────
+// existingPaths: array of URL strings (already saved)
+// pending: array of File objects (selected, not yet saved)
+function renderPhotoGrid(existingPaths, pending) {
+    const grid = document.getElementById('photoGrid');
+    grid.innerHTML = '';
 
-    input.addEventListener("change", () => {
-        preview.innerHTML = "";
-        Array.from(input.files).forEach(file => {
-            if (!file.type.startsWith('image/')) return;
-            const wrapper = document.createElement("div");
-            wrapper.className = "preview-item";
-            const img = document.createElement("img");
-            img.src = URL.createObjectURL(file);
-            wrapper.appendChild(img);
-            preview.appendChild(wrapper);
+    const total = existingPaths.length + pending.length;
+    updateImageCount(total);
+
+    // Existing photos
+    existingPaths.forEach((path, i) => {
+        const cell = document.createElement('div');
+        cell.className = 'photo-cell';
+
+        const img = document.createElement('img');
+        img.src = path;
+        img.alt = 'Photo';
+        img.addEventListener('click', () => showImageModal(path));
+
+        const del = document.createElement('button');
+        del.className = 'photo-cell__del';
+        del.textContent = '×';
+        del.title = 'Delete photo';
+        del.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            if (!confirm('Delete this photo?')) return;
+            const entryId = getEntryId();
+            try {
+                const res = await apiRequest('/api/entries/delete-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ entryId, imagePath: path })
+                });
+                if (!res.ok) throw new Error();
+                existingPaths.splice(i, 1);
+                renderPhotoGrid(existingPaths, pending);
+            } catch {
+                alert('Failed to delete photo.');
+            }
         });
+
+        cell.appendChild(img);
+        cell.appendChild(del);
+        grid.appendChild(cell);
     });
+
+    // Pending previews
+    pending.forEach((file, i) => {
+        const cell = document.createElement('div');
+        cell.className = 'photo-cell photo-cell--pending';
+
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        img.alt = 'Preview';
+
+        const rem = document.createElement('button');
+        rem.className = 'photo-cell__remove';
+        rem.textContent = '×';
+        rem.title = 'Remove';
+        rem.addEventListener('click', (e) => {
+            e.stopPropagation();
+            pending.splice(i, 1);
+            renderPhotoGrid(existingPaths, pending);
+        });
+
+        cell.appendChild(img);
+        cell.appendChild(rem);
+        grid.appendChild(cell);
+    });
+
+    // "+" add cell (always last, unless 9 total already)
+    if (total < 9) {
+        const addCell = document.createElement('div');
+        addCell.className = 'photo-cell photo-cell--add';
+        addCell.title = 'Add photos';
+        addCell.innerHTML = '<span class="photo-cell__plus">+</span>';
+        addCell.addEventListener('click', () => {
+            document.getElementById('imageInput').click();
+        });
+        grid.appendChild(addCell);
+    }
 }
 
 async function loadEntry(entryId) {
@@ -60,7 +125,11 @@ async function loadEntry(entryId) {
     document.getElementById("content").value   = entry.content  || "";
     document.getElementById("entryDate").value = entry.entryDate || "";
     updateDateDisplay(entry.entryDate);
-    renderCurrentImages(entry);
+
+    const paths = entry.imagePaths
+        ? entry.imagePaths.split(',').map(p => p.trim()).filter(Boolean)
+        : [];
+    renderPhotoGrid(paths, pendingFiles);
     return entry;
 }
 
@@ -69,8 +138,7 @@ async function saveEntry(entryId) {
     fd.append("title",     document.getElementById("title").value);
     fd.append("content",   document.getElementById("content").value);
     fd.append("entryDate", document.getElementById("entryDate").value);
-    Array.from(document.getElementById("imageInput").files)
-        .forEach(f => fd.append("images", f));
+    pendingFiles.forEach(f => fd.append("images", f));
     const res = await apiRequestWithFile(`${API_BASE}/api/entries/edit/${entryId}`, fd);
     if (!res.ok) throw new Error("Failed to save entry");
     return await res.json();
@@ -81,8 +149,7 @@ async function createEntry(userId) {
     fd.append("title",     document.getElementById("title").value);
     fd.append("content",   document.getElementById("content").value);
     fd.append("entryDate", document.getElementById("entryDate").value);
-    Array.from(document.getElementById("imageInput").files)
-        .forEach(f => fd.append("images", f));
+    pendingFiles.forEach(f => fd.append("images", f));
     const res = await apiRequestWithFile(`${API_BASE}/api/entries/${userId}`, fd);
     if (!res.ok) throw new Error("Failed to create entry");
     return await res.json();
@@ -100,8 +167,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const userId  = localStorage.getItem('userId');
     const entryId = getEntryId();
 
-    attachImagePreview();
-
     document.getElementById("entryDate").addEventListener("change", function () {
         updateDateDisplay(this.value);
     });
@@ -111,18 +176,32 @@ document.addEventListener("DOMContentLoaded", async () => {
         else window.location.href = "journals.html";
     });
 
+    // File input → add to pendingFiles and re-render
+    document.getElementById("imageInput").addEventListener("change", function () {
+        Array.from(this.files).forEach(f => {
+            if (f.type.startsWith('image/')) pendingFiles.push(f);
+        });
+        this.value = ""; // reset so same file can be re-added if removed
+
+        const existingPaths = Array.from(
+            document.querySelectorAll('#photoGrid .photo-cell:not(.photo-cell--pending):not(.photo-cell--add) img')
+        ).map(img => img.src);
+        renderPhotoGrid(existingPaths, pendingFiles);
+    });
+
     // ── CREATE MODE ──────────────────────────────────────────────
     if (!entryId) {
         document.getElementById("pageTitle").textContent   = "New Entry";
         document.getElementById("saveBtn").textContent     = "Create Entry";
         document.getElementById("deleteBtn").style.display = "none";
-        // Hide the image count badge (no images yet) but keep upload zone visible
         document.getElementById("imageCount").style.display = "none";
 
-        // Default to today's date
         const today = new Date().toISOString().split('T')[0];
         document.getElementById("entryDate").value = today;
         updateDateDisplay(today);
+
+        // Show empty grid with just the "+" cell
+        renderPhotoGrid([], pendingFiles);
 
         document.getElementById("saveBtn").addEventListener("click", async () => {
             const title     = document.getElementById("title").value.trim();
@@ -167,9 +246,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         setSaveStatus("");
         try {
             await saveEntry(entryId);
+            pendingFiles = [];
             await loadEntry(entryId);
-            document.getElementById("imageInput").value     = "";
-            document.getElementById("previewBox").innerHTML = "";
             setSaveStatus("Saved");
             setTimeout(() => setSaveStatus(""), 2500);
         } catch (e) {
@@ -185,6 +263,4 @@ document.addEventListener("DOMContentLoaded", async () => {
         try { await deleteEntry(entryId); }
         catch (e) { console.error(e); alert("Delete failed."); }
     });
-
-
 });

@@ -28,22 +28,13 @@
   background: rgba(255,59,48,0.08);
 }
 
-/* ── Two-column layout on wide screens ── */
-.detail-layout {
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 20px;
-  align-items: start;
-}
-
-/* ── Document / writing card ── */
+/* ── Writing card ── */
 .entry-editor {
   background: var(--card);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-md);
   overflow: hidden;
-  position: relative;
 }
 
 /* Blue accent strip at top */
@@ -54,7 +45,6 @@
   background: linear-gradient(90deg, var(--primary), var(--primary-2));
 }
 
-/* Override global input styles inside the editor */
 .entry-editor .title-input {
   display: block;
   width: 100%;
@@ -85,7 +75,6 @@
   border-bottom: 1px solid var(--separator);
 }
 
-/* Override global input[type="date"] */
 .entry-editor .date-input {
   width: auto;
   padding: 5px 12px;
@@ -112,7 +101,6 @@
   color: var(--muted);
 }
 
-/* Override global textarea */
 .entry-editor .content-input {
   display: block;
   width: 100%;
@@ -135,31 +123,19 @@
   opacity: 0.5;
 }
 
-/* ── Right column ── */
-.detail-sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+/* ── Photos section ── */
+.photos-section {
+  margin-top: 0;
 }
 
-/* ── Photos card ── */
-.images-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow);
-  padding: 20px;
-  margin-bottom: 0;
-}
-
-.images-header {
+.photos-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 14px;
 }
 
-.images-title {
+.photos-title {
   font-size: 15px;
   font-weight: 600;
   color: var(--text);
@@ -175,47 +151,48 @@
   letter-spacing: 0.2px;
 }
 
-/* ── Existing photo grid ── */
-.image-gallery {
+.file-input { display: none; }
+
+/* ── Unified photo grid (WeChat 朋友圈 style) ── */
+.photo-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;
-  margin-bottom: 14px;
 }
-.image-gallery:empty { display: none; }
 
-.image-item {
+/* Base cell — square via aspect-ratio on the wrapper */
+.photo-cell {
   position: relative;
+  aspect-ratio: 1;
   border-radius: 8px;
   overflow: hidden;
-  aspect-ratio: 1;
-  cursor: pointer;
   background: var(--muted-card);
-  transition: transform var(--transition);
+  cursor: pointer;
 }
-.image-item:hover { transform: scale(1.02); }
 
-.image-item img {
+.photo-cell img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
-  transition: transform 0.3s;
+  transition: transform 0.25s;
 }
-.image-item:hover img { transform: scale(1.06); }
+.photo-cell:hover img { transform: scale(1.05); }
 
-.image-item .delete-btn {
+/* Delete button (shown on hover for existing photos) */
+.photo-cell__del {
   position: absolute;
   top: 5px;
   right: 5px;
-  background: rgba(0,0,0,0.5);
-  backdrop-filter: blur(6px);
-  color: white;
-  border: none;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  width: 24px;
-  height: 24px;
+  border: none;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px);
+  color: #fff;
   font-size: 13px;
+  line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -224,124 +201,83 @@
   transform: scale(0.7);
   transition: opacity 0.15s, transform 0.15s, background 0.15s;
 }
-.image-item:hover .delete-btn {
+.photo-cell:hover .photo-cell__del {
   opacity: 1;
   transform: scale(1);
 }
-.image-item .delete-btn:hover { background: var(--danger); }
+.photo-cell__del:hover { background: var(--danger); }
 
-/* ── Upload zone ── */
-.file-input { display: none; }
+/* Pending (not yet saved) — blue border indicator */
+.photo-cell--pending {
+  cursor: default;
+}
+.photo-cell--pending::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  border: 2px solid var(--primary);
+  pointer-events: none;
+  box-sizing: border-box;
+}
 
-.upload-label {
+/* Remove button for pending cells */
+.photo-cell__remove {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 20px 16px;
-  border: 1.5px dashed var(--border);
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: all var(--transition);
-  text-align: center;
-  color: var(--muted);
-  background: var(--muted-card);
+  opacity: 0;
+  transform: scale(0.7);
+  transition: opacity 0.15s, transform 0.15s, background 0.15s;
 }
-.upload-label:hover {
+.photo-cell--pending:hover .photo-cell__remove {
+  opacity: 1;
+  transform: scale(1);
+}
+.photo-cell__remove:hover { background: var(--danger); }
+
+/* "+" add cell */
+.photo-cell--add {
+  border: 1.5px dashed var(--border);
+  background: var(--muted-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color var(--transition), background var(--transition);
+  cursor: pointer;
+}
+.photo-cell--add:hover {
   border-color: var(--primary);
   background: var(--primary-bg);
+}
+
+.photo-cell__plus {
+  font-size: 28px;
+  color: var(--muted);
+  line-height: 1;
+  pointer-events: none;
+  transition: color var(--transition);
+}
+.photo-cell--add:hover .photo-cell__plus {
   color: var(--primary);
 }
 
-.upload-icon-wrap {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--card);
-  border: 1.5px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  transition: border-color var(--transition), background var(--transition);
-}
-.upload-label:hover .upload-icon-wrap {
-  border-color: var(--primary);
-  background: var(--primary-bg);
-}
-
-.upload-label strong {
-  font-size: 13px;
-  font-weight: 600;
-  color: inherit;
-}
-.upload-label small {
-  font-size: 11px;
-  opacity: 0.65;
-}
-
-/* ── Preview thumbnails ── */
-.image-preview {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-  margin-bottom: 10px;
-}
-.image-preview:empty { display: none; }
-
-/* Wrapper div gives reliable square cells */
-.preview-item {
-  position: relative;
-  aspect-ratio: 1;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 2px solid var(--primary);
-  box-sizing: border-box;
-  background: var(--muted-card);
-}
-
-.preview-item img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* ── Upload confirm button ── */
-.upload-confirm-btn {
-  width: 100%;
-  margin-top: 10px;
-  justify-content: center;
-  font-size: 13px;
-  height: 36px;
-}
-
-/* ── Responsive: stack on smaller screens ── */
-@media (max-width: 1100px) {
-  .detail-layout {
-    grid-template-columns: 1fr;
-  }
-  .detail-sidebar {
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-  .images-card {
-    flex: 1;
-    min-width: 280px;
-  }
-  .image-gallery {
-    grid-template-columns: repeat(4, 1fr);
-  }
-  .image-preview {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
+/* ── Responsive ── */
 @media (max-width: 600px) {
-  .entry-editor .title-input  { font-size: 20px; padding: 18px 18px 8px; }
-  .entry-meta-bar             { padding: 4px 18px 14px; }
-  .entry-editor .content-input{ padding: 14px 18px 24px; }
-  .detail-sidebar             { flex-direction: column; }
-  .image-gallery              { grid-template-columns: repeat(3, 1fr); }
+  .entry-editor .title-input   { font-size: 20px; padding: 18px 18px 8px; }
+  .entry-meta-bar              { padding: 4px 18px 14px; }
+  .entry-editor .content-input { padding: 14px 18px 24px; }
 }

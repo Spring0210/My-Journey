@@ -111,16 +111,11 @@ public class JournalController {
         existing.setEntryDate(LocalDate.parse(entryDate));
 
         if (images != null && images.length > 0) {
-            List<String> oldUrls = existing.getImagePathList();
-            if (oldUrls != null && !oldUrls.isEmpty()) {
-                cloudStorageService.deleteFiles(oldUrls);
-            }
-            List<String> imageUrls = cloudStorageService.uploadFiles(images, "my-journey/journals");
-            if (!imageUrls.isEmpty()) {
-                existing.setImagePathList(imageUrls);
-            } else {
-                existing.setImagePathList(null);
-            }
+            List<String> existingUrls = existing.getImagePathList();
+            if (existingUrls == null) existingUrls = new ArrayList<>();
+            List<String> newUrls = cloudStorageService.uploadFiles(images, "my-journey/journals");
+            existingUrls.addAll(newUrls);
+            existing.setImagePathList(existingUrls);
         }
 
         return ResponseEntity.ok(journalService.createEntry(existing));

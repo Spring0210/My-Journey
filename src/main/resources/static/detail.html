@@ -12,7 +12,6 @@
 </head>
 <body>
 <div class="app-layout">
-  <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-header">
       <a href="/journals.html" class="sidebar-brand">
@@ -20,7 +19,6 @@
         Journey
       </a>
     </div>
-
     <nav class="sidebar-nav">
       <div class="nav-section">
         <div class="nav-section-title">Main</div>
@@ -29,14 +27,10 @@
         <a href="/calendar.html" class="nav-item">Calendar View</a>
       </div>
     </nav>
-
     <div class="sidebar-footer">
       <div class="user-info">
         <div class="user-avatar"></div>
-        <div class="user-details">
-          <h4></h4>
-          <p></p>
-        </div>
+        <div class="user-details"><h4></h4><p></p></div>
       </div>
       <div class="sidebar-footer-actions">
         <button class="theme-toggle" id="themeToggle" title="Toggle theme">Dark</button>
@@ -45,7 +39,6 @@
     </div>
   </aside>
 
-  <!-- Main Content -->
   <main class="main-content">
     <header class="header">
       <div class="header-left">
@@ -61,46 +54,31 @@
     </header>
 
     <div class="content">
-      <div class="detail-layout">
 
-        <!-- Left: Writing area -->
-        <div class="entry-editor">
-          <input id="title" type="text" class="title-input" placeholder="Untitled" autocomplete="off" />
-          <div class="entry-meta-bar">
-            <input id="entryDate" type="date" class="date-input" />
-            <span id="entryDateDisplay" class="date-display"></span>
-          </div>
-          <textarea id="content" class="content-input" placeholder="Write your thoughts and experiences here..."></textarea>
+      <!-- Writing area -->
+      <div class="entry-editor">
+        <input id="title" type="text" class="title-input" placeholder="Untitled" autocomplete="off" />
+        <div class="entry-meta-bar">
+          <input id="entryDate" type="date" class="date-input" />
+          <span id="entryDateDisplay" class="date-display"></span>
         </div>
-
-        <!-- Right: Photos -->
-        <div class="detail-sidebar">
-          <section class="images-card" id="imagesSection">
-            <div class="images-header">
-              <span class="images-title">Photos</span>
-              <span class="image-count" id="imageCount">0 photos</span>
-            </div>
-
-            <!-- Current photo grid -->
-            <div id="imageBox" class="image-gallery"></div>
-
-            <!-- Preview of selected files (shown above upload zone) -->
-            <div id="previewBox" class="image-preview"></div>
-
-            <!-- Upload zone -->
-            <div class="upload-zone">
-              <input id="imageInput" type="file" accept="image/*" multiple class="file-input" />
-              <label for="imageInput" class="upload-label">
-                <div class="upload-icon-wrap">↑</div>
-                <strong>Add Photos</strong>
-                <small>Click to choose or drag &amp; drop</small>
-              </label>
-            </div>
-
-          </section>
-        </div>
-
+        <textarea id="content" class="content-input" placeholder="Write your thoughts and experiences here..."></textarea>
       </div>
+
+      <!-- Photos section — below writing area, full width -->
+      <section class="card photos-section">
+        <div class="photos-header">
+          <span class="photos-title">Photos</span>
+          <span class="image-count" id="imageCount"></span>
+        </div>
+
+        <!-- Hidden file input, triggered by the + cell in JS -->
+        <input id="imageInput" type="file" accept="image/*" multiple class="file-input" />
+
+        <!-- Unified grid: existing photos + pending previews + "+" cell -->
+        <div id="photoGrid" class="photo-grid"></div>
+      </section>
+
     </div>
   </main>
 </div>
