@@ -12,6 +12,7 @@ class LayoutManager {
         this.setupSidebar();
         this.setupUserInfo();
         this.setupSignOut();
+        this.setupTheme();
         this.setCurrentPageActive();
     }
 
@@ -31,10 +32,39 @@ class LayoutManager {
         return true;
     }
 
+    // Setup theme toggle (light/dark)
+    setupTheme() {
+        const saved = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = saved || (prefersDark ? 'dark' : 'light');
+        this.applyTheme(theme);
+
+        const btn = document.getElementById('themeToggle');
+        if (btn) {
+            btn.addEventListener('click', () => {
+                const current = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+                this.applyTheme(current === 'dark' ? 'light' : 'dark');
+            });
+        }
+    }
+
+    applyTheme(theme) {
+        document.documentElement.classList.remove('light', 'dark');
+        document.documentElement.classList.add(theme);
+        localStorage.setItem('theme', theme);
+
+        const btn = document.getElementById('themeToggle');
+        if (btn) {
+            btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+            btn.setAttribute('title', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+        }
+    }
+
     // Setup sidebar functionality
     setupSidebar() {
         this.sidebar = document.querySelector('.sidebar');
         this.sidebarToggle = document.querySelector('.sidebar-toggle');
+        this.overlay = document.getElementById('sidebarOverlay');
 
         if (this.sidebarToggle) {
             this.sidebarToggle.addEventListener('click', () => {
@@ -42,43 +72,41 @@ class LayoutManager {
             });
         }
 
-        // Close sidebar when clicking outside on mobile
-        document.addEventListener('click', (e) => {
-            if (window.innerWidth <= 1024) {
-                if (this.sidebar && !this.sidebar.contains(e.target) && !this.sidebarToggle.contains(e.target)) {
-                    this.closeSidebar();
-                }
-            }
-        });
+        // Close sidebar when clicking overlay
+        if (this.overlay) {
+            this.overlay.addEventListener('click', () => {
+                this.closeSidebar();
+            });
+        }
 
         // Handle window resize
         window.addEventListener('resize', () => {
             if (window.innerWidth > 1024) {
-                this.openSidebar();
-            } else {
-                this.closeSidebar();
+                this.closeSidebarMobile();
             }
         });
     }
 
-    // Toggle sidebar visibility
+    // Toggle sidebar visibility (mobile)
     toggleSidebar() {
         if (this.sidebar) {
-            this.sidebar.classList.toggle('open');
+            const isOpen = this.sidebar.classList.toggle('open');
+            if (this.overlay) this.overlay.classList.toggle('active', isOpen);
         }
     }
 
-    // Open sidebar
-    openSidebar() {
-        if (this.sidebar) {
-            this.sidebar.classList.add('open');
-        }
-    }
-
-    // Close sidebar
+    // Close sidebar and overlay (mobile)
     closeSidebar() {
         if (this.sidebar) {
             this.sidebar.classList.remove('open');
+            if (this.overlay) this.overlay.classList.remove('active');
+        }
+    }
+
+    // Close sidebar only on mobile (no-op on desktop)
+    closeSidebarMobile() {
+        if (window.innerWidth <= 1024) {
+            this.closeSidebar();
         }
     }
 
