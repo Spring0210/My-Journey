@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Journal Entry Detail - Journey</title>
+  <title>Journal Entry - Journey</title>
   <link rel="stylesheet" href="/css/ui.css" />
   <link rel="stylesheet" href="css/detail.css" />
   <script defer src="js/api.js"></script>
@@ -53,76 +53,54 @@
         <h1 class="header-title" id="pageTitle">New Entry</h1>
       </div>
       <div class="header-right">
+        <span id="saveStatus" class="save-status"></span>
+        <button id="deleteBtn" class="btn btn--delete">Delete</button>
+        <button id="saveBtn" class="btn btn--primary">Create Entry</button>
         <button id="backBtn" class="btn btn--ghost">Back</button>
       </div>
     </header>
 
     <div class="content">
-      <!-- Entry Header -->
-      <section class="card entry-header">
-        <div class="entry-meta-info">
-          <div class="entry-date-badge">
-            <span id="entryDateDisplay"></span>
-          </div>
-          <div class="entry-actions">
-            <button id="saveBtn" class="btn btn--primary">Save Changes</button>
-            <button id="deleteBtn" class="btn btn--danger">Delete Entry</button>
-          </div>
+
+      <!-- Document-style writing area -->
+      <div class="entry-editor">
+        <input id="title" type="text" class="title-input" placeholder="Untitled" autocomplete="off" />
+        <div class="entry-meta-bar">
+          <input id="entryDate" type="date" class="date-input" />
+          <span id="entryDateDisplay" class="date-display"></span>
         </div>
+        <textarea id="content" class="content-input" placeholder="Write your thoughts and experiences here..."></textarea>
+      </div>
+
+      <!-- Photos section -->
+      <section class="card images-card" id="imagesSection">
+        <div class="images-header">
+          <span class="images-title">Photos</span>
+          <span class="image-count" id="imageCount">0 photos</span>
+        </div>
+
+        <!-- Existing photo grid -->
+        <div id="imageBox" class="image-gallery"></div>
+
+        <!-- Upload zone -->
+        <div class="upload-zone">
+          <input id="imageInput" type="file" accept="image/*" multiple class="file-input" />
+          <label for="imageInput" class="upload-label">
+            <div class="upload-plus">+</div>
+            <span>Add Photos</span>
+            <small>Click to choose, or drag and drop</small>
+          </label>
+        </div>
+
+        <!-- Preview selected files -->
+        <div id="previewBox" class="image-preview"></div>
+
+        <!-- Confirm upload button, shown only when files are selected -->
+        <button id="addImagesBtn" class="btn btn--primary upload-confirm-btn" hidden>
+          Upload Selected Photos
+        </button>
       </section>
 
-      <!-- Entry Form -->
-      <section class="card entry-form">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="title" class="label">Title</label>
-            <input id="title" type="text" placeholder="Enter entry title..." class="form-input" />
-          </div>
-          <div class="form-group">
-            <label for="entryDate" class="label">Date</label>
-            <input id="entryDate" type="date" class="form-input" />
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="content" class="label">Content</label>
-          <textarea id="content" placeholder="Write your thoughts and experiences here..." class="form-textarea"></textarea>
-        </div>
-      </section>
-
-      <!-- Images Section -->
-      <section class="card images-section">
-        <div class="section-header">
-          <h3 class="section-title">
-            <span>Images</span>
-            <span class="image-count" id="imageCount">0 photos</span>
-          </h3>
-        </div>
-
-        <!-- Current Images -->
-        <div class="current-images">
-          <h4 class="subsection-title">Current Images</h4>
-          <div id="imageBox" class="image-gallery"></div>
-        </div>
-
-        <!-- Add Images -->
-        <div class="add-images">
-          <h4 class="subsection-title">Add More Images</h4>
-          <div class="upload-area">
-            <input id="imageInput" type="file" accept="image/*" multiple class="file-input" />
-            <label for="imageInput" class="upload-label">
-              <div class="upload-text">
-                <strong>Choose Images</strong>
-                <small>You can select multiple images at once</small>
-              </div>
-            </label>
-          </div>
-
-          <div id="previewBox" class="image-preview"></div>
-
-          <button id="addImagesBtn" class="btn btn--primary add-images-btn">Add Selected Images</button>
-        </div>
-      </section>
     </div>
   </main>
 </div>

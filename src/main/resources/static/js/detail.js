@@ -15,37 +15,41 @@ function updateDateDisplay(dateString) {
     });
 }
 
+function updateImageCount(imagePaths) {
+    const el = document.getElementById('imageCount');
+    if (!el) return;
+    const count = imagePaths ? imagePaths.split(',').filter(p => p.trim()).length : 0;
+    el.textContent = `${count} photo${count !== 1 ? 's' : ''}`;
+}
+
 function renderCurrentImages(entry) {
     const box = document.getElementById("imageBox");
     box.innerHTML = "";
     createImageManagement(entry, box);
-    updateImageCount(entry);
+    updateImageCount(entry.imagePaths);
 }
 
-function updateImageCount(entry) {
-    const el = document.getElementById('imageCount');
-    if (!el) return;
-    const count = entry.imagePaths
-        ? entry.imagePaths.split(',').filter(p => p.trim()).length
-        : 0;
-    el.textContent = `${count} photo${count !== 1 ? 's' : ''}`;
+function setSaveStatus(text) {
+    const el = document.getElementById('saveStatus');
+    if (el) el.textContent = text;
 }
 
 function attachImagePreview() {
     const input   = document.getElementById("imageInput");
     const preview = document.getElementById("previewBox");
+    const uploadBtn = document.getElementById("addImagesBtn");
+
     input.addEventListener("change", () => {
         preview.innerHTML = "";
-        Array.from(input.files).forEach(file => {
+        const files = Array.from(input.files);
+        files.forEach(file => {
             if (!file.type.startsWith('image/')) return;
             const img = document.createElement("img");
             img.src = URL.createObjectURL(file);
-            Object.assign(img.style, {
-                width: '100px', height: '100px', objectFit: 'cover',
-                borderRadius: '8px', margin: '4px'
-            });
             preview.appendChild(img);
         });
+        // Show/hide the confirm upload button
+        uploadBtn.hidden = files.length === 0;
     });
 }
 
@@ -98,9 +102,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const entryId = getEntryId();
 
     attachImagePreview();
+
     document.getElementById("entryDate").addEventListener("change", function () {
         updateDateDisplay(this.value);
     });
+
     document.getElementById("backBtn").addEventListener("click", () => {
         if (document.referrer) history.back();
         else window.location.href = "journals.html";
@@ -108,16 +114,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // ── CREATE MODE ──────────────────────────────────────────────
     if (!entryId) {
-        document.getElementById("pageTitle").textContent = "New Entry";
-        document.getElementById("saveBtn").textContent   = "Create Entry";
+        document.getElementById("pageTitle").textContent  = "New Entry";
+        document.getElementById("saveBtn").textContent    = "Create Entry";
         document.getElementById("deleteBtn").style.display = "none";
-
-        // Hide current-images section (nothing to show yet)
-        document.querySelector(".current-images").style.display = "none";
-
-        // Rename subsection and hide "Add Selected Images" button
-        document.querySelector(".add-images .subsection-title").textContent = "Images (optional)";
-        document.getElementById("addImagesBtn").style.display = "none";
+        document.getElementById("imagesSection").style.display = "none";
 
         // Default to today's date
         const today = new Date().toISOString().split('T')[0];
@@ -132,8 +132,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 return;
             }
             const btn = document.getElementById("saveBtn");
-            btn.disabled     = true;
-            btn.textContent  = "Creating...";
+            btn.disabled    = true;
+            btn.textContent = "Creating...";
             try {
                 const newEntry = await createEntry(userId);
                 window.location.href = `detail.html?id=${newEntry.id}`;
@@ -145,11 +145,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         });
 
-        return; // stop here — edit-mode init below is not needed
+        return;
     }
 
     // ── EDIT MODE ────────────────────────────────────────────────
-    document.getElementById("pageTitle").textContent = "Edit Entry";
+    document.getElementById("pageTitle").textContent  = "Edit Entry";
+    document.getElementById("saveBtn").textContent    = "Save Changes";
 
     try {
         await loadEntry(entryId);
@@ -163,11 +164,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         const btn = document.getElementById("saveBtn");
         btn.disabled    = true;
         btn.textContent = "Saving...";
+        setSaveStatus("");
         try {
             await saveEntry(entryId);
             await loadEntry(entryId);
-            document.getElementById("imageInput").value  = "";
+            document.getElementById("imageInput").value     = "";
             document.getElementById("previewBox").innerHTML = "";
+            document.getElementById("addImagesBtn").hidden  = true;
+            setSaveStatus("Saved");
+            setTimeout(() => setSaveStatus(""), 2500);
         } catch (e) {
             console.error(e);
             alert("Save failed.");
@@ -184,10 +189,22 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     document.getElementById("addImagesBtn").addEventListener("click", async () => {
         const files = document.getElementById("imageInput").files;
-        if (files.length === 0) { alert("Please select images to add."); return; }
-        await addImagesToEntry(entryId, files);
-        await loadEntry(entryId);
-        document.getElementById("imageInput").value  = "";
-        document.getElementById("previewBox").innerHTML = "";
+        if (files.length === 0) return;
+        const btn = document.getElementById("addImagesBtn");
+        btn.disabled    = true;
+        btn.textContent = "Uploading...";
+        try {
+            await addImagesToEntry(entryId, files);
+            await loadEntry(entryId);
+            document.getElementById("imageInput").value     = "";
+            document.getElementById("previewBox").innerHTML = "";
+            btn.hidden = true;
+        } catch (e) {
+            console.error(e);
+            alert("Upload failed.");
+        } finally {
+            btn.disabled    = false;
+            btn.textContent = "Upload Selected Photos";
+        }
     });
 });
