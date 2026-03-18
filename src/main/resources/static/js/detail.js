@@ -42,9 +42,12 @@ function attachImagePreview() {
         preview.innerHTML = "";
         Array.from(input.files).forEach(file => {
             if (!file.type.startsWith('image/')) return;
+            const wrapper = document.createElement("div");
+            wrapper.className = "preview-item";
             const img = document.createElement("img");
             img.src = URL.createObjectURL(file);
-            preview.appendChild(img);
+            wrapper.appendChild(img);
+            preview.appendChild(wrapper);
         });
     });
 }
