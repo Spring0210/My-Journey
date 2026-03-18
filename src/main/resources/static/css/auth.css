@@ -217,38 +217,51 @@ body {
   margin: 8px 0;
 }
 
-/* ── Form title ── */
-.form-title {
-  font-size: 20px;
-  font-weight: 700;
-  margin: 4px 0 20px;
-  letter-spacing: -0.3px;
-  color: var(--text);
-}
-
-/* ── Notice banner ── */
-.notice {
-  background: var(--primary);
-  color: #fff;
+/* ── Form subtitle ── */
+.form-subtitle {
   font-size: 13px;
-  line-height: 1.5;
-  padding: 10px 14px;
-  border-radius: 10px;
-  opacity: 0.92;
-}
-
-/* ── Resend button variant ── */
-.resend-btn {
-  font-size: 13px;
-  height: 38px;
-  border-radius: 10px;
   color: var(--muted);
-  border-color: var(--border);
+  margin: 0;
+  line-height: 1.5;
 }
-.resend-btn:hover {
+
+/* ── Code input row (input + resend button inline) ── */
+.code-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.code-row .input {
+  flex: 1;
+  min-width: 0;
+  letter-spacing: 0.1em;
+}
+
+.btn-resend {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: transparent;
   color: var(--primary);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 0 14px;
+  height: 46px;
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.2s, border-color 0.2s;
+}
+.btn-resend:hover:not(:disabled) {
+  background: rgba(0,122,255,0.07);
   border-color: var(--primary);
-  background: rgba(0,122,255,0.06);
+}
+.btn-resend:disabled {
+  color: var(--muted);
+  cursor: default;
+  border-color: var(--border);
 }
 
 /* ── Messages ── */
