@@ -20,25 +20,16 @@
         Journey
       </a>
     </div>
-    
+
     <nav class="sidebar-nav">
       <div class="nav-section">
         <div class="nav-section-title">Main</div>
-        <a href="/dashboard.html" class="nav-item">
-          <span class="icon">🏠</span>
-          Dashboard
-        </a>
-        <a href="/journals.html" class="nav-item">
-          <span class="icon">📝</span>
-          My Journals
-        </a>
-        <a href="/calendar.html" class="nav-item">
-          <span class="icon">📅</span>
-          Calendar View
-        </a>
+        <a href="/dashboard.html" class="nav-item">Dashboard</a>
+        <a href="/journals.html" class="nav-item">My Journals</a>
+        <a href="/calendar.html" class="nav-item">Calendar View</a>
       </div>
     </nav>
-    
+
     <div class="sidebar-footer">
       <div class="user-info">
         <div class="user-avatar"></div>
@@ -48,7 +39,7 @@
         </div>
       </div>
       <div class="sidebar-footer-actions">
-        <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+        <button class="theme-toggle" id="themeToggle" title="Toggle theme">Dark</button>
         <button class="signout-btn">Sign Out</button>
       </div>
     </div>
@@ -62,10 +53,7 @@
         <h1 class="header-title">Edit Entry</h1>
       </div>
       <div class="header-right">
-        <button id="backBtn" class="btn btn--ghost">
-          <span>←</span>
-          Back
-        </button>
+        <button id="backBtn" class="btn btn--ghost">Back</button>
       </div>
     </header>
 
@@ -74,18 +62,11 @@
       <section class="card entry-header">
         <div class="entry-meta-info">
           <div class="entry-date-badge">
-            <span class="date-icon">📅</span>
             <span id="entryDateDisplay"></span>
           </div>
           <div class="entry-actions">
-            <button id="saveBtn" class="btn btn--primary">
-              <span>💾</span>
-              Save Changes
-            </button>
-            <button id="deleteBtn" class="btn btn--danger">
-              <span>🗑️</span>
-              Delete Entry
-            </button>
+            <button id="saveBtn" class="btn btn--primary">Save Changes</button>
+            <button id="deleteBtn" class="btn btn--danger">Delete Entry</button>
           </div>
         </div>
       </section>
@@ -94,26 +75,17 @@
       <section class="card entry-form">
         <div class="form-row">
           <div class="form-group">
-            <label for="title" class="label">
-              <span class="label-icon">📝</span>
-              Title
-            </label>
+            <label for="title" class="label">Title</label>
             <input id="title" type="text" placeholder="Enter entry title..." class="form-input" />
           </div>
           <div class="form-group">
-            <label for="entryDate" class="label">
-              <span class="label-icon">📅</span>
-              Date
-            </label>
+            <label for="entryDate" class="label">Date</label>
             <input id="entryDate" type="date" class="form-input" />
           </div>
         </div>
 
         <div class="form-group">
-          <label for="content" class="label">
-            <span class="label-icon">📄</span>
-            Content
-          </label>
+          <label for="content" class="label">Content</label>
           <textarea id="content" placeholder="Write your thoughts and experiences here..." class="form-textarea"></textarea>
         </div>
       </section>
@@ -122,10 +94,7 @@
       <section class="card images-section">
         <div class="section-header">
           <h3 class="section-title">
-            <span>
-              <span class="section-icon">📸</span>
-              Images
-            </span>
+            <span>Images</span>
             <span class="image-count" id="imageCount">0 photos</span>
           </h3>
         </div>
@@ -133,9 +102,7 @@
         <!-- Current Images -->
         <div class="current-images">
           <h4 class="subsection-title">Current Images</h4>
-          <div id="imageBox" class="image-gallery">
-            <!-- Images will be loaded here -->
-          </div>
+          <div id="imageBox" class="image-gallery"></div>
         </div>
 
         <!-- Add Images -->
@@ -144,20 +111,16 @@
           <div class="upload-area">
             <input id="imageInput" type="file" accept="image/*" multiple class="file-input" />
             <label for="imageInput" class="upload-label">
-              <div class="upload-icon">📁</div>
               <div class="upload-text">
                 <strong>Choose Images</strong>
                 <small>You can select multiple images at once</small>
               </div>
             </label>
           </div>
-          
+
           <div id="previewBox" class="image-preview"></div>
-          
-          <button id="addImagesBtn" class="btn btn--primary add-images-btn">
-            <span>➕</span>
-            Add Selected Images
-          </button>
+
+          <button id="addImagesBtn" class="btn btn--primary add-images-btn">Add Selected Images</button>
         </div>
       </section>
     </div>

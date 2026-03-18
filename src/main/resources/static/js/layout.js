@@ -55,8 +55,7 @@ class LayoutManager {
 
         const btn = document.getElementById('themeToggle');
         if (btn) {
-            btn.textContent = theme === 'dark' ? '☀️' : '🌙';
-            btn.setAttribute('title', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+            btn.textContent = theme === 'dark' ? 'Light' : 'Dark';
         }
     }
 

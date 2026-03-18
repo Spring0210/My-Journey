@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Your Journals - Journey</title>
-  <link rel="stylesheet" href="/css/ui.css" /> 
+  <link rel="stylesheet" href="/css/ui.css" />
   <link rel="stylesheet" href="/css/journals.css" />
   <link rel="stylesheet" href="/css/notifications.css" />
   <script defer src="js/api.js"></script>
@@ -11,7 +11,6 @@
   <script defer src="js/layout.js"></script>
   <script defer src="js/journals.js"></script>
 </head>
-
 <body>
 <div class="app-layout">
   <!-- Sidebar -->
@@ -22,25 +21,16 @@
         Journey
       </a>
     </div>
-    
+
     <nav class="sidebar-nav">
       <div class="nav-section">
         <div class="nav-section-title">Main</div>
-        <a href="/dashboard.html" class="nav-item">
-          <span class="icon">🏠</span>
-          Dashboard
-        </a>
-        <a href="/journals.html" class="nav-item">
-          <span class="icon">📝</span>
-          My Journals
-        </a>
-        <a href="/calendar.html" class="nav-item">
-          <span class="icon">📅</span>
-          Calendar View
-        </a>
+        <a href="/dashboard.html" class="nav-item">Dashboard</a>
+        <a href="/journals.html" class="nav-item">My Journals</a>
+        <a href="/calendar.html" class="nav-item">Calendar View</a>
       </div>
     </nav>
-    
+
     <div class="sidebar-footer">
       <div class="user-info">
         <div class="user-avatar"></div>
@@ -50,7 +40,7 @@
         </div>
       </div>
       <div class="sidebar-footer-actions">
-        <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+        <button class="theme-toggle" id="themeToggle" title="Toggle theme">Dark</button>
         <button class="signout-btn">Sign Out</button>
       </div>
     </div>
@@ -64,56 +54,53 @@
         <h1 class="header-title">My Journals</h1>
       </div>
       <div class="header-right">
-        <button id="toggleFormBtn" class="btn btn--primary">
-          <span>➕</span>
-          New Entry
-        </button>
+        <button id="toggleFormBtn" class="btn btn--primary">New Entry</button>
       </div>
     </header>
 
     <div class="content">
-  <!-- Search form -->
-  <section class="card card--soft">
-    <div id="searchForm" class="searchbar">
-      <input type="text" id="searchKeyword" placeholder="Search keyword" />
-      <input type="date" id="searchDate" />
-      <button id="searchBtn" class="btn btn--primary">Search</button>
-      <button id="clearBtn" class="btn btn--ghost">Clear</button>
-    </div>
-  </section>
+      <!-- Search form -->
+      <section class="card card--soft">
+        <div id="searchForm" class="searchbar">
+          <input type="text" id="searchKeyword" placeholder="Search keyword" />
+          <input type="date" id="searchDate" />
+          <button id="searchBtn" class="btn btn--primary">Search</button>
+          <button id="clearBtn" class="btn btn--ghost">Clear</button>
+        </div>
+      </section>
 
-  <!-- Journal entry form -->
-  <section id="entryForm" class="card" style="display:none;">
-    <h3 class="card__title">Create a New Journal Entry</h3>
-    <div class="form-grid">
-      <label>
-        <span class="label">Title</span>
-        <input type="text" id="title" placeholder="Title" required />
-      </label>
+      <!-- Journal entry form -->
+      <section id="entryForm" class="card" style="display:none;">
+        <h3 class="card__title">Create a New Journal Entry</h3>
+        <div class="form-grid">
+          <label>
+            <span class="label">Title</span>
+            <input type="text" id="title" placeholder="Title" required />
+          </label>
 
-      <label class="full">
-        <span class="label">Content</span>
-        <textarea id="content" placeholder="Content" required></textarea>
-      </label>
+          <label class="full">
+            <span class="label">Content</span>
+            <textarea id="content" placeholder="Content" required></textarea>
+          </label>
 
-      <label>
-        <span class="label">Images (Multiple)</span>
-        <input type="file" id="images" accept="image/*" multiple />
-        <small>You can select multiple images at once</small>
-      </label>
-      
-      <div id="imagePreview" class="image-preview"></div>
+          <label>
+            <span class="label">Images</span>
+            <input type="file" id="images" accept="image/*" multiple />
+            <small>You can select multiple images at once</small>
+          </label>
 
-      <label>
-        <span class="label">Date</span>
-        <input type="date" id="entryDate" required />
-      </label>
-    </div>
+          <div id="imagePreview" class="image-preview"></div>
 
-    <div class="actions">
-      <button id="submitEntry" class="btn btn--primary">Submit</button>
-    </div>
-  </section>
+          <label>
+            <span class="label">Date</span>
+            <input type="date" id="entryDate" required />
+          </label>
+        </div>
+
+        <div class="actions">
+          <button id="submitEntry" class="btn btn--primary">Submit</button>
+        </div>
+      </section>
 
       <!-- Journal List -->
       <section id="journalList" class="cards"></section>

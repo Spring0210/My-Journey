@@ -267,18 +267,21 @@ a:hover { text-decoration: underline; }
   background: transparent;
   border: 1px solid var(--border);
   color: var(--text-secondary);
-  width: 36px;
   height: 36px;
+  padding: 0 12px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all var(--transition);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
   flex-shrink: 0;
+  font-family: inherit;
 }
-.theme-toggle:hover { background: var(--primary-bg); border-color: var(--primary); }
+.theme-toggle:hover { background: var(--primary-bg); border-color: var(--primary); color: var(--primary); }
 
 /* Mobile overlay */
 .sidebar-overlay {

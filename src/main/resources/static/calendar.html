@@ -1,17 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"/>
-    <title>Calendar View - Journey</title>
-    <link rel="stylesheet" href="/css/ui.css"/>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.8/index.global.min.css" rel="stylesheet"/>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.8/index.global.min.js"></script>
-    <script defer src="/js/api.js"></script>
-    <script defer src="/js/layout.js"></script>
-    <script defer src="/js/calendar.js"></script>
-    <link href="/css/calendar.css" rel="stylesheet"/>
+  <meta charset="UTF-8"/>
+  <title>Calendar View - Journey</title>
+  <link rel="stylesheet" href="/css/ui.css"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.8/index.global.min.css" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.8/index.global.min.js"></script>
+  <script defer src="/js/api.js"></script>
+  <script defer src="/js/layout.js"></script>
+  <script defer src="/js/calendar.js"></script>
+  <link href="/css/calendar.css" rel="stylesheet"/>
 </head>
-
 <body>
 <div class="app-layout">
   <!-- Sidebar -->
@@ -22,25 +21,16 @@
         Journey
       </a>
     </div>
-    
+
     <nav class="sidebar-nav">
       <div class="nav-section">
         <div class="nav-section-title">Main</div>
-        <a href="/dashboard.html" class="nav-item">
-          <span class="icon">🏠</span>
-          Dashboard
-        </a>
-        <a href="/journals.html" class="nav-item">
-          <span class="icon">📝</span>
-          My Journals
-        </a>
-        <a href="/calendar.html" class="nav-item">
-          <span class="icon">📅</span>
-          Calendar View
-        </a>
+        <a href="/dashboard.html" class="nav-item">Dashboard</a>
+        <a href="/journals.html" class="nav-item">My Journals</a>
+        <a href="/calendar.html" class="nav-item">Calendar View</a>
       </div>
     </nav>
-    
+
     <div class="sidebar-footer">
       <div class="user-info">
         <div class="user-avatar"></div>
@@ -50,7 +40,7 @@
         </div>
       </div>
       <div class="sidebar-footer-actions">
-        <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+        <button class="theme-toggle" id="themeToggle" title="Toggle theme">Dark</button>
         <button class="signout-btn">Sign Out</button>
       </div>
     </div>
@@ -64,10 +54,7 @@
         <h1 class="header-title">Calendar View</h1>
       </div>
       <div class="header-right">
-        <a href="/journals.html" class="btn btn--ghost">
-          <span>📝</span>
-          Back to Journals
-        </a>
+        <a href="/journals.html" class="btn btn--ghost">Back to Journals</a>
       </div>
     </header>
 
