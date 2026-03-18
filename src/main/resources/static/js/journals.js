@@ -4,7 +4,7 @@ const username = localStorage.getItem('username');
 const userId = localStorage.getItem('userId');
 
 let currentPage = 0;
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 9;
 let isSearchMode = false;
 
 // Load paginated entries

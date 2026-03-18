@@ -41,8 +41,8 @@ async function loadDashboardData() {
         document.getElementById('totalImages').textContent = totalImages;
         document.getElementById('streakDays').textContent = streakDays;
         
-        // Load recent entries (last 5)
-        loadRecentEntries(entries.slice(0, 5));
+        // Load recent entries (last 3)
+        loadRecentEntries(entries.slice(0, 3));
         
     } catch (error) {
         console.error('Error loading dashboard data:', error);
