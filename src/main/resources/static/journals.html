@@ -5,7 +5,6 @@
   <title>Your Journals - Journey</title>
   <link rel="stylesheet" href="/css/ui.css" />
   <link rel="stylesheet" href="/css/journals.css" />
-  <link rel="stylesheet" href="/css/notifications.css" />
   <script defer src="js/api.js"></script>
   <script defer src="js/image-utils.js"></script>
   <script defer src="js/layout.js"></script>
@@ -54,7 +53,7 @@
         <h1 class="header-title">My Journals</h1>
       </div>
       <div class="header-right">
-        <button id="toggleFormBtn" class="btn btn--primary">New Entry</button>
+        <a href="/detail.html" class="btn btn--primary">New Entry</a>
       </div>
     </header>
 
@@ -66,39 +65,6 @@
           <input type="date" id="searchDate" />
           <button id="searchBtn" class="btn btn--primary">Search</button>
           <button id="clearBtn" class="btn btn--ghost">Clear</button>
-        </div>
-      </section>
-
-      <!-- Journal entry form -->
-      <section id="entryForm" class="card" style="display:none;">
-        <h3 class="card__title">Create a New Journal Entry</h3>
-        <div class="form-grid">
-          <label>
-            <span class="label">Title</span>
-            <input type="text" id="title" placeholder="Title" required />
-          </label>
-
-          <label class="full">
-            <span class="label">Content</span>
-            <textarea id="content" placeholder="Content" required></textarea>
-          </label>
-
-          <label>
-            <span class="label">Images</span>
-            <input type="file" id="images" accept="image/*" multiple />
-            <small>You can select multiple images at once</small>
-          </label>
-
-          <div id="imagePreview" class="image-preview"></div>
-
-          <label>
-            <span class="label">Date</span>
-            <input type="date" id="entryDate" required />
-          </label>
-        </div>
-
-        <div class="actions">
-          <button id="submitEntry" class="btn btn--primary">Submit</button>
         </div>
       </section>
 

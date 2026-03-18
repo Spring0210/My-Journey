@@ -1,217 +1,193 @@
-// Base URL for backend resources (update if you deploy)
-const API_BASE = "";
-const IMAGE_BASE = ""; // used to prefix relative imagePath
+const API_BASE  = "";
+const IMAGE_BASE = "";
 
-// Parse query string to get entryId
 function getEntryId() {
-    // Extract id from URL: detail.html?id=123
-    const url = new URL(window.location.href);
-    return url.searchParams.get("id");
+    return new URL(window.location.href).searchParams.get("id");
 }
 
-// Update date display in header
 function updateDateDisplay(dateString) {
     if (!dateString) return;
-    
-    // Parse date string to avoid timezone issues
     const [year, month, day] = dateString.split('-');
-    const date = new Date(year, month - 1, day); // month is 0-indexed
-    
-    const formattedDate = date.toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
+    const date = new Date(year, month - 1, day);
+    const el = document.getElementById('entryDateDisplay');
+    if (el) el.textContent = date.toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
-    
-    const dateDisplay = document.getElementById('entryDateDisplay');
-    if (dateDisplay) {
-        dateDisplay.textContent = formattedDate;
-    }
 }
 
-// Render current images if any
 function renderCurrentImages(entry) {
     const box = document.getElementById("imageBox");
     box.innerHTML = "";
-    
-    // Use image management interface
     createImageManagement(entry, box);
-    
-    // Update image count
     updateImageCount(entry);
 }
 
-// Update image count display
 function updateImageCount(entry) {
-    const imageCount = document.getElementById('imageCount');
-    if (!imageCount) return;
-    
-    let count = 0;
-    if (entry.imagePaths) {
-        const imagePaths = entry.imagePaths.split(',').filter(path => path.trim());
-        count = imagePaths.length;
-    }
-    
-    imageCount.textContent = `${count} photo${count !== 1 ? 's' : ''}`;
+    const el = document.getElementById('imageCount');
+    if (!el) return;
+    const count = entry.imagePaths
+        ? entry.imagePaths.split(',').filter(p => p.trim()).length
+        : 0;
+    el.textContent = `${count} photo${count !== 1 ? 's' : ''}`;
 }
 
-// Render preview when new files are selected
 function attachImagePreview() {
-    const input = document.getElementById("imageInput");
+    const input   = document.getElementById("imageInput");
     const preview = document.getElementById("previewBox");
-
-    // Show a client-side preview for selected image files
     input.addEventListener("change", () => {
         preview.innerHTML = "";
-        const files = input.files;
-        
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            if (file.type.startsWith('image/')) {
-                const url = URL.createObjectURL(file);
-                const img = document.createElement("img");
-                img.src = url;
-                img.alt = "Preview";
-                img.style.margin = "5px";
-                img.style.width = "100px";
-                img.style.height = "100px";
-                img.style.objectFit = "cover";
-                img.style.borderRadius = "8px";
-                img.style.border = "2px solid #e0e0e0";
-                preview.appendChild(img);
-            }
-        }
+        Array.from(input.files).forEach(file => {
+            if (!file.type.startsWith('image/')) return;
+            const img = document.createElement("img");
+            img.src = URL.createObjectURL(file);
+            Object.assign(img.style, {
+                width: '100px', height: '100px', objectFit: 'cover',
+                borderRadius: '8px', margin: '4px'
+            });
+            preview.appendChild(img);
+        });
     });
 }
 
-// Load entry details by id
 async function loadEntry(entryId) {
-    // Fetch single entry using the non-conflicting endpoint
     const res = await apiRequest(`${API_BASE}/api/entries/entry/${entryId}`);
     if (!res.ok) throw new Error("Failed to load entry");
     const entry = await res.json();
-
-    // Fill form fields with entry data
-    document.getElementById("title").value = entry.title || "";
-    document.getElementById("content").value = entry.content || "";
+    document.getElementById("title").value     = entry.title    || "";
+    document.getElementById("content").value   = entry.content  || "";
     document.getElementById("entryDate").value = entry.entryDate || "";
-    
-    // Update date display
     updateDateDisplay(entry.entryDate);
-
-    // Render current images
     renderCurrentImages(entry);
+    return entry;
 }
 
-// Save changes (text/date + optional new images)
 async function saveEntry(entryId) {
-    // Build a FormData payload because image upload is multipart
     const fd = new FormData();
-    fd.append("title", document.getElementById("title").value);
-    fd.append("content", document.getElementById("content").value);
+    fd.append("title",     document.getElementById("title").value);
+    fd.append("content",   document.getElementById("content").value);
     fd.append("entryDate", document.getElementById("entryDate").value);
-
-    // Append files if user selected new images
-    const files = document.getElementById("imageInput").files;
-    for (let i = 0; i < files.length; i++) {
-        fd.append("images", files[i]);
-    }
-
-    // Use your existing edit endpoint (multipart POST)
+    Array.from(document.getElementById("imageInput").files)
+        .forEach(f => fd.append("images", f));
     const res = await apiRequestWithFile(`${API_BASE}/api/entries/edit/${entryId}`, fd);
     if (!res.ok) throw new Error("Failed to save entry");
     return await res.json();
 }
 
-// Delete entry
-async function deleteEntry(entryId) {
-    const ok = confirm("Are you sure you want to delete this entry?");
-    if (!ok) return;
+async function createEntry(userId) {
+    const fd = new FormData();
+    fd.append("title",     document.getElementById("title").value);
+    fd.append("content",   document.getElementById("content").value);
+    fd.append("entryDate", document.getElementById("entryDate").value);
+    Array.from(document.getElementById("imageInput").files)
+        .forEach(f => fd.append("images", f));
+    const res = await apiRequestWithFile(`${API_BASE}/api/entries/${userId}`, fd);
+    if (!res.ok) throw new Error("Failed to create entry");
+    return await res.json();
+}
 
-    const res = await apiRequest(`${API_BASE}/api/entries/${entryId}`, {
-        method: "DELETE"
-    });
+async function deleteEntry(entryId) {
+    if (!confirm("Are you sure you want to delete this entry?")) return;
+    const res = await apiRequest(`${API_BASE}/api/entries/${entryId}`, { method: "DELETE" });
     if (!res.ok) throw new Error("Failed to delete entry");
-    alert("Entry deleted.");
-    // After deletion, navigate back to journals list
     window.location.href = "journals.html";
 }
 
-// Wire up buttons and init page
+// ── Init ──────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", async () => {
-    // Get user info from layout manager
-    const username = localStorage.getItem('username');
-    const userId = localStorage.getItem('userId');
-    
-    // Handle back navigation (go back or fallback to list)
+    const userId  = localStorage.getItem('userId');
+    const entryId = getEntryId();
+
+    attachImagePreview();
+    document.getElementById("entryDate").addEventListener("change", function () {
+        updateDateDisplay(this.value);
+    });
     document.getElementById("backBtn").addEventListener("click", () => {
         if (document.referrer) history.back();
         else window.location.href = "journals.html";
     });
 
-    // Prepare preview handler
-    attachImagePreview();
-    
-    // Handle date input changes
-    document.getElementById("entryDate").addEventListener("change", function() {
-        updateDateDisplay(this.value);
-    });
-    
-    // Handle add images button
-    document.getElementById("addImagesBtn").addEventListener("click", async () => {
-        const files = document.getElementById("imageInput").files;
-        if (files.length === 0) {
-            alert("Please select images to add");
-            return;
-        }
-        
-        const entryId = getEntryId();
-        if (entryId) {
-            await addImagesToEntry(entryId, files);
-            // Reload entry to show new images
-            await loadEntry(entryId);
-            // Clear file input
-            document.getElementById("imageInput").value = "";
-            document.getElementById("previewBox").innerHTML = "";
-        }
-    });
-
-    // Load entry
-    const entryId = getEntryId();
+    // ── CREATE MODE ──────────────────────────────────────────────
     if (!entryId) {
-        alert("Missing entry id.");
-        window.location.href = "journals.html";
-        return;
+        document.getElementById("pageTitle").textContent = "New Entry";
+        document.getElementById("saveBtn").textContent   = "Create Entry";
+        document.getElementById("deleteBtn").style.display = "none";
+
+        // Hide current-images section (nothing to show yet)
+        document.querySelector(".current-images").style.display = "none";
+
+        // Rename subsection and hide "Add Selected Images" button
+        document.querySelector(".add-images .subsection-title").textContent = "Images (optional)";
+        document.getElementById("addImagesBtn").style.display = "none";
+
+        // Default to today's date
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById("entryDate").value = today;
+        updateDateDisplay(today);
+
+        document.getElementById("saveBtn").addEventListener("click", async () => {
+            const title     = document.getElementById("title").value.trim();
+            const entryDate = document.getElementById("entryDate").value;
+            if (!title || !entryDate) {
+                alert("Title and date are required.");
+                return;
+            }
+            const btn = document.getElementById("saveBtn");
+            btn.disabled     = true;
+            btn.textContent  = "Creating...";
+            try {
+                const newEntry = await createEntry(userId);
+                window.location.href = `detail.html?id=${newEntry.id}`;
+            } catch (e) {
+                console.error(e);
+                alert("Failed to create entry.");
+                btn.disabled    = false;
+                btn.textContent = "Create Entry";
+            }
+        });
+
+        return; // stop here — edit-mode init below is not needed
     }
+
+    // ── EDIT MODE ────────────────────────────────────────────────
+    document.getElementById("pageTitle").textContent = "Edit Entry";
 
     try {
         await loadEntry(entryId);
     } catch (e) {
         console.error(e);
         alert("Failed to load entry.");
+        return;
     }
 
-    // Save changes
     document.getElementById("saveBtn").addEventListener("click", async () => {
+        const btn = document.getElementById("saveBtn");
+        btn.disabled    = true;
+        btn.textContent = "Saving...";
         try {
             await saveEntry(entryId);
-            alert("Saved.");
-            // Reload to reflect new image path if updated
             await loadEntry(entryId);
+            document.getElementById("imageInput").value  = "";
+            document.getElementById("previewBox").innerHTML = "";
         } catch (e) {
             console.error(e);
             alert("Save failed.");
+        } finally {
+            btn.disabled    = false;
+            btn.textContent = "Save Changes";
         }
     });
 
-    // Delete entry
     document.getElementById("deleteBtn").addEventListener("click", async () => {
-        try {
-            await deleteEntry(entryId);
-        } catch (e) {
-            console.error(e);
-            alert("Delete failed.");
-        }
+        try { await deleteEntry(entryId); }
+        catch (e) { console.error(e); alert("Delete failed."); }
+    });
+
+    document.getElementById("addImagesBtn").addEventListener("click", async () => {
+        const files = document.getElementById("imageInput").files;
+        if (files.length === 0) { alert("Please select images to add."); return; }
+        await addImagesToEntry(entryId, files);
+        await loadEntry(entryId);
+        document.getElementById("imageInput").value  = "";
+        document.getElementById("previewBox").innerHTML = "";
     });
 });
