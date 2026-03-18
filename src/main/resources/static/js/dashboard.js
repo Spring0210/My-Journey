@@ -8,12 +8,13 @@ const userId = localStorage.getItem('userId');
 // Load dashboard data
 async function loadDashboardData() {
     try {
-        // Load all entries for statistics
-        const response = await apiRequest(`${API_BASE}/api/entries/${userId}`);
-        const entries = await response.json();
-        
+        // Load all entries for statistics (large page size to get everything)
+        const response = await apiRequest(`${API_BASE}/api/entries/${userId}?page=0&size=9999`);
+        const data = await response.json();
+        const entries = data.content || [];
+
         // Calculate statistics
-        const totalEntries = entries.length;
+        const totalEntries = data.totalElements || entries.length;
         const thisMonth = new Date().getMonth();
         const thisYear = new Date().getFullYear();
         
