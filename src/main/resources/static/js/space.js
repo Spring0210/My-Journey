@@ -91,7 +91,7 @@ async function loadPosts(page = 0) {
 
 function renderPost(post) {
     const isAuthor = post.authorId === userId;
-    const date = new Date(post.createdAt).toLocaleString('en-US', {
+    const date = new Date(post.createdAt + 'Z').toLocaleString('en-US', {
         month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
     });
     const imagesHtml = post.images && post.images.length > 0
