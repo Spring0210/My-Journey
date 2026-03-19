@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Space - Journey</title>
+  <link rel="stylesheet" href="/css/ui.css" />
+  <link rel="stylesheet" href="/css/spaces.css" />
+  <script defer src="js/api.js"></script>
+  <script defer src="js/image-utils.js"></script>
+  <script defer src="js/layout.js"></script>
+  <script defer src="js/space.js"></script>
+</head>
+<body>
+<div class="app-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="/dashboard.html" class="sidebar-brand">
+        <div class="logo">J</div>
+        Journey
+      </a>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Main</div>
+        <a href="/dashboard.html" class="nav-item">Dashboard</a>
+        <a href="/journals.html" class="nav-item">My Journals</a>
+        <a href="/calendar.html" class="nav-item">Calendar View</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Spaces</div>
+        <a href="/spaces.html" class="nav-item">My Spaces</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar"></div>
+        <div class="user-details"><h4></h4><p></p></div>
+      </div>
+      <div class="sidebar-footer-actions">
+        <button class="theme-toggle" id="themeToggle" title="Toggle theme">Dark</button>
+        <button class="signout-btn">Sign Out</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <header class="header">
+      <div class="header-left">
+        <button class="sidebar-toggle">☰</button>
+        <a href="/spaces.html" class="back-link">← Spaces</a>
+        <h1 class="header-title" id="spaceTitle">Loading...</h1>
+      </div>
+      <div class="header-right" id="spaceActions"></div>
+    </header>
+
+    <div class="content space-layout">
+      <!-- Left: Timeline -->
+      <div class="timeline-column">
+        <!-- Post Composer -->
+        <div class="card composer" id="composer">
+          <textarea id="postContent" placeholder="Share something with the space..." rows="3"></textarea>
+          <div class="composer-footer">
+            <label class="upload-label">
+              <input type="file" id="postImages" multiple accept="image/*" hidden />
+              📷 Add Photos
+            </label>
+            <div id="imagePreviewList" class="composer-previews"></div>
+            <button class="btn btn--primary" id="postBtn">Post</button>
+          </div>
+        </div>
+
+        <!-- Posts Timeline -->
+        <div id="postsList">
+          <div class="loading">Loading posts...</div>
+        </div>
+
+        <!-- Pagination -->
+        <div id="postsPagination" class="pagination" hidden>
+          <button id="prevPostsBtn" class="btn btn--ghost" disabled>← Prev</button>
+          <span id="postsPageInfo"></span>
+          <button id="nextPostsBtn" class="btn btn--ghost">Next →</button>
+        </div>
+      </div>
+
+      <!-- Right: Space Info -->
+      <aside class="space-info-column">
+        <div class="card">
+          <h4 class="card__title">Space Info</h4>
+          <p id="spaceDescription" class="muted"></p>
+          <div class="invite-code-box" id="inviteCodeBox" hidden>
+            <span class="invite-label">Invite Code</span>
+            <span class="invite-code" id="inviteCode"></span>
+            <button class="btn btn--ghost btn--sm" id="copyCodeBtn">Copy</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4 class="card__title">Members <span id="memberCount" class="muted"></span></h4>
+          <div id="membersList"></div>
+        </div>
+
+        <div id="dangerZone" class="card danger-card" hidden>
+          <h4 class="card__title">Actions</h4>
+          <button class="btn btn--danger btn--sm" id="leaveOrDeleteBtn"></button>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+</body>
+</html>

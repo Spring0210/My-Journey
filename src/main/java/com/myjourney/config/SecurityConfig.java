@@ -41,6 +41,7 @@ public class SecurityConfig {
                                "/journals.html", "/calendar.html", "/day.html", "/detail.html", "/debug-auth.html").permitAll()
                 .requestMatchers("/css/**", "/js/**", "/uploads/**", "/static/**").permitAll()
                 .requestMatchers("/api/entries/**").authenticated()
+                .requestMatchers("/api/spaces/**").authenticated()
                 .anyRequest().permitAll()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

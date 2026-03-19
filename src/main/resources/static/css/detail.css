@@ -37,14 +37,6 @@
   overflow: hidden;
 }
 
-/* Blue accent strip at top */
-.entry-editor::before {
-  content: '';
-  display: block;
-  height: 3px;
-  background: linear-gradient(90deg, var(--primary), var(--primary-2));
-}
-
 .entry-editor .title-input {
   display: block;
   width: 100%;
