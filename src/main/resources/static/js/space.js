@@ -4,9 +4,12 @@ const spaceId = new URLSearchParams(window.location.search).get('id');
 let currentPage = 0;
 let totalPages = 0;
 let selectedImages = [];
+let objectUrls = [];
 let isOwner = false;
 let lightboxImages = [];
 let lightboxIndex = 0;
+// Store post images in JS Map instead of DOM data attributes
+const postImagesMap = new Map();
 
 if (!spaceId) window.location.href = 'spaces.html';
 
@@ -139,8 +142,10 @@ document.getElementById('copyCodeBtn').addEventListener('click', () => {
 // 4 images → 2x2 grid
 // 5 images → 1 large + 4 grid
 // 6+ images → 3-col grid, last cell shows "+N more"
-function renderImageGrid(images) {
+function renderImageGrid(postId, images) {
     if (!images || images.length === 0) return '';
+    postImagesMap.set(postId, images);
+
     const count = images.length;
     const MAX_SHOW = 9;
     const shown = images.slice(0, MAX_SHOW);
@@ -156,8 +161,8 @@ function renderImageGrid(images) {
     const cells = shown.map((url, i) => {
         const isLast = extra > 0 && i === shown.length - 1;
         return `
-            <div class="img-cell${i === 0 && (count === 3) ? ' img-cell--tall' : ''}"
-                 data-index="${i}" data-images='${JSON.stringify(images)}'>
+            <div class="img-cell${i === 0 && count === 3 ? ' img-cell--tall' : ''}"
+                 data-post-id="${postId}" data-index="${i}">
                 <img src="${url}" alt="post image" loading="lazy" />
                 ${isLast ? `<div class="img-overlay">+${extra}</div>` : ''}
             </div>`;
@@ -238,7 +243,7 @@ function renderPost(post) {
                 ${canDelete ? `<button class="post-delete-btn" data-post-id="${post.id}" title="Delete">&times;</button>` : ''}
             </div>
             ${post.content ? `<p class="post-content">${escapeHtml(post.content)}</p>` : ''}
-            ${renderImageGrid(post.images)}
+            ${renderImageGrid(post.id, post.images)}
         </div>
     `;
 }
@@ -247,10 +252,10 @@ function bindPostEvents(container) {
     // Image grid clicks → lightbox
     container.querySelectorAll('.img-cell').forEach(cell => {
         cell.addEventListener('click', () => {
-            const images = JSON.parse(cell.dataset.images);
+            const postId = parseInt(cell.dataset.postId);
             const index = parseInt(cell.dataset.index);
-            const actualIndex = index < images.length ? index : images.length - 1;
-            openLightbox(images, actualIndex);
+            const images = postImagesMap.get(postId) || [];
+            openLightbox(images, index);
         });
     });
 
@@ -285,10 +290,14 @@ document.getElementById('postImages').addEventListener('change', (e) => {
 });
 
 function renderComposerPreviews() {
+    // Revoke old object URLs to free memory
+    objectUrls.forEach(url => URL.revokeObjectURL(url));
+    objectUrls = selectedImages.map(f => URL.createObjectURL(f));
+
     const preview = document.getElementById('imagePreviewList');
-    preview.innerHTML = selectedImages.map((f, i) => `
+    preview.innerHTML = objectUrls.map((url, i) => `
         <div class="composer-preview-item">
-            <img src="${URL.createObjectURL(f)}" />
+            <img src="${url}" />
             <button class="remove-preview" data-index="${i}">&times;</button>
         </div>
     `).join('');
