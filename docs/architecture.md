@@ -48,7 +48,7 @@ JWT is stored in `localStorage` on the client. The `api.js` utility automaticall
 
 ```
 user
- ├── id, username (unique), password (bcrypt), email, created_at
+ ├── id, username (unique), password (bcrypt), email (unique), avatar, created_at
 
 journal_entry
  ├── id, title, content, entry_date
@@ -80,6 +80,7 @@ All images go to Cloudinary. Local `uploads/` directory is not used in productio
 
 - Journal images → `my-journey/journals/`
 - Space post images → `my-journey/spaces/{spaceId}/`
+- User avatars → `my-journey/avatars/`
 
 Image URLs are stored as comma-separated strings in the `image_paths` column. `getImagePathList()` / `setImagePathList()` on the entity handle serialization.
 

@@ -31,19 +31,22 @@ Registration successful
 **Errors**
 - `Username already exists`
 - `Invalid email address`
+- `Email already in use`
 
 ---
 
 ### POST /api/login
-Login and receive a JWT token.
+Login with username or email, receive a JWT token.
 
 **Request**
 ```json
 {
-  "username": "ben",
+  "identifier": "ben",
   "password": "secret123"
 }
 ```
+
+> `identifier` can be either a username or an email address.
 
 **Response** `200 OK`
 ```json
@@ -51,7 +54,8 @@ Login and receive a JWT token.
   "message": "Login successful",
   "token": "eyJhbGci...",
   "username": "ben",
-  "userId": 1
+  "userId": 1,
+  "avatar": "https://res.cloudinary.com/..."
 }
 ```
 
@@ -280,6 +284,35 @@ Leave a space. Owners cannot leave (must delete instead).
 
 ### DELETE /api/spaces/{spaceId}
 Delete a space and all its posts. Owner only.
+
+---
+
+## User Profile
+
+### PUT /api/profile/{userId}
+Update username and/or avatar. Requires JWT.
+
+**Content-Type:** `multipart/form-data`
+
+| Field | Type | Required |
+|-------|------|----------|
+| username | String | No |
+| avatar | File | No |
+
+At least one field must be provided.
+
+**Response** `200 OK`
+```json
+{
+  "message": "Profile updated",
+  "username": "newname",
+  "avatar": "https://res.cloudinary.com/..."
+}
+```
+
+**Errors**
+- `Username already taken`
+- `User not found`
 
 ---
 

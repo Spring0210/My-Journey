@@ -25,9 +25,14 @@
 - [x] Post image stored in JS Map (prevents browser freeze)
 
 ### Auth & Account
-- [x] JWT authentication (24h expiration)
-- [x] Password reset via email verification code (Resend + myjourneycloud.com)
+- [x] JWT authentication (24h expiration, subject = userId)
+- [x] Login via username or email
+- [x] Email uniqueness enforced on registration
 - [x] Email format validation on registration (frontend + backend)
+- [x] Password reset via email verification code (Resend + myjourneycloud.com)
+- [x] User avatar support (Cloudinary, `my-journey/avatars/`)
+- [x] Profile page — change username and avatar
+- [x] Sidebar extracted to layout.js (single source of truth for all pages)
 
 ---
 
@@ -51,8 +56,9 @@
 - [ ] Export entries as PDF
 
 ### Account
-- [ ] User profile page (avatar, bio)
-- [ ] Change email / password from settings
+- [x] User profile page (avatar, username)
+- [ ] Change password from settings
+- [ ] Bio / display name field
 
 ---
 
