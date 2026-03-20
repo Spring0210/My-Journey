@@ -140,6 +140,7 @@ public class SpaceService {
             Map<String, Object> memberInfo = new HashMap<>();
             memberInfo.put("userId", m.getUser().getId());
             memberInfo.put("username", m.getUser().getUsername());
+            memberInfo.put("avatar", m.getUser().getAvatar()); // include avatar for frontend display
             memberInfo.put("role", m.getRole().name());
             memberInfo.put("joinedAt", m.getJoinedAt());
             return memberInfo;

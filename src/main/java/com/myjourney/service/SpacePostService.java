@@ -124,6 +124,7 @@ public class SpacePostService {
         map.put("images", post.getImagePathList());
         map.put("authorId", post.getAuthor().getId());
         map.put("authorUsername", post.getAuthor().getUsername());
+        map.put("authorAvatar", post.getAuthor().getAvatar()); // include avatar for frontend display
         map.put("createdAt", post.getCreatedAt());
         map.put("updatedAt", post.getUpdatedAt());
         return map;

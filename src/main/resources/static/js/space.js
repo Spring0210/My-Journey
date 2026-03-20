@@ -11,6 +11,14 @@ let lightboxIndex = 0;
 // Store post images in JS Map instead of DOM data attributes
 const postImagesMap = new Map();
 
+// Render a user avatar: show image if avatarUrl is available, otherwise show initial letter
+function renderAvatar(avatarUrl, username, cssClass = 'member-avatar') {
+    if (avatarUrl) {
+        return `<div class="${cssClass}"><img src="${avatarUrl}" alt="${escapeHtml(username)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>`;
+    }
+    return `<div class="${cssClass}">${username.charAt(0).toUpperCase()}</div>`;
+}
+
 if (!spaceId) window.location.href = 'spaces.html';
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -57,7 +65,7 @@ async function loadSpaceDetail() {
         document.getElementById('memberCount').textContent = `(${space.members.length})`;
         document.getElementById('membersList').innerHTML = space.members.map(m => `
             <div class="member-row">
-                <div class="member-avatar">${m.username.charAt(0).toUpperCase()}</div>
+                ${renderAvatar(m.avatar, m.username)}
                 <div class="member-info">
                     <span class="member-name">${escapeHtml(m.username)}</span>
                     ${m.role === 'OWNER' ? '<span class="role-badge role-badge--owner">Owner</span>' : ''}
@@ -235,7 +243,7 @@ function renderPost(post) {
     return `
         <div class="post-card" data-post-id="${post.id}">
             <div class="post-header">
-                <div class="member-avatar">${post.authorUsername.charAt(0).toUpperCase()}</div>
+                ${renderAvatar(post.authorAvatar, post.authorUsername)}
                 <div class="post-meta">
                     <span class="post-author">${escapeHtml(post.authorUsername)}</span>
                     <span class="post-date">${formatDate(post.createdAt)}</span>
