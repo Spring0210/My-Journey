@@ -1,9 +1,10 @@
 package com.myjourney.controller;
 
-import com.myjourney.model.User;
 import com.myjourney.service.UserService;
+import com.myjourney.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
@@ -21,24 +22,25 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public Map<String, Object> login(@RequestBody User user) {
-        return userService.login(user);
+    public Map<String, Object> login(@RequestBody Map<String, String> body) {
+        return userService.login(body.get("identifier"), body.get("password"));
     }
 
-    // Step 1: Send reset code to email
+    @PutMapping("/profile/{userId}")
+    public Map<String, Object> updateProfile(
+            @PathVariable Integer userId,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) MultipartFile avatar) {
+        return userService.updateProfile(userId, username, avatar);
+    }
+
     @PostMapping("/forgot-password")
     public String forgotPassword(@RequestBody Map<String, String> map) {
-        String username = map.get("username");
-        String email = map.get("email");
-        return userService.sendResetCode(username, email);
+        return userService.sendResetCode(map.get("username"), map.get("email"));
     }
 
-    // Step 2: Verify code and reset password
     @PostMapping("/reset-password")
     public String resetPassword(@RequestBody Map<String, String> map) {
-        String username = map.get("username");
-        String code = map.get("code");
-        String newPassword = map.get("newPassword");
-        return userService.verifyAndResetPassword(username, code, newPassword);
+        return userService.verifyAndResetPassword(map.get("username"), map.get("code"), map.get("newPassword"));
     }
 }

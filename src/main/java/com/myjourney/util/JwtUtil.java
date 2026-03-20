@@ -25,12 +25,12 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(secretKey.getBytes());
     }
     
-    public String generateToken(String username, Integer userId) {
+    public String generateToken(Integer userId, String username) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("userId", userId);
-        return createToken(claims, username);
+        claims.put("username", username);
+        return createToken(claims, String.valueOf(userId));
     }
-    
+
     private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
                 .setClaims(claims)
@@ -40,18 +40,17 @@ public class JwtUtil {
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
-    
-    public Boolean validateToken(String token, String username) {
-        final String extractedUsername = extractUsername(token);
-        return (extractedUsername.equals(username) && !isTokenExpired(token));
+
+    public Boolean validateToken(String token) {
+        return !isTokenExpired(token);
     }
-    
+
     public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+        return extractClaim(token, claims -> claims.get("username", String.class));
     }
-    
+
     public Integer extractUserId(String token) {
-        return extractClaim(token, claims -> claims.get("userId", Integer.class));
+        return Integer.valueOf(extractClaim(token, Claims::getSubject));
     }
     
     public Date extractExpiration(String token) {

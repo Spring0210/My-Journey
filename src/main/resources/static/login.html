@@ -18,12 +18,11 @@
         <h2 style="margin:4px 0 16px 0">Welcome back</h2>
 
         <form id="loginForm" class="form" novalidate>
-            <!-- Username -->
+            <!-- Identifier -->
             <div>
-                <label class="label" for="username">Username</label>
-                <input class="input" id="username" name="username" type="text" placeholder="Enter your username" required />
-                <!-- Inline error if needed -->
-                <div class="error" id="err-username" hidden><!-- Filled by JS --></div>
+                <label class="label" for="identifier">Username or Email</label>
+                <input class="input" id="identifier" name="identifier" type="text" placeholder="Enter your username or email" required autocomplete="username" />
+                <div class="error" id="err-identifier" hidden></div>
             </div>
 
             <!-- Password -->

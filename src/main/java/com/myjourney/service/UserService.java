@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -39,6 +40,9 @@ public class UserService {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private CloudStorageService cloudStorageService;
+
     @Value("${resend.api-key}")
     private String resendApiKey;
 
@@ -52,33 +56,71 @@ public class UserService {
         if (user.getEmail() == null || !EMAIL_PATTERN.matcher(user.getEmail()).matches()) {
             return "Invalid email address";
         }
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            return "Email already in use";
+        }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
         return "Registration successful";
     }
 
-    public Map<String, Object> login(User user) {
+    public Map<String, Object> login(String identifier, String password) {
         Map<String, Object> response = new HashMap<>();
 
-        Optional<User> existingUser = userRepository.findByUsername(user.getUsername());
-        if (existingUser.isEmpty()) {
+        Optional<User> userOpt = identifier.contains("@")
+                ? userRepository.findByEmail(identifier)
+                : userRepository.findByUsername(identifier);
+
+        if (userOpt.isEmpty() || !passwordEncoder.matches(password, userOpt.get().getPassword())) {
             response.put("error", "Invalid credentials");
             return response;
         }
 
-        User dbUser = existingUser.get();
-        if (!passwordEncoder.matches(user.getPassword(), dbUser.getPassword())) {
-            response.put("error", "Invalid credentials");
-            return response;
-        }
-
-        String token = jwtUtil.generateToken(user.getUsername(), dbUser.getId());
+        User dbUser = userOpt.get();
+        String token = jwtUtil.generateToken(dbUser.getId(), dbUser.getUsername());
 
         response.put("message", "Login successful");
         response.put("token", token);
         response.put("username", dbUser.getUsername());
         response.put("userId", dbUser.getId());
+        response.put("avatar", dbUser.getAvatar());
 
+        return response;
+    }
+
+    @Transactional
+    public Map<String, Object> updateProfile(Integer userId, String newUsername, MultipartFile avatarFile) {
+        Map<String, Object> response = new HashMap<>();
+
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            response.put("error", "User not found");
+            return response;
+        }
+
+        User user = userOpt.get();
+
+        if (newUsername != null && !newUsername.isBlank() && !newUsername.equals(user.getUsername())) {
+            if (userRepository.findByUsername(newUsername).isPresent()) {
+                response.put("error", "Username already taken");
+                return response;
+            }
+            user.setUsername(newUsername);
+        }
+
+        if (avatarFile != null && !avatarFile.isEmpty()) {
+            if (user.getAvatar() != null) {
+                cloudStorageService.deleteFile(user.getAvatar());
+            }
+            String avatarUrl = cloudStorageService.uploadFile(avatarFile, "my-journey/avatars");
+            user.setAvatar(avatarUrl);
+        }
+
+        userRepository.save(user);
+
+        response.put("message", "Profile updated");
+        response.put("username", user.getUsername());
+        response.put("avatar", user.getAvatar());
         return response;
     }
 
@@ -94,10 +136,8 @@ public class UserService {
             return "Email does not match";
         }
 
-        // Delete any existing token for this user
         tokenRepository.deleteByUsername(username);
 
-        // Generate 6-digit code
         String code = String.format("%06d", new Random().nextInt(1000000));
 
         PasswordResetToken token = new PasswordResetToken();
@@ -106,7 +146,6 @@ public class UserService {
         token.setExpiredAt(LocalDateTime.now().plusMinutes(10));
         tokenRepository.save(token);
 
-        // Send email via Resend
         try {
             Resend resend = new Resend(resendApiKey);
             CreateEmailOptions params = CreateEmailOptions.builder()
