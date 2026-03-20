@@ -38,8 +38,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/login", "/api/register", "/api/forgot-password", "/api/reset-password").permitAll()
                 .requestMatchers("/api/profile/**").authenticated()
-                .requestMatchers("/", "/login.html", "/register.html", "/forgot-password.html", 
-                               "/journals.html", "/calendar.html", "/day.html", "/detail.html", "/debug-auth.html").permitAll()
+                .requestMatchers("/", "/login.html", "/register.html", "/forgot-password.html",
+                               "/journals.html", "/calendar.html", "/day.html", "/detail.html",
+                               "/spaces.html", "/space.html", "/dashboard.html", "/profile.html").permitAll()
                 .requestMatchers("/css/**", "/js/**", "/uploads/**", "/static/**").permitAll()
                 .requestMatchers("/api/entries/**").authenticated()
                 .requestMatchers("/api/spaces/**").authenticated()

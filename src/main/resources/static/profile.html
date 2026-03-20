@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile - Journey</title>
+  <link rel="stylesheet" href="/css/ui.css" />
+  <script defer src="/js/api.js"></script>
+  <script defer src="/js/layout.js"></script>
+  <script defer src="/js/profile.js"></script>
+</head>
+<body>
+<div class="app-layout">
+  <!-- Sidebar injected by layout.js -->
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="main-content">
+    <header class="header">
+      <div class="header-left">
+        <button class="sidebar-toggle">☰</button>
+        <h1 class="header-title">Profile</h1>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="card" style="max-width:480px;margin:0 auto;padding:32px;">
+
+        <!-- Avatar section -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:32px;">
+          <!-- Shows current avatar image or initial letter -->
+          <div id="avatarPreview" class="user-avatar" style="width:80px;height:80px;font-size:2rem;"></div>
+          <label class="btn btn--ghost" style="cursor:pointer;">
+            Change Avatar
+            <input type="file" id="avatarInput" accept="image/*" style="display:none;" />
+          </label>
+        </div>
+
+        <!-- Username field -->
+        <div style="margin-bottom:20px;">
+          <label class="label" for="usernameInput">Username</label>
+          <input class="input" id="usernameInput" type="text" placeholder="Enter new username" />
+        </div>
+
+        <!-- Save button -->
+        <button class="btn btn--primary" id="saveBtn" style="width:100%;">Save Changes</button>
+
+        <p id="statusMsg" style="margin-top:12px;text-align:center;color:var(--success);display:none;"></p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+</body>
+</html>

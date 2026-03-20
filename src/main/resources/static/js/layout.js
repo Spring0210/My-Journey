@@ -1,4 +1,4 @@
-// Common layout functionality for all pages
+// Common layout functionality shared across all authenticated pages
 class LayoutManager {
     constructor() {
         this.sidebar = null;
@@ -9,6 +9,7 @@ class LayoutManager {
 
     init() {
         this.checkAuth();
+        this.renderSidebar();   // inject sidebar HTML before setting up events
         this.setupSidebar();
         this.setupUserInfo();
         this.setupSignOut();
@@ -16,23 +17,67 @@ class LayoutManager {
         this.setCurrentPageActive();
     }
 
-    // Check if user is authenticated
+    // Verify user is logged in; redirect to login if not
     checkAuth() {
         const token = localStorage.getItem('token');
         const username = localStorage.getItem('username');
         const userId = localStorage.getItem('userId');
 
         if (!token || !username || !userId) {
-            // Redirect to login if not authenticated
             window.location.href = '/login.html';
             return false;
         }
 
-        this.currentUser = { token, username, userId };
+        this.currentUser = { token, username, userId, avatar: localStorage.getItem('avatar') };
         return true;
     }
 
-    // Setup theme toggle (light/dark)
+    // Inject sidebar HTML into the #sidebar placeholder element
+    // Centralising the HTML here means every page automatically gets
+    // any future nav changes without editing each file individually
+    renderSidebar() {
+        const el = document.getElementById('sidebar');
+        if (!el) return;
+        el.innerHTML = `
+            <div class="sidebar-header">
+                <a href="/dashboard.html" class="sidebar-brand">
+                    <div class="logo">J</div>
+                    Journey
+                </a>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="/dashboard.html" class="nav-item">Dashboard</a>
+                    <a href="/journals.html" class="nav-item">My Journals</a>
+                    <a href="/calendar.html" class="nav-item">Calendar View</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Spaces</div>
+                    <a href="/spaces.html" class="nav-item">My Spaces</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Account</div>
+                    <a href="/profile.html" class="nav-item">Profile</a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <!-- Clicking the user info block navigates to profile page -->
+                <a href="/profile.html" class="user-info" style="text-decoration:none;cursor:pointer;">
+                    <div class="user-avatar" id="sidebarAvatar"></div>
+                    <div class="user-details">
+                        <h4 id="sidebarUsername"></h4>
+                        <p>View profile</p>
+                    </div>
+                </a>
+                <div class="sidebar-footer-actions">
+                    <button class="theme-toggle" id="themeToggle" title="Toggle theme">Dark</button>
+                    <button class="signout-btn">Sign Out</button>
+                </div>
+            </div>`;
+    }
+
+    // Apply saved or system-preferred theme on load, and wire up the toggle button
     setupTheme() {
         const saved = localStorage.getItem('theme');
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -54,39 +99,27 @@ class LayoutManager {
         localStorage.setItem('theme', theme);
 
         const btn = document.getElementById('themeToggle');
-        if (btn) {
-            btn.textContent = theme === 'dark' ? 'Light' : 'Dark';
-        }
+        if (btn) btn.textContent = theme === 'dark' ? 'Light' : 'Dark';
     }
 
-    // Setup sidebar functionality
+    // Wire up sidebar toggle button and overlay (used on mobile)
     setupSidebar() {
         this.sidebar = document.querySelector('.sidebar');
         this.sidebarToggle = document.querySelector('.sidebar-toggle');
         this.overlay = document.getElementById('sidebarOverlay');
 
         if (this.sidebarToggle) {
-            this.sidebarToggle.addEventListener('click', () => {
-                this.toggleSidebar();
-            });
+            this.sidebarToggle.addEventListener('click', () => this.toggleSidebar());
         }
-
-        // Close sidebar when clicking overlay
         if (this.overlay) {
-            this.overlay.addEventListener('click', () => {
-                this.closeSidebar();
-            });
+            this.overlay.addEventListener('click', () => this.closeSidebar());
         }
-
-        // Handle window resize
+        // Auto-close sidebar when resizing to desktop width
         window.addEventListener('resize', () => {
-            if (window.innerWidth > 1024) {
-                this.closeSidebarMobile();
-            }
+            if (window.innerWidth > 1024) this.closeSidebarMobile();
         });
     }
 
-    // Toggle sidebar visibility (mobile)
     toggleSidebar() {
         if (this.sidebar) {
             const isOpen = this.sidebar.classList.toggle('open');
@@ -94,7 +127,6 @@ class LayoutManager {
         }
     }
 
-    // Close sidebar and overlay (mobile)
     closeSidebar() {
         if (this.sidebar) {
             this.sidebar.classList.remove('open');
@@ -102,61 +134,46 @@ class LayoutManager {
         }
     }
 
-    // Close sidebar only on mobile (no-op on desktop)
     closeSidebarMobile() {
-        if (window.innerWidth <= 1024) {
-            this.closeSidebar();
-        }
+        if (window.innerWidth <= 1024) this.closeSidebar();
     }
 
-    // Setup user information display
+    // Populate the sidebar footer with the current user's avatar and username
     setupUserInfo() {
-        if (this.currentUser) {
-            // Update username in header if element exists
-            const userElement = document.getElementById('user');
-            if (userElement) {
-                userElement.textContent = this.currentUser.username;
-            }
+        if (!this.currentUser) return;
 
-            // Update user info in sidebar
-            const userAvatar = document.querySelector('.user-avatar');
-            const userName = document.querySelector('.user-details h4');
-            const userEmail = document.querySelector('.user-details p');
+        const avatarEl = document.getElementById('sidebarAvatar');
+        const usernameEl = document.getElementById('sidebarUsername');
 
-            if (userAvatar) {
-                userAvatar.textContent = this.currentUser.username.charAt(0).toUpperCase();
-            }
-            if (userName) {
-                userName.textContent = this.currentUser.username;
-            }
-            if (userEmail) {
-                userEmail.textContent = `ID: ${this.currentUser.userId}`;
+        if (avatarEl) {
+            if (this.currentUser.avatar) {
+                // Show avatar image if available
+                avatarEl.innerHTML = `<img src="${this.currentUser.avatar}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+            } else {
+                // Fall back to first letter of username
+                avatarEl.textContent = this.currentUser.username.charAt(0).toUpperCase();
             }
         }
+        if (usernameEl) usernameEl.textContent = this.currentUser.username;
     }
 
-    // Setup sign out functionality
     setupSignOut() {
         const signOutBtn = document.querySelector('.signout-btn');
         if (signOutBtn) {
-            signOutBtn.addEventListener('click', () => {
-                this.signOut();
-            });
+            signOutBtn.addEventListener('click', () => this.signOut());
         }
     }
 
-    // Sign out user
+    // Clear all auth data from localStorage and return to login
     signOut() {
-        // Clear stored authentication data
         localStorage.removeItem('token');
         localStorage.removeItem('username');
         localStorage.removeItem('userId');
-
-        // Redirect to login page
+        localStorage.removeItem('avatar');
         window.location.href = '/login.html';
     }
 
-    // Set active navigation item
+    // Highlight the nav item matching the current page path
     setActiveNavItem(path) {
         const navItems = document.querySelectorAll('.nav-item');
         navItems.forEach(item => {
@@ -167,33 +184,15 @@ class LayoutManager {
         });
     }
 
-    // Auto-detect current page and set active nav item
     setCurrentPageActive() {
-        const currentPath = window.location.pathname;
-        this.setActiveNavItem(currentPath);
-    }
-
-    // Show loading state
-    showLoading(element) {
-        if (element) {
-            element.innerHTML = '<div class="loading">Loading...</div>';
-        }
-    }
-
-    // Hide loading state
-    hideLoading(element, content) {
-        if (element) {
-            element.innerHTML = content;
-        }
+        this.setActiveNavItem(window.location.pathname);
     }
 }
 
-// Initialize layout when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     window.layoutManager = new LayoutManager();
 });
 
-// Export for use in other scripts
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = LayoutManager;
 }

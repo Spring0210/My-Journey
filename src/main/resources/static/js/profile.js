@@ -1,0 +1,81 @@
+// Profile page — handles avatar preview and saving username/avatar changes
+
+document.addEventListener('DOMContentLoaded', () => {
+    const userId = localStorage.getItem('userId');
+    const avatarInput = document.getElementById('avatarInput');
+    const avatarPreview = document.getElementById('avatarPreview');
+    const usernameInput = document.getElementById('usernameInput');
+    const saveBtn = document.getElementById('saveBtn');
+    const statusMsg = document.getElementById('statusMsg');
+
+    // Populate fields with current values from localStorage
+    usernameInput.value = localStorage.getItem('username') || '';
+    renderAvatarPreview(localStorage.getItem('avatar'));
+
+    // Show a preview of the selected image before uploading
+    avatarInput.addEventListener('change', () => {
+        const file = avatarInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => renderAvatarPreview(e.target.result);
+        reader.readAsDataURL(file);
+    });
+
+    saveBtn.addEventListener('click', async () => {
+        const newUsername = usernameInput.value.trim();
+        const avatarFile = avatarInput.files[0];
+
+        // At least one field must be provided
+        if (!newUsername && !avatarFile) {
+            showStatus('Nothing to update.', false);
+            return;
+        }
+
+        const formData = new FormData();
+        if (newUsername) formData.append('username', newUsername);
+        if (avatarFile) formData.append('avatar', avatarFile);
+
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+
+        try {
+            const res = await apiRequestWithFile(`/api/profile/${userId}`, formData, 'PUT');
+            const data = await res.json();
+
+            if (data.error) {
+                showStatus(data.error, false);
+            } else {
+                // Update localStorage so sidebar and other pages reflect the new values immediately
+                if (data.username) localStorage.setItem('username', data.username);
+                if (data.avatar) localStorage.setItem('avatar', data.avatar);
+                if (!data.avatar) localStorage.removeItem('avatar');
+
+                // Re-render the sidebar user info with updated values
+                if (window.layoutManager) window.layoutManager.setupUserInfo();
+
+                showStatus('Profile updated!', true);
+            }
+        } catch (err) {
+            showStatus('Failed to save changes.', false);
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save Changes';
+        }
+    });
+
+    // Render avatar preview: show image if url provided, else show initial letter
+    function renderAvatarPreview(src) {
+        if (src) {
+            avatarPreview.innerHTML = `<img src="${src}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+        } else {
+            avatarPreview.innerHTML = '';
+            avatarPreview.textContent = (localStorage.getItem('username') || '?').charAt(0).toUpperCase();
+        }
+    }
+
+    function showStatus(msg, success) {
+        statusMsg.textContent = msg;
+        statusMsg.style.color = success ? 'var(--success)' : 'var(--danger)';
+        statusMsg.style.display = 'block';
+    }
+});

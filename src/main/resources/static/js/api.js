@@ -34,16 +34,17 @@ function apiRequest(url, options = {}) {
 }
 
 // API request for file uploads (multipart/form-data)
-function apiRequestWithFile(url, formData) {
+// method defaults to POST but can be overridden (e.g. PUT for profile updates)
+function apiRequestWithFile(url, formData, method = 'POST') {
     const token = localStorage.getItem('token');
     const headers = {};
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
     }
-    
+
     return fetch(url, {
-        method: 'POST',
-        headers: headers,
+        method,
+        headers,
         body: formData
     })
     .then(response => {
