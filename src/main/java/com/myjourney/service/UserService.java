@@ -5,10 +5,11 @@ import com.myjourney.model.User;
 import com.myjourney.repository.PasswordResetTokenRepository;
 import com.myjourney.repository.UserRepository;
 import com.myjourney.util.JwtUtil;
+import com.resend.Resend;
+import com.resend.core.exception.ResendException;
+import com.resend.services.emails.model.CreateEmailOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,9 +19,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.regex.Pattern;
 
 @Service
 public class UserService {
+
+    private static final Pattern EMAIL_PATTERN =
+            Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
     @Autowired
     private UserRepository userRepository;
@@ -34,15 +39,18 @@ public class UserService {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @Autowired
-    private JavaMailSender mailSender;
+    @Value("${resend.api-key}")
+    private String resendApiKey;
 
-    @Value("${spring.mail.username}")
+    @Value("${resend.from}")
     private String fromEmail;
 
     public String register(User user) {
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             return "Username already exists";
+        }
+        if (user.getEmail() == null || !EMAIL_PATTERN.matcher(user.getEmail()).matches()) {
+            return "Invalid email address";
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
@@ -98,13 +106,19 @@ public class UserService {
         token.setExpiredAt(LocalDateTime.now().plusMinutes(10));
         tokenRepository.save(token);
 
-        // Send email
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromEmail);
-        message.setTo(email);
-        message.setSubject("Journey - Password Reset Code");
-        message.setText("Your password reset code is: " + code + "\n\nThis code expires in 10 minutes.\n\nIf you did not request this, please ignore this email.");
-        mailSender.send(message);
+        // Send email via Resend
+        try {
+            Resend resend = new Resend(resendApiKey);
+            CreateEmailOptions params = CreateEmailOptions.builder()
+                    .from(fromEmail)
+                    .to(email)
+                    .subject("My Journey - Password Reset Code")
+                    .text("Your password reset code is: " + code + "\n\nThis code expires in 10 minutes.\n\nIf you did not request this, please ignore this email.")
+                    .build();
+            resend.emails().send(params);
+        } catch (ResendException e) {
+            return "Failed to send email, please try again later";
+        }
 
         return "Code sent";
     }
