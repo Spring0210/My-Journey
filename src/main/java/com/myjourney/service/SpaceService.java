@@ -155,6 +155,32 @@ public class SpaceService {
         return response;
     }
 
+    // Update space name and description (owner only)
+    @Transactional
+    public Map<String, Object> updateSpace(Integer spaceId, Integer userId, String name, String description) {
+        Map<String, Object> response = new HashMap<>();
+
+        Space space = spaceRepository.findById(spaceId).orElse(null);
+        if (space == null) {
+            response.put("error", "Space not found");
+            return response;
+        }
+
+        if (!space.getOwner().getId().equals(userId)) {
+            response.put("error", "Only the owner can edit this space");
+            return response;
+        }
+
+        if (name != null && !name.isBlank()) space.setName(name);
+        if (description != null) space.setDescription(description);
+        spaceRepository.save(space);
+
+        response.put("id", space.getId());
+        response.put("name", space.getName());
+        response.put("description", space.getDescription());
+        return response;
+    }
+
     // Leave a space (owner cannot leave, must delete)
     @Transactional
     public Map<String, Object> leaveSpace(Integer spaceId, Integer userId) {

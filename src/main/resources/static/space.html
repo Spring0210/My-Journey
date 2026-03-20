@@ -88,7 +88,10 @@
       <!-- Right: Space Info -->
       <aside class="space-info-column">
         <div class="card">
-          <h4 class="card__title">Space Info</h4>
+          <div class="space-info-header">
+            <h4 class="card__title">Space Info</h4>
+            <div id="spaceInfoActions"></div>
+          </div>
           <p id="spaceDescription" class="muted"></p>
           <div class="invite-code-box" id="inviteCodeBox" hidden>
             <span class="invite-label">Invite Code</span>
@@ -111,5 +114,37 @@
   </main>
 </div>
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- Edit Space Modal -->
+<div class="modal-overlay" id="editSpaceModal" hidden>
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Edit Space</h3>
+      <button class="modal-close" id="closeEditModal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Space Name <span class="required">*</span></label>
+        <input type="text" id="editSpaceName" maxlength="100" />
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="editSpaceDesc" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn--ghost" id="cancelEdit">Cancel</button>
+      <button class="btn btn--primary" id="confirmEdit">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Image Lightbox -->
+<div class="lightbox" id="lightbox" hidden>
+  <button class="lightbox-close" id="lightboxClose">&times;</button>
+  <button class="lightbox-nav lightbox-prev" id="lightboxPrev">&#8249;</button>
+  <img class="lightbox-img" id="lightboxImg" />
+  <button class="lightbox-nav lightbox-next" id="lightboxNext">&#8250;</button>
+</div>
 </body>
 </html>

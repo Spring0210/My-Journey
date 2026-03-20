@@ -98,6 +98,21 @@ public class SpaceController {
         return ResponseEntity.ok(result);
     }
 
+    // PUT /api/spaces/{spaceId} — update space info (owner only)
+    @PutMapping("/{spaceId}")
+    public ResponseEntity<Map<String, Object>> updateSpace(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @PathVariable Integer spaceId,
+            @RequestBody Map<String, String> body
+    ) {
+        Integer userId = getJwtUserId(authHeader);
+        if (userId == null) return ResponseEntity.status(401).build();
+
+        Map<String, Object> result = spaceService.updateSpace(spaceId, userId, body.get("name"), body.get("description"));
+        if (result.containsKey("error")) return ResponseEntity.status(403).body(result);
+        return ResponseEntity.ok(result);
+    }
+
     // POST /api/spaces/{spaceId}/leave — leave a space
     @PostMapping("/{spaceId}/leave")
     public ResponseEntity<Map<String, Object>> leaveSpace(

@@ -1,10 +1,27 @@
 const userId = parseInt(localStorage.getItem('userId'));
+const username = localStorage.getItem('username');
 const spaceId = new URLSearchParams(window.location.search).get('id');
 let currentPage = 0;
 let totalPages = 0;
 let selectedImages = [];
+let isOwner = false;
+let lightboxImages = [];
+let lightboxIndex = 0;
 
 if (!spaceId) window.location.href = 'spaces.html';
+
+// ── Helpers ───────────────────────────────────────────────────
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function formatDate(isoStr) {
+    return new Date(isoStr + 'Z').toLocaleString('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
+}
 
 // ── Load Space Detail ──────────────────────────────────────────
 async function loadSpaceDetail() {
@@ -18,16 +35,24 @@ async function loadSpaceDetail() {
         document.getElementById('spaceTitle').textContent = space.name;
         document.getElementById('spaceDescription').textContent = space.description || 'No description.';
 
-        const isOwner = space.ownerUsername === localStorage.getItem('username');
+        isOwner = space.ownerUsername === username;
 
-        // Show invite code to all members
+        // Invite code visible to all members
         document.getElementById('inviteCodeBox').hidden = false;
         document.getElementById('inviteCode').textContent = space.inviteCode;
 
-        // Members list
-        const membersList = document.getElementById('membersList');
+        // Edit button for owner
+        if (isOwner) {
+            const editBtn = document.createElement('button');
+            editBtn.className = 'btn btn--ghost btn--sm';
+            editBtn.textContent = 'Edit Space';
+            editBtn.addEventListener('click', () => openEditModal(space));
+            document.getElementById('spaceInfoActions').appendChild(editBtn);
+        }
+
+        // Members
         document.getElementById('memberCount').textContent = `(${space.members.length})`;
-        membersList.innerHTML = space.members.map(m => `
+        document.getElementById('membersList').innerHTML = space.members.map(m => `
             <div class="member-row">
                 <div class="member-avatar">${m.username.charAt(0).toUpperCase()}</div>
                 <div class="member-info">
@@ -53,6 +78,49 @@ async function loadSpaceDetail() {
     }
 }
 
+// ── Edit Space ─────────────────────────────────────────────────
+function openEditModal(space) {
+    document.getElementById('editSpaceName').value = space.name;
+    document.getElementById('editSpaceDesc').value = space.description || '';
+    document.getElementById('editSpaceModal').hidden = false;
+}
+
+document.getElementById('closeEditModal').addEventListener('click', () => {
+    document.getElementById('editSpaceModal').hidden = true;
+});
+document.getElementById('cancelEdit').addEventListener('click', () => {
+    document.getElementById('editSpaceModal').hidden = true;
+});
+document.getElementById('editSpaceModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('editSpaceModal'))
+        document.getElementById('editSpaceModal').hidden = true;
+});
+
+document.getElementById('confirmEdit').addEventListener('click', async () => {
+    const name = document.getElementById('editSpaceName').value.trim();
+    const description = document.getElementById('editSpaceDesc').value.trim();
+    if (!name) { alert('Space name is required.'); return; }
+
+    const btn = document.getElementById('confirmEdit');
+    btn.disabled = true;
+    try {
+        const res = await apiRequest(`/api/spaces/${spaceId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ name, description })
+        });
+        const data = await res.json();
+        if (data.error) { alert(data.error); return; }
+        document.getElementById('spaceTitle').textContent = data.name;
+        document.getElementById('spaceDescription').textContent = data.description || 'No description.';
+        document.title = `${data.name} - Journey`;
+        document.getElementById('editSpaceModal').hidden = true;
+    } catch (e) {
+        alert('Failed to update space.');
+    } finally {
+        btn.disabled = false;
+    }
+});
+
 // ── Copy Invite Code ───────────────────────────────────────────
 document.getElementById('copyCodeBtn').addEventListener('click', () => {
     const code = document.getElementById('inviteCode').textContent;
@@ -61,6 +129,75 @@ document.getElementById('copyCodeBtn').addEventListener('click', () => {
         btn.textContent = 'Copied!';
         setTimeout(() => btn.textContent = 'Copy', 2000);
     });
+});
+
+// ── Image Grid Renderer ────────────────────────────────────────
+// Follows Instagram/WeChat grid conventions:
+// 1 image  → full width, aspect-ratio preserved
+// 2 images → side by side
+// 3 images → 1 large left + 2 stacked right
+// 4 images → 2x2 grid
+// 5 images → 1 large + 4 grid
+// 6+ images → 3-col grid, last cell shows "+N more"
+function renderImageGrid(images) {
+    if (!images || images.length === 0) return '';
+    const count = images.length;
+    const MAX_SHOW = 9;
+    const shown = images.slice(0, MAX_SHOW);
+    const extra = count > MAX_SHOW ? count - MAX_SHOW : 0;
+
+    let gridClass = '';
+    if (count === 1) gridClass = 'img-grid--1';
+    else if (count === 2) gridClass = 'img-grid--2';
+    else if (count === 3) gridClass = 'img-grid--3';
+    else if (count === 4) gridClass = 'img-grid--4';
+    else gridClass = 'img-grid--n';
+
+    const cells = shown.map((url, i) => {
+        const isLast = extra > 0 && i === shown.length - 1;
+        return `
+            <div class="img-cell${i === 0 && (count === 3) ? ' img-cell--tall' : ''}"
+                 data-index="${i}" data-images='${JSON.stringify(images)}'>
+                <img src="${url}" alt="post image" loading="lazy" />
+                ${isLast ? `<div class="img-overlay">+${extra}</div>` : ''}
+            </div>`;
+    }).join('');
+
+    return `<div class="img-grid ${gridClass}">${cells}</div>`;
+}
+
+// ── Lightbox ───────────────────────────────────────────────────
+function openLightbox(images, index) {
+    lightboxImages = images;
+    lightboxIndex = index;
+    document.getElementById('lightboxImg').src = images[index];
+    document.getElementById('lightbox').hidden = false;
+    document.getElementById('lightboxPrev').style.display = images.length > 1 ? '' : 'none';
+    document.getElementById('lightboxNext').style.display = images.length > 1 ? '' : 'none';
+}
+
+document.getElementById('lightboxClose').addEventListener('click', () => {
+    document.getElementById('lightbox').hidden = true;
+});
+document.getElementById('lightboxPrev').addEventListener('click', () => {
+    lightboxIndex = (lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length;
+    document.getElementById('lightboxImg').src = lightboxImages[lightboxIndex];
+});
+document.getElementById('lightboxNext').addEventListener('click', () => {
+    lightboxIndex = (lightboxIndex + 1) % lightboxImages.length;
+    document.getElementById('lightboxImg').src = lightboxImages[lightboxIndex];
+});
+document.getElementById('lightbox').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('lightbox')) {
+        document.getElementById('lightbox').hidden = true;
+    }
+});
+document.addEventListener('keydown', (e) => {
+    const lb = document.getElementById('lightbox');
+    if (lb.hidden) return;
+    if (e.key === 'Escape') lb.hidden = true;
+    if (e.key === 'ArrowLeft') document.getElementById('lightboxPrev').click();
+    if (e.key === 'ArrowRight') document.getElementById('lightboxNext').click();
 });
 
 // ── Load Posts ─────────────────────────────────────────────────
@@ -79,8 +216,7 @@ async function loadPosts(page = 0) {
             container.innerHTML = '<div class="empty-state"><p>No posts yet. Be the first to share something!</p></div>';
         } else {
             container.innerHTML = posts.map(post => renderPost(post)).join('');
-            addImageClickEvents(container);
-            addDeleteListeners(container);
+            bindPostEvents(container);
         }
 
         updatePagination();
@@ -90,38 +226,40 @@ async function loadPosts(page = 0) {
 }
 
 function renderPost(post) {
-    const isAuthor = post.authorId === userId;
-    const date = new Date(post.createdAt + 'Z').toLocaleString('en-US', {
-        month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
-    });
-    const imagesHtml = post.images && post.images.length > 0
-        ? `<div class="post-images post-images--${Math.min(post.images.length, 3)}">${post.images.map(url =>
-            `<img src="${url}" alt="post image" />`).join('')}</div>`
-        : '';
-
+    const canDelete = post.authorId === userId || isOwner;
     return `
         <div class="post-card" data-post-id="${post.id}">
             <div class="post-header">
                 <div class="member-avatar">${post.authorUsername.charAt(0).toUpperCase()}</div>
                 <div class="post-meta">
                     <span class="post-author">${escapeHtml(post.authorUsername)}</span>
-                    <span class="post-date">${date}</span>
+                    <span class="post-date">${formatDate(post.createdAt)}</span>
                 </div>
-                ${isAuthor ? `<button class="post-delete-btn" data-post-id="${post.id}" title="Delete">&times;</button>` : ''}
+                ${canDelete ? `<button class="post-delete-btn" data-post-id="${post.id}" title="Delete">&times;</button>` : ''}
             </div>
             ${post.content ? `<p class="post-content">${escapeHtml(post.content)}</p>` : ''}
-            ${imagesHtml}
+            ${renderImageGrid(post.images)}
         </div>
     `;
 }
 
-function addDeleteListeners(container) {
+function bindPostEvents(container) {
+    // Image grid clicks → lightbox
+    container.querySelectorAll('.img-cell').forEach(cell => {
+        cell.addEventListener('click', () => {
+            const images = JSON.parse(cell.dataset.images);
+            const index = parseInt(cell.dataset.index);
+            const actualIndex = index < images.length ? index : images.length - 1;
+            openLightbox(images, actualIndex);
+        });
+    });
+
+    // Delete buttons
     container.querySelectorAll('.post-delete-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             e.stopPropagation();
             if (!confirm('Delete this post?')) return;
-            const postId = btn.dataset.postId;
-            const res = await apiRequest(`/api/spaces/${spaceId}/posts/${postId}`, { method: 'DELETE' });
+            const res = await apiRequest(`/api/spaces/${spaceId}/posts/${btn.dataset.postId}`, { method: 'DELETE' });
             if (res.ok) loadPosts(currentPage);
             else alert('Failed to delete post.');
         });
@@ -143,6 +281,10 @@ document.getElementById('nextPostsBtn').addEventListener('click', () => loadPost
 // ── Composer: Image Preview ────────────────────────────────────
 document.getElementById('postImages').addEventListener('change', (e) => {
     selectedImages = Array.from(e.target.files);
+    renderComposerPreviews();
+});
+
+function renderComposerPreviews() {
     const preview = document.getElementById('imagePreviewList');
     preview.innerHTML = selectedImages.map((f, i) => `
         <div class="composer-preview-item">
@@ -154,14 +296,10 @@ document.getElementById('postImages').addEventListener('change', (e) => {
     preview.querySelectorAll('.remove-preview').forEach(btn => {
         btn.addEventListener('click', () => {
             selectedImages.splice(parseInt(btn.dataset.index), 1);
-            // Re-trigger change display
-            const dt = new DataTransfer();
-            selectedImages.forEach(f => dt.items.add(f));
-            document.getElementById('postImages').files = dt.files;
-            document.getElementById('postImages').dispatchEvent(new Event('change'));
+            renderComposerPreviews();
         });
     });
-});
+}
 
 // ── Submit Post ────────────────────────────────────────────────
 document.getElementById('postBtn').addEventListener('click', async () => {
@@ -183,7 +321,6 @@ document.getElementById('postBtn').addEventListener('click', async () => {
         const res = await apiRequestWithFile(`/api/spaces/${spaceId}/posts`, formData);
         if (res && res.ok) {
             document.getElementById('postContent').value = '';
-            document.getElementById('postImages').value = '';
             document.getElementById('imagePreviewList').innerHTML = '';
             selectedImages = [];
             loadPosts(0);
@@ -213,11 +350,6 @@ async function deleteSpace() {
     const data = await res.json();
     if (data.error) { alert(data.error); return; }
     window.location.href = 'spaces.html';
-}
-
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 // ── Init ───────────────────────────────────────────────────────
