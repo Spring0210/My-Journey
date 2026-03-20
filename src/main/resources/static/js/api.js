@@ -1,4 +1,4 @@
-// API请求工具函数
+// API request utilities
 function getAuthHeaders() {
     const token = localStorage.getItem('token');
     return {
@@ -24,7 +24,7 @@ function apiRequest(url, options = {}) {
     return fetch(url, finalOptions)
         .then(response => {
             if (response.status === 401) {
-                // Token过期或无效，重定向到登录页
+                // Token expired or invalid, redirect to login
                 localStorage.clear();
                 window.location.href = 'login.html';
                 return;
@@ -33,7 +33,7 @@ function apiRequest(url, options = {}) {
         });
 }
 
-// 用于文件上传的API请求
+// API request for file uploads (multipart/form-data)
 function apiRequestWithFile(url, formData) {
     const token = localStorage.getItem('token');
     const headers = {};

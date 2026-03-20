@@ -1,207 +1,133 @@
-# 📖 My Journey - Personal Journal Application
+# My Journey - Personal Journal Application
 
-A modern, full-stack journal application built with Java Spring Boot and vanilla JavaScript, featuring JWT authentication, multiple image uploads, and a beautiful Instagram-style interface.
+A full-stack journaling application with collaborative spaces, built with Java Spring Boot and vanilla JavaScript.
 
-## ✨ Features
+## Features
 
-### 🔐 Authentication & Security
-- **JWT Authentication** - Secure token-based authentication
-- **Password Encryption** - BCrypt password hashing
-- **Session Management** - Stateless authentication
-- **Protected Routes** - Secure API endpoints
+### Authentication & Security
+- JWT-based stateless authentication (24-hour token expiration)
+- BCrypt password hashing
+- Password reset via email verification code (6-digit code, 10-minute expiration)
+- Role-based access control for spaces (Owner / Member)
 
-### 📝 Journal Management
-- **Create & Edit Entries** - Rich text journal entries
-- **Multiple Image Upload** - Upload multiple photos per entry
-- **Image Management** - Add, delete, and view images
-- **Search & Filter** - Search by keyword or date
-- **Calendar View** - Visual calendar with entry indicators
+### Journal Management
+- Create, edit, and delete dated journal entries
+- Multiple image uploads per entry (stored on Cloudinary)
+- Add or remove individual images from existing entries
+- Search entries by keyword or date
+- Paginated entry list (10 per page)
 
-### 🎨 Modern UI/UX
-- **Responsive Design** - Works on all devices
-- **Instagram-style Layout** - Beautiful image galleries
-- **Dark/Light Theme** - Automatic theme detection
-- **Sidebar Navigation** - Easy navigation between pages
-- **Dashboard** - Statistics and recent entries overview
+### Calendar & Navigation
+- Monthly calendar view with FullCalendar — dates with entries are highlighted
+- Click a date to view all entries for that day
+- Dashboard with stats: total entries, this month, total images, day streak
 
-### 📱 Pages
-- **Dashboard** - Overview with statistics and recent entries
-- **My Journals** - List view with search and filtering
-- **Calendar View** - Monthly calendar with entry indicators
-- **Day View** - Entries for a specific day
-- **Detail Page** - Full entry details with image management
+### Shared Spaces
+- Create a shared space and invite others via an 8-character invite code
+- Join any space with an invite code
+- Post content with multiple images to a shared timeline (newest first, 20 per page)
+- Space owners can edit space info, delete the space, or remove posts
+- Members can leave spaces; authors can delete their own posts
+- Image lightbox viewer with navigation
 
-## 🛠 Technology Stack
+### UI / UX
+- Responsive design for all screen sizes
+- Light / dark theme toggle, persisted in localStorage
+- Sidebar navigation with active page highlighting
+
+## Technology Stack
 
 ### Backend
-- **Java 17** - Programming language
-- **Spring Boot 3.x** - Application framework
-- **Spring Security** - Authentication and authorization
-- **Spring Data JPA** - Database abstraction
-- **MySQL** - Database
-- **JWT** - Token-based authentication
-- **Maven** - Dependency management
+- **Java 21** + **Spring Boot 3.4.5**
+- **Spring Security** — JWT authentication filter
+- **Spring Data JPA** + **Hibernate** — ORM with MySQL
+- **JJWT 0.11.5** — JWT token generation and validation
+- **Cloudinary** — Cloud image storage
+- **Spring Mail** — Gmail SMTP for password reset emails
+- **Lombok** — Boilerplate reduction
+- **Maven** — Build and dependency management
 
 ### Frontend
-- **Vanilla JavaScript** - No framework dependencies
-- **HTML5 & CSS3** - Modern web standards
-- **Fetch API** - HTTP requests
-- **Local Storage** - Client-side data persistence
-- **FullCalendar** - Calendar component
+- Vanilla **HTML5 / CSS3 / JavaScript** (no frameworks)
+- **FullCalendar 6.1.8** — Calendar component
+- **Fetch API** — HTTP requests with JWT header injection
+- **localStorage** — Token, theme, and user info persistence
 
-### Database
-- **MySQL** - Relational database
-- **JPA Entities** - Object-relational mapping
-- **Foreign Keys** - Data integrity
+### Infrastructure
+- **MySQL 8.0** — Relational database
+- **Docker + Docker Compose** — Containerized deployment
 
-## 🚀 Getting Started
-
-### Prerequisites
-- Java 17 or higher
-- Maven 3.6+
-- MySQL 8.0+
-- Node.js (for development tools)
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/my-journey.git
-   cd my-journey
-   ```
-
-2. **Set up the database**
-   ```bash
-   # Create MySQL database
-   mysql -u root -p < database/schema.sql
-   ```
-
-3. **Configure application properties**
-   ```properties
-   # src/main/resources/application.properties
-   spring.datasource.url=jdbc:mysql://localhost:3306/my_journey
-   spring.datasource.username=your_username
-   spring.datasource.password=your_password
-   spring.jpa.hibernate.ddl-auto=update
-   ```
-
-4. **Build and run the application**
-   ```bash
-   mvn clean install
-   mvn spring-boot:run
-   ```
-
-5. **Access the application**
-   - Open your browser and go to `http://localhost:8080`
-   - Register a new account or login
-
-## 📁 Project Structure
+## Project Structure
 
 ```
 my-journey/
 ├── src/main/java/com/myjourney/
-│   ├── config/          # Configuration classes
-│   ├── controller/      # REST controllers
-│   ├── model/          # JPA entities
-│   ├── repository/     # Data access layer
-│   ├── service/        # Business logic
-│   ├── util/           # Utility classes
-│   └── filter/         # Security filters
+│   ├── config/          # Security, Cloudinary, Web MVC config
+│   ├── controller/      # UserController, JournalController, SpaceController, SpacePostController
+│   ├── model/           # User, JournalEntry, Space, SpaceMember, SpacePost, PasswordResetToken
+│   ├── repository/      # JPA repositories for each entity
+│   ├── service/         # UserService, JournalService, SpaceService, SpacePostService, CloudStorageService
+│   ├── filter/          # JwtAuthenticationFilter
+│   └── util/            # JwtUtil
 ├── src/main/resources/
-│   ├── static/         # Frontend files
-│   │   ├── css/        # Stylesheets
-│   │   ├── js/         # JavaScript files
-│   │   └── *.html      # HTML pages
-│   └── application.properties
+│   ├── static/
+│   │   ├── css/         # ui.css, auth.css, journals.css, spaces.css, detail.css ...
+│   │   ├── js/          # api.js, layout.js, dashboard.js, journals.js, detail.js, space.js ...
+│   │   └── *.html       # login, register, forgot-password, dashboard, journals, calendar, day, detail, spaces, space
+│   ├── application.properties
+│   └── application-docker.properties
 ├── database/
-│   └── schema.sql      # Database schema
-└── uploads/            # Image upload directory
+│   └── schema.sql
+├── Dockerfile
+└── docker-compose.yml
 ```
 
-## 🔧 Configuration
+## API Endpoints
 
-### Environment Variables
-```bash
-# Database
-DB_URL=jdbc:mysql://localhost:3306/my_journey
-DB_USERNAME=your_username
-DB_PASSWORD=your_password
+### Authentication (Public)
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/register` | Register new user |
+| POST | `/api/login` | Login, returns JWT token |
+| POST | `/api/forgot-password` | Send 6-digit reset code to email |
+| POST | `/api/reset-password` | Verify code and set new password |
 
-# JWT
-JWT_SECRET=your_jwt_secret_key
-JWT_EXPIRATION=86400000
+### Journal Entries (JWT required)
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/entries/{userId}` | Create entry with optional images |
+| GET | `/api/entries/{userId}` | Get paginated entries (10/page) |
+| POST | `/api/entries/edit/{entryId}` | Update entry |
+| DELETE | `/api/entries/{entryId}` | Delete entry and its images |
+| GET | `/api/entries/search` | Search by keyword or date |
+| GET | `/api/entries/entry/{entryId}` | Get single entry |
+| GET | `/api/entries/calendar/{userId}` | Get all entries for calendar |
+| GET | `/api/entries/user/{userId}/entries/date/{entryDate}` | Get entries for a specific date |
+| POST | `/api/entries/add-images/{entryId}` | Add images to existing entry |
+| POST | `/api/entries/delete-image` | Remove a single image from entry |
 
-# File Upload
-UPLOAD_DIR=uploads/
-MAX_FILE_SIZE=10MB
-```
+### Spaces (JWT required)
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/spaces` | Create space |
+| POST | `/api/spaces/join` | Join space via invite code |
+| GET | `/api/spaces` | List user's spaces |
+| GET | `/api/spaces/{spaceId}` | Get space detail with members |
+| PUT | `/api/spaces/{spaceId}` | Update space info (owner only) |
+| POST | `/api/spaces/{spaceId}/leave` | Leave space |
+| DELETE | `/api/spaces/{spaceId}` | Delete space (owner only) |
+| POST | `/api/spaces/{spaceId}/posts` | Create post with optional images |
+| GET | `/api/spaces/{spaceId}/posts` | Get paginated posts (20/page) |
+| DELETE | `/api/spaces/{spaceId}/posts/{postId}` | Delete post (author or owner) |
 
-### CORS Configuration
-The application is configured to allow requests from:
-- `http://localhost:8080` (development)
-- Your production domain (when deployed)
+## Getting Started
 
-## 📱 API Endpoints
+### Prerequisites
+- Java 21+
+- Maven 3.6+
+- MySQL 8.0+
 
-### Authentication
-- `POST /api/register` - User registration
-- `POST /api/login` - User login
-- `POST /api/reset-password` - Password reset
-
-### Journal Entries
-- `GET /api/entries/{userId}` - Get user's entries
-- `POST /api/entries/{userId}` - Create new entry
-- `PUT /api/entries/edit/{entryId}` - Update entry
-- `DELETE /api/entries/{entryId}` - Delete entry
-- `GET /api/entries/search` - Search entries
-- `GET /api/entries/entry/{entryId}` - Get single entry
-
-### Image Management
-- `POST /api/entries/add-images/{entryId}` - Add images to entry
-- `POST /api/entries/delete-image` - Delete single image
-
-## 🎨 Customization
-
-### Themes
-The application supports automatic theme detection based on system preferences. You can customize colors in `src/main/resources/static/css/ui.css`:
-
-```css
-:root {
-  --primary: #3b82f6;
-  --primary-2: #1d4ed8;
-  --secondary: #64748b;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --text: #1e293b;
-  --text-muted: #64748b;
-  --background: #ffffff;
-  --card: #ffffff;
-  --border: #e2e8f0;
-}
-```
-
-### Image Storage
-By default, images are stored locally in the `uploads/` directory. For production, consider using cloud storage services like AWS S3 or Cloudinary.
-
-## 🚀 Deployment
-
-### Local Development
-1. Start MySQL service
-2. Run `mvn spring-boot:run`
-3. Access `http://localhost:8080`
-
-### Production Deployment
-1. **Backend**: Deploy to Heroku, Railway, or AWS
-2. **Database**: Use managed MySQL service
-3. **Images**: Use cloud storage (AWS S3, Cloudinary)
-4. **Frontend**: Deploy to Vercel, Netlify, or GitHub Pages
-
-### Docker Deployment
-
-The project includes `Dockerfile` and `docker-compose.yml` for containerized deployment.
-
-**Prerequisites:** Docker and Docker Compose installed on your server.
+### Local Setup
 
 1. **Clone the repository**
    ```bash
@@ -209,52 +135,67 @@ The project includes `Dockerfile` and `docker-compose.yml` for containerized dep
    cd My-Journey
    ```
 
-2. **Create environment file**
+2. **Create the database**
    ```bash
-   cp .env.example .env
+   mysql -u root -p < database/schema.sql
    ```
-   Edit `.env` and fill in your credentials:
+
+3. **Set environment variables**
+   ```bash
+   export JWT_SECRET=your_jwt_secret
+   export CLOUDINARY_CLOUD_NAME=your_cloud_name
+   export CLOUDINARY_API_KEY=your_api_key
+   export CLOUDINARY_API_SECRET=your_api_secret
+   export GMAIL_USERNAME=your_gmail_address
+   export GMAIL_APP_PASSWORD=your_gmail_app_password
+   export SPRING_DATASOURCE_PASSWORD=your_db_password
+   ```
+
+4. **Run the application**
+   ```bash
+   mvn spring-boot:run
+   ```
+
+5. **Open** `http://localhost:8080`
+
+### Docker Deployment
+
+1. **Create `.env` file**
    ```env
    MYSQL_ROOT_PASSWORD=yourpassword
+   JWT_SECRET=your_jwt_secret
    CLOUDINARY_CLOUD_NAME=your_cloud_name
    CLOUDINARY_API_KEY=your_api_key
    CLOUDINARY_API_SECRET=your_api_secret
+   GMAIL_USERNAME=your_gmail_address
+   GMAIL_APP_PASSWORD=your_gmail_app_password
    ```
 
-3. **Build and start all services**
+2. **Build and start**
    ```bash
    docker-compose up -d --build
    ```
-   This will start both the MySQL database and the Spring Boot application.
 
-4. **Access the application**
-   - Open your browser and go to `http://your-server-ip:8080`
+3. **Open** `http://your-server-ip:8080`
 
 **Useful commands:**
 ```bash
-docker-compose logs -f app     # View application logs
-docker-compose down            # Stop all services
-docker-compose up -d           # Restart without rebuilding
+docker-compose logs -f app   # View app logs
+docker-compose down          # Stop all services
+docker-compose up -d         # Restart without rebuilding
 ```
 
-## 🤝 Contributing
+## Database Schema
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+| Table | Purpose |
+|-------|---------|
+| `user` | User accounts (id, username, password, email) |
+| `journal_entry` | Journal entries with comma-separated image URLs |
+| `space` | Shared spaces with unique invite codes |
+| `space_member` | User-space membership with OWNER / MEMBER roles |
+| `space_post` | Posts in spaces with comma-separated image URLs |
+| `password_reset_token` | Temporary codes for password reset |
 
-## 📝 License
+## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Spring Boot team for the excellent framework
-- FullCalendar for the calendar component
-- All contributors and testers
-
----
-
-**Happy Journaling! 📖✨**
+MIT License
