@@ -7,6 +7,8 @@ import com.myjourney.model.Space;
 import com.myjourney.model.SpacePost;
 import com.myjourney.model.User;
 import com.myjourney.repository.SpaceMemberRepository;
+import com.myjourney.repository.SpacePostCommentRepository;
+import com.myjourney.repository.SpacePostReactionRepository;
 import com.myjourney.repository.SpacePostRepository;
 import com.myjourney.repository.SpaceRepository;
 import com.myjourney.repository.UserRepository;
@@ -37,6 +39,12 @@ public class SpacePostService {
 
     @Autowired
     private SpacePostReactionService reactionService;
+
+    @Autowired
+    private SpacePostReactionRepository reactionRepository;
+
+    @Autowired
+    private SpacePostCommentRepository commentRepository;
 
     @Autowired
     private SpacePostCommentService commentService;
@@ -105,6 +113,10 @@ public class SpacePostService {
         if (!isAuthor && !isSpaceOwner) {
             throw new AppException(HttpStatus.FORBIDDEN, "Access denied");
         }
+
+        // Delete child records first to avoid foreign key constraint violations
+        reactionRepository.deleteByPost(post);
+        commentRepository.deleteByPost(post);
 
         // Clean up images from Cloudinary before deleting the post record
         List<String> imageUrls = post.getImagePathList();
