@@ -6,8 +6,9 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-yourpassword}
       MYSQL_DATABASE: my_journey
-    ports:
-      - "3306:3306"
+    # No external port mapping — MySQL is only accessible within the Docker network
+    expose:
+      - "3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -20,8 +21,9 @@ services:
     build: .
     container_name: my-journey-app
     restart: always
+    # Bind to localhost only — Nginx proxies to this port, no need for external access
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     depends_on:
       mysql:
         condition: service_healthy
