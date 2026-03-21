@@ -39,9 +39,12 @@ public class CloudStorageServiceImpl implements CloudStorageService {
             );
 
             String url = (String) result.get("secure_url");
-            System.out.println("Successfully uploaded to Cloudinary: " + url);
 
-            // Return the secure URL
+            // Insert f_auto,q_auto transformation so Cloudinary converts non-web formats
+            // (e.g. HEIC) to WebP/JPEG automatically based on the browser's capabilities
+            url = url.replace("/upload/", "/upload/f_auto,q_auto/");
+
+            System.out.println("Successfully uploaded to Cloudinary: " + url);
             return url;
 
         } catch (IOException e) {
