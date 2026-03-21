@@ -1,5 +1,6 @@
 const userId = parseInt(localStorage.getItem('userId'));
 const username = localStorage.getItem('username');
+const myAvatar = localStorage.getItem('avatar');
 const spaceId = new URLSearchParams(window.location.search).get('id');
 let currentPage = 0;
 let totalPages = 0;
@@ -306,7 +307,7 @@ function renderCommentSection(post) {
             <div class="comment-body-area" hidden>
                 <div class="comment-list">${commentItems}</div>
                 <div class="comment-input-row">
-                    ${renderAvatar(null, username, 'member-avatar')}
+                    ${renderAvatar(myAvatar, username, 'member-avatar')}
                     <input class="comment-input" type="text" placeholder="Write a comment…" data-post-id="${post.id}" maxlength="500" />
                     <button class="comment-send-btn" data-post-id="${post.id}">Send</button>
                 </div>
