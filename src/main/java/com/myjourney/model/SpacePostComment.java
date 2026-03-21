@@ -2,6 +2,7 @@ package com.myjourney.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @Entity
 @Table(name = "space_post_comment")
@@ -27,7 +28,7 @@ public class SpacePostComment {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = LocalDateTime.now(ZoneOffset.UTC);
     }
 
     public Integer getId() { return id; }

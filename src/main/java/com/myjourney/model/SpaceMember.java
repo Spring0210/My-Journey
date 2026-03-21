@@ -2,6 +2,7 @@ package com.myjourney.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @Entity
 @Table(
@@ -35,7 +36,7 @@ public class SpaceMember {
 
     @PrePersist
     protected void onCreate() {
-        joinedAt = LocalDateTime.now();
+        joinedAt = LocalDateTime.now(ZoneOffset.UTC);
     }
 
     public Integer getId() { return id; }
