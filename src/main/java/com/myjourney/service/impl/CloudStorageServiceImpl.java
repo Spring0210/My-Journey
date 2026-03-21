@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.Arrays;
 
 @Service
 public class CloudStorageServiceImpl implements CloudStorageService {
@@ -28,9 +29,9 @@ public class CloudStorageServiceImpl implements CloudStorageService {
             // Configure upload options
             Map<String, Object> uploadOptions = new HashMap<>();
             uploadOptions.put("folder", folder != null ? folder : "my-journey");
-            uploadOptions.put("resource_type", "auto"); // Auto-detect image/video
-            uploadOptions.put("quality", "auto"); // Auto-optimize quality
-            uploadOptions.put("fetch_format", "auto"); // Auto-optimize format
+            uploadOptions.put("resource_type", "image"); // Force image type; avoids HEIC being treated as video
+            uploadOptions.put("quality", "auto");
+            uploadOptions.put("page", 1); // Only take the first page/frame — prevents HEIC Live Photos from producing multiple images
 
             // Upload file to Cloudinary
             Map<String, Object> result = cloudinary.uploader().upload(
@@ -124,16 +125,38 @@ public class CloudStorageServiceImpl implements CloudStorageService {
             }
 
             String afterUpload = parts[1];
-            if (afterUpload.matches("^v\\d+/.*")) {
-                afterUpload = afterUpload.substring(afterUpload.indexOf('/') + 1);
+
+            // Skip Cloudinary transformation segments (e.g. f_auto,q_auto) — they appear
+            // before the version number and contain commas or underscores with known prefixes
+            // Keep skipping segments until we hit the version string (v followed by digits)
+            // or a segment that looks like the start of the public ID path
+            String[] segments = afterUpload.split("/");
+            int startIndex = 0;
+            for (int i = 0; i < segments.length; i++) {
+                if (segments[i].matches("^v\\d+$")) {
+                    // Skip version segment too, public ID starts after it
+                    startIndex = i + 1;
+                    break;
+                } else if (segments[i].contains(",") || segments[i].matches("^[a-z]_.*")) {
+                    // This looks like a transformation segment, skip it
+                    startIndex = i + 1;
+                } else {
+                    // Reached the public ID portion
+                    startIndex = i;
+                    break;
+                }
             }
 
-            int lastDot = afterUpload.lastIndexOf('.');
+            // Rejoin remaining segments as the public ID
+            String publicId = String.join("/", Arrays.copyOfRange(segments, startIndex, segments.length));
+
+            // Remove file extension
+            int lastDot = publicId.lastIndexOf('.');
             if (lastDot != -1) {
-                afterUpload = afterUpload.substring(0, lastDot);
+                publicId = publicId.substring(0, lastDot);
             }
 
-            return afterUpload;
+            return publicId;
 
         } catch (Exception e) {
             System.err.println("Failed to extract public ID from URL: " + url);
