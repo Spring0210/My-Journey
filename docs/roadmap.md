@@ -39,15 +39,14 @@
 ## Phase 2 — Experience Polish
 
 ### Social Features
-- [ ] Member avatar / display name support
 - [x] Post reactions (like / emoji)
 - [x] Comments on space posts
-- [ ] In-app notifications for new posts in joined spaces
+- [x] In-app notifications (new post / new comment); sidebar badge with 30s polling; delete single / clear all
 
 ### Spaces Improvements
 - [ ] Space cover image upload
-- [ ] Space permission tiers (read-only member vs posting member)
 - [ ] Kick member from space (owner only)
+- [ ] Space permission tiers (read-only member vs posting member)
 - [ ] Space search / discovery (public spaces)
 
 ### Journal Improvements
@@ -59,6 +58,14 @@
 - [x] User profile page (avatar, username)
 - [ ] Change password from settings
 - [ ] Bio / display name field
+
+### Bug Fixes & Security (done in Phase 2)
+- [x] Fix login failure after DTO refactor (checked wrong response field)
+- [x] Hide BCrypt password hash from journal API responses (@JsonIgnore)
+- [x] Unified error handling via GlobalExceptionHandler + AppException
+- [x] Replace System.out/err with SLF4J logging
+- [x] Fix post/comment timestamps (ZoneOffset.UTC + JVM TZ=UTC in Docker)
+- [x] Fix post deletion FK constraint (delete reactions/comments first)
 
 ---
 
