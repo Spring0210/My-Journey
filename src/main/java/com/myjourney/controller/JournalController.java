@@ -1,5 +1,7 @@
 package com.myjourney.controller;
 
+import com.myjourney.dto.CalendarEventResponse;
+import com.myjourney.dto.PageResponse;
 import com.myjourney.model.JournalEntry;
 import com.myjourney.model.User;
 import com.myjourney.repository.UserRepository;
@@ -76,7 +78,7 @@ public class JournalController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<Map<String, Object>> getUserEntries(
+    public ResponseEntity<PageResponse<JournalEntry>> getUserEntries(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Integer userId,
             @RequestParam(defaultValue = "0") int page,
@@ -156,7 +158,7 @@ public class JournalController {
     }
 
     @GetMapping("/calendar/{userId}")
-    public ResponseEntity<List<Map<String, Object>>> getCalendarEntries(
+    public ResponseEntity<List<CalendarEventResponse>> getCalendarEntries(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Integer userId
     ) {
@@ -165,18 +167,11 @@ public class JournalController {
             return ResponseEntity.status(403).build();
         }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        List<JournalEntry> entries = journalService.getEntriesByUser(user);
+        User user = userRepository.findById(userId).orElseThrow();
+        List<CalendarEventResponse> events = journalService.getEntriesByUser(user).stream()
+                .map(e -> new CalendarEventResponse(e.getId(), e.getTitle(), e.getEntryDate().toString()))
+                .toList();
 
-        List<Map<String, Object>> events = new ArrayList<>();
-        for (JournalEntry entry : entries) {
-            Map<String, Object> event = new HashMap<>();
-            event.put("id", entry.getId());
-            event.put("title", entry.getTitle());
-            event.put("start", entry.getEntryDate().toString());
-            events.add(event);
-        }
         return ResponseEntity.ok(events);
     }
 

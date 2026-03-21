@@ -512,16 +512,22 @@ document.getElementById('postBtn').addEventListener('click', async () => {
 async function leaveSpace() {
     if (!confirm('Leave this space?')) return;
     const res = await apiRequest(`/api/spaces/${spaceId}/leave`, { method: 'POST' });
-    const data = await res.json();
-    if (data.error) { alert(data.error); return; }
+    if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || 'Failed to leave space.');
+        return;
+    }
     window.location.href = 'spaces.html';
 }
 
 async function deleteSpace() {
     if (!confirm('Delete this space? This cannot be undone.')) return;
     const res = await apiRequest(`/api/spaces/${spaceId}`, { method: 'DELETE' });
-    const data = await res.json();
-    if (data.error) { alert(data.error); return; }
+    if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || 'Failed to delete space.');
+        return;
+    }
     window.location.href = 'spaces.html';
 }
 

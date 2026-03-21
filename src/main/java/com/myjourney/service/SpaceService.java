@@ -1,5 +1,10 @@
 package com.myjourney.service;
 
+import com.myjourney.dto.MemberInfo;
+import com.myjourney.dto.SpaceDetailResponse;
+import com.myjourney.dto.SpaceResponse;
+import com.myjourney.dto.SpaceSummaryResponse;
+import com.myjourney.exception.AppException;
 import com.myjourney.model.Space;
 import com.myjourney.model.SpaceMember;
 import com.myjourney.model.SpaceMember.Role;
@@ -8,13 +13,12 @@ import com.myjourney.repository.SpaceMemberRepository;
 import com.myjourney.repository.SpaceRepository;
 import com.myjourney.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 import java.util.Optional;
 
 @Service
@@ -33,16 +37,11 @@ public class SpaceService {
     @Autowired
     private UserRepository userRepository;
 
-    // Create a new space, creator becomes OWNER
+    // Create a new space; the creator becomes OWNER
     @Transactional
-    public Map<String, Object> createSpace(Integer userId, String name, String description) {
-        Map<String, Object> response = new HashMap<>();
-
-        User owner = userRepository.findById(userId).orElse(null);
-        if (owner == null) {
-            response.put("error", "User not found");
-            return response;
-        }
+    public SpaceResponse createSpace(Integer userId, String name, String description) {
+        User owner = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "User not found"));
 
         Space space = new Space();
         space.setName(name);
@@ -58,35 +57,20 @@ public class SpaceService {
         member.setRole(Role.OWNER);
         spaceMemberRepository.save(member);
 
-        response.put("id", space.getId());
-        response.put("name", space.getName());
-        response.put("description", space.getDescription());
-        response.put("inviteCode", space.getInviteCode());
-        return response;
+        return new SpaceResponse(space.getId(), space.getName(), space.getDescription(), space.getInviteCode());
     }
 
     // Join a space via invite code
     @Transactional
-    public Map<String, Object> joinSpace(Integer userId, String inviteCode) {
-        Map<String, Object> response = new HashMap<>();
+    public SpaceResponse joinSpace(Integer userId, String inviteCode) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "User not found"));
 
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null) {
-            response.put("error", "User not found");
-            return response;
-        }
-
-        Optional<Space> spaceOpt = spaceRepository.findByInviteCode(inviteCode.toUpperCase());
-        if (spaceOpt.isEmpty()) {
-            response.put("error", "Invalid invite code");
-            return response;
-        }
-
-        Space space = spaceOpt.get();
+        Space space = spaceRepository.findByInviteCode(inviteCode.toUpperCase())
+                .orElseThrow(() -> new AppException(HttpStatus.BAD_REQUEST, "Invalid invite code"));
 
         if (spaceMemberRepository.existsBySpaceAndUser(space, user)) {
-            response.put("error", "Already a member of this space");
-            return response;
+            throw new AppException(HttpStatus.BAD_REQUEST, "Already a member of this space");
         }
 
         SpaceMember member = new SpaceMember();
@@ -95,140 +79,98 @@ public class SpaceService {
         member.setRole(Role.MEMBER);
         spaceMemberRepository.save(member);
 
-        response.put("id", space.getId());
-        response.put("name", space.getName());
-        response.put("description", space.getDescription());
-        return response;
+        return new SpaceResponse(space.getId(), space.getName(), space.getDescription(), space.getInviteCode());
     }
 
     // Get all spaces the user belongs to
-    public List<Map<String, Object>> getMySpaces(Integer userId) {
-        User user = userRepository.findById(userId).orElseThrow();
-        List<SpaceMember> memberships = spaceMemberRepository.findByUser(user);
+    public List<SpaceSummaryResponse> getMySpaces(Integer userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "User not found"));
 
-        return memberships.stream().map(m -> {
-            Map<String, Object> item = new HashMap<>();
+        return spaceMemberRepository.findByUser(user).stream().map(m -> {
             Space s = m.getSpace();
-            item.put("id", s.getId());
-            item.put("name", s.getName());
-            item.put("description", s.getDescription());
-            item.put("coverImage", s.getCoverImage());
-            item.put("inviteCode", s.getInviteCode());
-            item.put("role", m.getRole().name());
-            item.put("ownerUsername", s.getOwner().getUsername());
-            return item;
+            return new SpaceSummaryResponse(
+                    s.getId(), s.getName(), s.getDescription(),
+                    s.getCoverImage(), s.getInviteCode(),
+                    m.getRole().name(), s.getOwner().getUsername());
         }).toList();
     }
 
-    // Get space detail (only accessible to members)
-    public Map<String, Object> getSpaceDetail(Integer spaceId, Integer userId) {
-        Map<String, Object> response = new HashMap<>();
+    // Get space detail — accessible to members only
+    public SpaceDetailResponse getSpaceDetail(Integer spaceId, Integer userId) {
+        Space space = spaceRepository.findById(spaceId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Space not found"));
 
-        Space space = spaceRepository.findById(spaceId).orElse(null);
-        if (space == null) {
-            response.put("error", "Space not found");
-            return response;
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (!spaceMemberRepository.existsBySpaceAndUser(space, user)) {
+            throw new AppException(HttpStatus.FORBIDDEN, "Access denied");
         }
 
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null || !spaceMemberRepository.existsBySpaceAndUser(space, user)) {
-            response.put("error", "Access denied");
-            return response;
-        }
+        List<MemberInfo> members = spaceMemberRepository.findBySpace(space).stream().map(m ->
+                new MemberInfo(
+                        m.getUser().getId(),
+                        m.getUser().getUsername(),
+                        m.getUser().getAvatar(), // include avatar for frontend display
+                        m.getRole().name(),
+                        m.getJoinedAt())
+        ).toList();
 
-        List<Map<String, Object>> members = spaceMemberRepository.findBySpace(space).stream().map(m -> {
-            Map<String, Object> memberInfo = new HashMap<>();
-            memberInfo.put("userId", m.getUser().getId());
-            memberInfo.put("username", m.getUser().getUsername());
-            memberInfo.put("avatar", m.getUser().getAvatar()); // include avatar for frontend display
-            memberInfo.put("role", m.getRole().name());
-            memberInfo.put("joinedAt", m.getJoinedAt());
-            return memberInfo;
-        }).toList();
-
-        response.put("id", space.getId());
-        response.put("name", space.getName());
-        response.put("description", space.getDescription());
-        response.put("coverImage", space.getCoverImage());
-        response.put("inviteCode", space.getInviteCode());
-        response.put("ownerUsername", space.getOwner().getUsername());
-        response.put("members", members);
-        return response;
+        return new SpaceDetailResponse(
+                space.getId(), space.getName(), space.getDescription(),
+                space.getCoverImage(), space.getInviteCode(),
+                space.getOwner().getUsername(), members);
     }
 
-    // Update space name and description (owner only)
+    // Update space name and description — owner only
     @Transactional
-    public Map<String, Object> updateSpace(Integer spaceId, Integer userId, String name, String description) {
-        Map<String, Object> response = new HashMap<>();
-
-        Space space = spaceRepository.findById(spaceId).orElse(null);
-        if (space == null) {
-            response.put("error", "Space not found");
-            return response;
-        }
+    public SpaceResponse updateSpace(Integer spaceId, Integer userId, String name, String description) {
+        Space space = spaceRepository.findById(spaceId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Space not found"));
 
         if (!space.getOwner().getId().equals(userId)) {
-            response.put("error", "Only the owner can edit this space");
-            return response;
+            throw new AppException(HttpStatus.FORBIDDEN, "Only the owner can edit this space");
         }
 
         if (name != null && !name.isBlank()) space.setName(name);
         if (description != null) space.setDescription(description);
         spaceRepository.save(space);
 
-        response.put("id", space.getId());
-        response.put("name", space.getName());
-        response.put("description", space.getDescription());
-        return response;
+        return new SpaceResponse(space.getId(), space.getName(), space.getDescription(), space.getInviteCode());
     }
 
-    // Leave a space (owner cannot leave, must delete)
+    // Leave a space — owner cannot leave, must delete instead
     @Transactional
-    public Map<String, Object> leaveSpace(Integer spaceId, Integer userId) {
-        Map<String, Object> response = new HashMap<>();
+    public void leaveSpace(Integer spaceId, Integer userId) {
+        Space space = spaceRepository.findById(spaceId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Space not found"));
 
-        Space space = spaceRepository.findById(spaceId).orElse(null);
-        if (space == null) {
-            response.put("error", "Space not found");
-            return response;
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "User not found"));
 
-        User user = userRepository.findById(userId).orElse(null);
         Optional<SpaceMember> memberOpt = spaceMemberRepository.findBySpaceAndUser(space, user);
         if (memberOpt.isEmpty()) {
-            response.put("error", "Not a member of this space");
-            return response;
+            throw new AppException(HttpStatus.BAD_REQUEST, "Not a member of this space");
         }
-
         if (memberOpt.get().getRole() == Role.OWNER) {
-            response.put("error", "Owner cannot leave. Delete the space instead.");
-            return response;
+            throw new AppException(HttpStatus.BAD_REQUEST, "Owner cannot leave. Delete the space instead.");
         }
 
         spaceMemberRepository.delete(memberOpt.get());
-        response.put("message", "Left space successfully");
-        return response;
     }
 
-    // Delete a space (owner only)
+    // Delete a space — owner only
     @Transactional
-    public Map<String, Object> deleteSpace(Integer spaceId, Integer userId) {
-        Map<String, Object> response = new HashMap<>();
-
-        Space space = spaceRepository.findById(spaceId).orElse(null);
-        if (space == null) {
-            response.put("error", "Space not found");
-            return response;
-        }
+    public void deleteSpace(Integer spaceId, Integer userId) {
+        Space space = spaceRepository.findById(spaceId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Space not found"));
 
         if (!space.getOwner().getId().equals(userId)) {
-            response.put("error", "Only the owner can delete this space");
-            return response;
+            throw new AppException(HttpStatus.FORBIDDEN, "Only the owner can delete this space");
         }
 
         spaceRepository.delete(space);
-        response.put("message", "Space deleted successfully");
-        return response;
     }
 
     private String generateUniqueInviteCode() {

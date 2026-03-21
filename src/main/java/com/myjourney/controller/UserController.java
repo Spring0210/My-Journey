@@ -1,7 +1,9 @@
 package com.myjourney.controller;
 
-import com.myjourney.service.UserService;
+import com.myjourney.dto.AuthResponse;
+import com.myjourney.dto.ProfileResponse;
 import com.myjourney.model.User;
+import com.myjourney.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,12 +24,13 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public Map<String, Object> login(@RequestBody Map<String, String> body) {
+    public AuthResponse login(@RequestBody Map<String, String> body) {
+        // AppException thrown by service is caught by GlobalExceptionHandler
         return userService.login(body.get("identifier"), body.get("password"));
     }
 
     @PutMapping("/profile/{userId}")
-    public Map<String, Object> updateProfile(
+    public ProfileResponse updateProfile(
             @PathVariable Integer userId,
             @RequestParam(required = false) String username,
             @RequestParam(required = false) MultipartFile avatar) {

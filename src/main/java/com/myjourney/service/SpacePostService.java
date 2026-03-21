@@ -1,5 +1,8 @@
 package com.myjourney.service;
 
+import com.myjourney.dto.PageResponse;
+import com.myjourney.dto.PostResponse;
+import com.myjourney.exception.AppException;
 import com.myjourney.model.Space;
 import com.myjourney.model.SpacePost;
 import com.myjourney.model.User;
@@ -10,12 +13,11 @@ import com.myjourney.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -36,26 +38,24 @@ public class SpacePostService {
     @Autowired
     private SpacePostReactionService reactionService;
 
-    // Create a post in a space (members only)
+    @Autowired
+    private CloudStorageService cloudStorageService;
+
+    // Create a post in a space — members only
     @Transactional
-    public Map<String, Object> createPost(Integer spaceId, Integer userId, String content, List<String> imageUrls) {
-        Map<String, Object> response = new HashMap<>();
+    public PostResponse createPost(Integer spaceId, Integer userId, String content, List<String> imageUrls) {
+        Space space = spaceRepository.findById(spaceId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Space not found"));
 
-        Space space = spaceRepository.findById(spaceId).orElse(null);
-        if (space == null) {
-            response.put("error", "Space not found");
-            return response;
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "User not found"));
 
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null || !spaceMemberRepository.existsBySpaceAndUser(space, user)) {
-            response.put("error", "Access denied");
-            return response;
+        if (!spaceMemberRepository.existsBySpaceAndUser(space, user)) {
+            throw new AppException(HttpStatus.FORBIDDEN, "Access denied");
         }
 
         if ((content == null || content.isBlank()) && (imageUrls == null || imageUrls.isEmpty())) {
-            response.put("error", "Post must have content or images");
-            return response;
+            throw new AppException(HttpStatus.BAD_REQUEST, "Post must have content or images");
         }
 
         SpacePost post = new SpacePost();
@@ -65,76 +65,63 @@ public class SpacePostService {
         post.setImagePathList(imageUrls);
         spacePostRepository.save(post);
 
-        return toMap(post, userId);
+        return toDto(post, userId);
     }
 
-    // Get posts in a space (members only), newest first, paginated
-    public Map<String, Object> getPosts(Integer spaceId, Integer userId, int page, int size) {
-        Map<String, Object> response = new HashMap<>();
+    // Get posts in a space — members only, newest first, paginated
+    public PageResponse<PostResponse> getPosts(Integer spaceId, Integer userId, int page, int size) {
+        Space space = spaceRepository.findById(spaceId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Space not found"));
 
-        Space space = spaceRepository.findById(spaceId).orElse(null);
-        if (space == null) {
-            response.put("error", "Space not found");
-            return response;
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "User not found"));
 
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null || !spaceMemberRepository.existsBySpaceAndUser(space, user)) {
-            response.put("error", "Access denied");
-            return response;
+        if (!spaceMemberRepository.existsBySpaceAndUser(space, user)) {
+            throw new AppException(HttpStatus.FORBIDDEN, "Access denied");
         }
 
         Page<SpacePost> result = spacePostRepository.findBySpaceOrderByCreatedAtDesc(
                 space, PageRequest.of(page, size));
 
-        response.put("content", result.getContent().stream().map(p -> toMap(p, userId)).toList());
-        response.put("totalPages", result.getTotalPages());
-        response.put("totalElements", result.getTotalElements());
-        response.put("currentPage", result.getNumber());
-        return response;
+        List<PostResponse> posts = result.getContent().stream()
+                .map(p -> toDto(p, userId))
+                .toList();
+
+        return new PageResponse<>(posts, result.getTotalPages(), result.getTotalElements(), result.getNumber());
     }
 
-    // Delete a post (author or space owner only)
+    // Delete a post — author or space owner only; also deletes images from Cloudinary
     @Transactional
-    public Map<String, Object> deletePost(Integer postId, Integer userId) {
-        Map<String, Object> response = new HashMap<>();
+    public void deletePost(Integer postId, Integer userId) {
+        SpacePost post = spacePostRepository.findById(postId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Post not found"));
 
-        Optional<SpacePost> postOpt = spacePostRepository.findById(postId);
-        if (postOpt.isEmpty()) {
-            response.put("error", "Post not found");
-            return response;
-        }
-
-        SpacePost post = postOpt.get();
         boolean isAuthor = post.getAuthor().getId().equals(userId);
         boolean isSpaceOwner = post.getSpace().getOwner().getId().equals(userId);
 
         if (!isAuthor && !isSpaceOwner) {
-            response.put("error", "Access denied");
-            return response;
+            throw new AppException(HttpStatus.FORBIDDEN, "Access denied");
         }
 
-        response.put("imageUrls", post.getImagePathList());
+        // Clean up images from Cloudinary before deleting the post record
+        List<String> imageUrls = post.getImagePathList();
         spacePostRepository.delete(post);
-        response.put("message", "Post deleted successfully");
-        return response;
+        if (imageUrls != null && !imageUrls.isEmpty()) {
+            cloudStorageService.deleteFiles(imageUrls);
+        }
     }
 
-    private Map<String, Object> toMap(SpacePost post, Integer requestingUserId) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("id", post.getId());
-        map.put("content", post.getContent());
-        map.put("images", post.getImagePathList());
-        map.put("authorId", post.getAuthor().getId());
-        map.put("authorUsername", post.getAuthor().getUsername());
-        map.put("authorAvatar", post.getAuthor().getAvatar()); // include avatar for frontend display
-        map.put("createdAt", post.getCreatedAt());
-        map.put("updatedAt", post.getUpdatedAt());
-
-        // Include emoji reaction counts and the requesting user's own reaction
-        Map<String, Object> reactions = reactionService.buildReactionSummary(post, requestingUserId);
-        map.put("reactions", reactions);
-
-        return map;
+    private PostResponse toDto(SpacePost post, Integer requestingUserId) {
+        return new PostResponse(
+                post.getId(),
+                post.getContent(),
+                post.getImagePathList(),
+                post.getAuthor().getId(),
+                post.getAuthor().getUsername(),
+                post.getAuthor().getAvatar(), // include avatar for frontend display
+                post.getCreatedAt(),
+                post.getUpdatedAt(),
+                reactionService.buildReactionSummary(post, requestingUserId)
+        );
     }
 }

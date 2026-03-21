@@ -1,5 +1,8 @@
 package com.myjourney.service;
 
+import com.myjourney.dto.AuthResponse;
+import com.myjourney.dto.ProfileResponse;
+import com.myjourney.exception.AppException;
 import com.myjourney.model.PasswordResetToken;
 import com.myjourney.model.User;
 import com.myjourney.repository.PasswordResetTokenRepository;
@@ -10,14 +13,13 @@ import com.resend.core.exception.ResendException;
 import com.resend.services.emails.model.CreateEmailOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.regex.Pattern;
@@ -49,6 +51,7 @@ public class UserService {
     @Value("${resend.from}")
     private String fromEmail;
 
+    // Returns a plain string — frontend checks response text for register/password flows
     public String register(User user) {
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             return "Username already exists";
@@ -64,51 +67,36 @@ public class UserService {
         return "Registration successful";
     }
 
-    public Map<String, Object> login(String identifier, String password) {
-        Map<String, Object> response = new HashMap<>();
-
+    // Throws AppException on failure so the controller stays clean
+    public AuthResponse login(String identifier, String password) {
         Optional<User> userOpt = identifier.contains("@")
                 ? userRepository.findByEmail(identifier)
                 : userRepository.findByUsername(identifier);
 
         if (userOpt.isEmpty() || !passwordEncoder.matches(password, userOpt.get().getPassword())) {
-            response.put("error", "Invalid credentials");
-            return response;
+            // Use 400 (not 401) to avoid the frontend's global 401 → redirect-to-login handler
+            throw new AppException(HttpStatus.BAD_REQUEST, "Invalid credentials");
         }
 
         User dbUser = userOpt.get();
         String token = jwtUtil.generateToken(dbUser.getId(), dbUser.getUsername());
-
-        response.put("message", "Login successful");
-        response.put("token", token);
-        response.put("username", dbUser.getUsername());
-        response.put("userId", dbUser.getId());
-        response.put("avatar", dbUser.getAvatar());
-
-        return response;
+        return new AuthResponse(token, dbUser.getUsername(), dbUser.getId(), dbUser.getAvatar());
     }
 
     @Transactional
-    public Map<String, Object> updateProfile(Integer userId, String newUsername, MultipartFile avatarFile) {
-        Map<String, Object> response = new HashMap<>();
-
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isEmpty()) {
-            response.put("error", "User not found");
-            return response;
-        }
-
-        User user = userOpt.get();
+    public ProfileResponse updateProfile(Integer userId, String newUsername, MultipartFile avatarFile) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "User not found"));
 
         if (newUsername != null && !newUsername.isBlank() && !newUsername.equals(user.getUsername())) {
             if (userRepository.findByUsername(newUsername).isPresent()) {
-                response.put("error", "Username already taken");
-                return response;
+                throw new AppException(HttpStatus.BAD_REQUEST, "Username already taken");
             }
             user.setUsername(newUsername);
         }
 
         if (avatarFile != null && !avatarFile.isEmpty()) {
+            // Delete old avatar from Cloudinary before uploading the new one
             if (user.getAvatar() != null) {
                 cloudStorageService.deleteFile(user.getAvatar());
             }
@@ -117,11 +105,7 @@ public class UserService {
         }
 
         userRepository.save(user);
-
-        response.put("message", "Profile updated");
-        response.put("username", user.getUsername());
-        response.put("avatar", user.getAvatar());
-        return response;
+        return new ProfileResponse(user.getUsername(), user.getAvatar());
     }
 
     @Transactional

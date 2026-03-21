@@ -1,5 +1,8 @@
 package com.myjourney.controller;
 
+import com.myjourney.dto.PageResponse;
+import com.myjourney.dto.PostResponse;
+import com.myjourney.dto.ReactionSummary;
 import com.myjourney.service.CloudStorageService;
 import com.myjourney.service.SpacePostReactionService;
 import com.myjourney.service.SpacePostService;
@@ -41,7 +44,7 @@ public class SpacePostController {
 
     // POST /api/spaces/{spaceId}/posts — create a post
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createPost(
+    public ResponseEntity<PostResponse> createPost(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Integer spaceId,
             @RequestParam(required = false) String content,
@@ -55,18 +58,13 @@ public class SpacePostController {
             imageUrls = cloudStorageService.uploadFiles(images, "my-journey/spaces/" + spaceId);
         }
 
-        Map<String, Object> result = spacePostService.createPost(spaceId, userId, content, imageUrls);
-        if (result.containsKey("error")) {
-            String error = (String) result.get("error");
-            if (error.equals("Access denied")) return ResponseEntity.status(403).body(result);
-            return ResponseEntity.badRequest().body(result);
-        }
-        return ResponseEntity.ok(result);
+        // AppException thrown by service is caught by GlobalExceptionHandler
+        return ResponseEntity.ok(spacePostService.createPost(spaceId, userId, content, imageUrls));
     }
 
     // GET /api/spaces/{spaceId}/posts — get posts (paginated)
     @GetMapping
-    public ResponseEntity<Map<String, Object>> getPosts(
+    public ResponseEntity<PageResponse<PostResponse>> getPosts(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Integer spaceId,
             @RequestParam(defaultValue = "0") int page,
@@ -75,18 +73,12 @@ public class SpacePostController {
         Integer userId = getJwtUserId(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
 
-        Map<String, Object> result = spacePostService.getPosts(spaceId, userId, page, size);
-        if (result.containsKey("error")) {
-            String error = (String) result.get("error");
-            if (error.equals("Access denied")) return ResponseEntity.status(403).body(result);
-            return ResponseEntity.badRequest().body(result);
-        }
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(spacePostService.getPosts(spaceId, userId, page, size));
     }
 
     // DELETE /api/spaces/{spaceId}/posts/{postId} — delete a post
     @DeleteMapping("/{postId}")
-    public ResponseEntity<Map<String, Object>> deletePost(
+    public ResponseEntity<Void> deletePost(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Integer spaceId,
             @PathVariable Integer postId
@@ -94,26 +86,14 @@ public class SpacePostController {
         Integer userId = getJwtUserId(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
 
-        Map<String, Object> result = spacePostService.deletePost(postId, userId);
-        if (result.containsKey("error")) {
-            String error = (String) result.get("error");
-            if (error.equals("Access denied")) return ResponseEntity.status(403).body(result);
-            return ResponseEntity.badRequest().body(result);
-        }
-
-        // Clean up images from Cloudinary
-        @SuppressWarnings("unchecked")
-        List<String> imageUrls = (List<String>) result.get("imageUrls");
-        if (imageUrls != null && !imageUrls.isEmpty()) {
-            cloudStorageService.deleteFiles(imageUrls);
-        }
-
-        return ResponseEntity.ok(result);
+        // Cloudinary cleanup is now handled inside the service
+        spacePostService.deletePost(postId, userId);
+        return ResponseEntity.ok().build();
     }
 
     // POST /api/spaces/{spaceId}/posts/{postId}/reaction — add or switch emoji reaction
     @PostMapping("/{postId}/reaction")
-    public ResponseEntity<Map<String, Object>> addReaction(
+    public ResponseEntity<ReactionSummary> addReaction(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Integer spaceId,
             @PathVariable Integer postId,
@@ -124,21 +104,15 @@ public class SpacePostController {
 
         String emoji = body.get("emoji");
         if (emoji == null || emoji.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "emoji is required"));
+            return ResponseEntity.badRequest().build();
         }
 
-        Map<String, Object> result = reactionService.addOrUpdateReaction(postId, userId, emoji);
-        if (result.containsKey("error")) {
-            String error = (String) result.get("error");
-            if (error.equals("Access denied")) return ResponseEntity.status(403).body(result);
-            return ResponseEntity.badRequest().body(result);
-        }
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(reactionService.addOrUpdateReaction(postId, userId, emoji));
     }
 
     // DELETE /api/spaces/{spaceId}/posts/{postId}/reaction — remove the user's reaction
     @DeleteMapping("/{postId}/reaction")
-    public ResponseEntity<Map<String, Object>> removeReaction(
+    public ResponseEntity<ReactionSummary> removeReaction(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Integer spaceId,
             @PathVariable Integer postId
@@ -146,10 +120,6 @@ public class SpacePostController {
         Integer userId = getJwtUserId(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
 
-        Map<String, Object> result = reactionService.removeReaction(postId, userId);
-        if (result.containsKey("error")) {
-            return ResponseEntity.badRequest().body(result);
-        }
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(reactionService.removeReaction(postId, userId));
     }
 }

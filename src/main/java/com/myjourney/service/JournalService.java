@@ -1,5 +1,6 @@
 package com.myjourney.service;
 
+import com.myjourney.dto.PageResponse;
 import com.myjourney.model.JournalEntry;
 import com.myjourney.model.User;
 import com.myjourney.repository.JournalRepository;
@@ -13,8 +14,6 @@ import org.springframework.data.domain.Sort;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 import java.util.Optional;
 
 @Service
@@ -34,16 +33,15 @@ public class JournalService {
         return journalRepository.findByUser(user);
     }
 
-    public Map<String, Object> getEntriesByUserPaged(User user, int page, int size) {
+    public PageResponse<JournalEntry> getEntriesByUserPaged(User user, int page, int size) {
         PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "entryDate"));
         Page<JournalEntry> result = journalRepository.findByUser(user, pageable);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("content", result.getContent());
-        response.put("totalPages", result.getTotalPages());
-        response.put("totalElements", result.getTotalElements());
-        response.put("currentPage", result.getNumber());
-        return response;
+        return new PageResponse<>(
+                result.getContent(),
+                result.getTotalPages(),
+                result.getTotalElements(),
+                result.getNumber());
     }
 
     public Optional<JournalEntry> getEntryById(Integer id) {
