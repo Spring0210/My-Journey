@@ -280,6 +280,119 @@
   word-break: break-word;
   margin: 0 0 12px;
 }
+/* ── Comments ── */
+.comment-section {
+  margin-top: 10px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+.comment-toggle-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 2px 0;
+  margin-bottom: 8px;
+}
+.comment-toggle-btn:hover { color: var(--text); }
+
+.comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.comment-item {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.comment-body {
+  flex: 1;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.comment-author {
+  font-weight: 600;
+  color: var(--text);
+  margin-right: 6px;
+}
+
+.comment-text {
+  color: var(--text);
+  word-break: break-word;
+}
+
+.comment-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.comment-time {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.comment-delete-btn {
+  background: none;
+  border: none;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+.comment-delete-btn:hover { color: var(--danger); }
+
+/* Comment input row */
+.comment-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.comment-input {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.comment-input:focus { border-color: var(--primary); }
+
+.comment-send-btn {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+.comment-send-btn:hover { opacity: 0.85; }
+.comment-send-btn:disabled { opacity: 0.5; cursor: default; }
+
+@media (max-width: 768px) {
+  .comment-input { font-size: 16px; /* prevents iOS zoom on focus */ }
+}
+
 .post-delete-btn {
   background: none;
   border: none;

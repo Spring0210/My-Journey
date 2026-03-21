@@ -40,8 +40,8 @@
 
 ### Social Features
 - [ ] Member avatar / display name support
-- [ ] Post reactions (like / emoji)
-- [ ] Comments on space posts
+- [x] Post reactions (like / emoji)
+- [x] Comments on space posts
 - [ ] In-app notifications for new posts in joined spaces
 
 ### Spaces Improvements

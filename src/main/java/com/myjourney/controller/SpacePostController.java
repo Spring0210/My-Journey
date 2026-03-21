@@ -1,9 +1,11 @@
 package com.myjourney.controller;
 
+import com.myjourney.dto.CommentResponse;
 import com.myjourney.dto.PageResponse;
 import com.myjourney.dto.PostResponse;
 import com.myjourney.dto.ReactionSummary;
 import com.myjourney.service.CloudStorageService;
+import com.myjourney.service.SpacePostCommentService;
 import com.myjourney.service.SpacePostReactionService;
 import com.myjourney.service.SpacePostService;
 import com.myjourney.util.JwtUtil;
@@ -26,6 +28,9 @@ public class SpacePostController {
 
     @Autowired
     private CloudStorageService cloudStorageService;
+
+    @Autowired
+    private SpacePostCommentService commentService;
 
     @Autowired
     private SpacePostReactionService reactionService;
@@ -108,6 +113,35 @@ public class SpacePostController {
         }
 
         return ResponseEntity.ok(reactionService.addOrUpdateReaction(postId, userId, emoji));
+    }
+
+    // POST /api/spaces/{spaceId}/posts/{postId}/comments — add a comment
+    @PostMapping("/{postId}/comments")
+    public ResponseEntity<CommentResponse> addComment(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @PathVariable Integer spaceId,
+            @PathVariable Integer postId,
+            @RequestBody Map<String, String> body
+    ) {
+        Integer userId = getJwtUserId(authHeader);
+        if (userId == null) return ResponseEntity.status(401).build();
+
+        return ResponseEntity.ok(commentService.addComment(postId, userId, body.get("content")));
+    }
+
+    // DELETE /api/spaces/{spaceId}/posts/{postId}/comments/{commentId} — delete a comment
+    @DeleteMapping("/{postId}/comments/{commentId}")
+    public ResponseEntity<Void> deleteComment(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @PathVariable Integer spaceId,
+            @PathVariable Integer postId,
+            @PathVariable Integer commentId
+    ) {
+        Integer userId = getJwtUserId(authHeader);
+        if (userId == null) return ResponseEntity.status(401).build();
+
+        commentService.deleteComment(commentId, userId);
+        return ResponseEntity.ok().build();
     }
 
     // DELETE /api/spaces/{spaceId}/posts/{postId}/reaction — remove the user's reaction

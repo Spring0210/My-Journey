@@ -276,6 +276,45 @@ function renderReactionBar(post) {
     `;
 }
 
+function renderCommentItem(comment, postId) {
+    const canDelete = comment.authorId === userId || isOwner;
+    return `
+        <div class="comment-item" data-comment-id="${comment.id}">
+            ${renderAvatar(comment.authorAvatar, comment.authorUsername, 'member-avatar')}
+            <div class="comment-body">
+                <span class="comment-author">${escapeHtml(comment.authorUsername)}</span><span class="comment-text">${escapeHtml(comment.content)}</span>
+                <div class="comment-meta">
+                    <span class="comment-time">${formatDate(comment.createdAt)}</span>
+                    ${canDelete ? `<button class="comment-delete-btn" data-comment-id="${comment.id}" data-post-id="${postId}" title="Delete">Delete</button>` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderCommentSection(post) {
+    const count = post.comments ? post.comments.length : 0;
+    const toggleLabel = count > 0 ? `${count} comment${count !== 1 ? 's' : ''}` : 'Add a comment';
+
+    const commentItems = (post.comments || [])
+        .map(c => renderCommentItem(c, post.id))
+        .join('');
+
+    return `
+        <div class="comment-section" data-post-id="${post.id}">
+            <button class="comment-toggle-btn" data-post-id="${post.id}">${toggleLabel}</button>
+            <div class="comment-body-area" hidden>
+                <div class="comment-list">${commentItems}</div>
+                <div class="comment-input-row">
+                    ${renderAvatar(null, username, 'member-avatar')}
+                    <input class="comment-input" type="text" placeholder="Write a comment…" data-post-id="${post.id}" maxlength="500" />
+                    <button class="comment-send-btn" data-post-id="${post.id}">Send</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
 function renderPost(post) {
     const canDelete = post.authorId === userId || isOwner;
     return `
@@ -291,6 +330,7 @@ function renderPost(post) {
             ${post.content ? `<p class="post-content">${escapeHtml(post.content)}</p>` : ''}
             ${renderImageGrid(post.id, post.images)}
             ${renderReactionBar(post)}
+            ${renderCommentSection(post)}
         </div>
     `;
 }
@@ -314,6 +354,47 @@ function bindPostEvents(container) {
             const res = await apiRequest(`/api/spaces/${spaceId}/posts/${btn.dataset.postId}`, { method: 'DELETE' });
             if (res.ok) loadPosts(currentPage);
             else alert('Failed to delete post.');
+        });
+    });
+
+    // Comment toggle — show/hide the comment area
+    container.querySelectorAll('.comment-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const section = container.querySelector(`.comment-section[data-post-id="${btn.dataset.postId}"]`);
+            const area = section.querySelector('.comment-body-area');
+            area.hidden = !area.hidden;
+            if (!area.hidden) {
+                // Focus the input when opening
+                area.querySelector('.comment-input')?.focus();
+            }
+        });
+    });
+
+    // Send comment on button click or Enter key
+    container.querySelectorAll('.comment-send-btn').forEach(btn => {
+        btn.addEventListener('click', () => sendComment(btn.dataset.postId, container));
+    });
+    container.querySelectorAll('.comment-input').forEach(input => {
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendComment(input.dataset.postId, container);
+            }
+        });
+    });
+
+    // Delete comment
+    container.querySelectorAll('.comment-delete-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            if (!confirm('Delete this comment?')) return;
+            const res = await apiRequest(
+                `/api/spaces/${spaceId}/posts/${btn.dataset.postId}/comments/${btn.dataset.commentId}`,
+                { method: 'DELETE' }
+            );
+            if (res.ok) {
+                btn.closest('.comment-item').remove();
+                updateCommentToggleLabel(btn.dataset.postId, container);
+            }
         });
     });
 
@@ -425,6 +506,57 @@ function updateReactionBar(bar, reactions) {
     const picker = bar.querySelector('.reaction-picker');
     if (picker) picker.hidden = true;
     bar.querySelector('.reaction-add-btn')?.classList.remove('active');
+}
+
+// Send a new comment and insert it into the DOM without re-rendering the whole list
+async function sendComment(postId, container) {
+    const section = container.querySelector(`.comment-section[data-post-id="${postId}"]`);
+    const input = section.querySelector('.comment-input');
+    const sendBtn = section.querySelector('.comment-send-btn');
+    const content = input.value.trim();
+    if (!content) return;
+
+    sendBtn.disabled = true;
+    try {
+        const res = await apiRequest(`/api/spaces/${spaceId}/posts/${postId}/comments`, {
+            method: 'POST',
+            body: JSON.stringify({ content })
+        });
+        if (!res.ok) { alert('Failed to post comment.'); return; }
+
+        const comment = await res.json();
+
+        // Insert new comment item before the input row
+        const list = section.querySelector('.comment-list');
+        list.insertAdjacentHTML('beforeend', renderCommentItem(comment, postId));
+
+        // Re-attach delete handler for the new comment
+        const newItem = list.lastElementChild;
+        newItem.querySelector('.comment-delete-btn')?.addEventListener('click', async () => {
+            if (!confirm('Delete this comment?')) return;
+            const delRes = await apiRequest(
+                `/api/spaces/${spaceId}/posts/${postId}/comments/${comment.id}`,
+                { method: 'DELETE' }
+            );
+            if (delRes.ok) {
+                newItem.remove();
+                updateCommentToggleLabel(postId, container);
+            }
+        });
+
+        input.value = '';
+        updateCommentToggleLabel(postId, container);
+    } finally {
+        sendBtn.disabled = false;
+    }
+}
+
+// Update the "N comments" label after adding or removing a comment
+function updateCommentToggleLabel(postId, container) {
+    const section = container.querySelector(`.comment-section[data-post-id="${postId}"]`);
+    const count = section.querySelectorAll('.comment-item').length;
+    const btn = section.querySelector('.comment-toggle-btn');
+    btn.textContent = count > 0 ? `${count} comment${count !== 1 ? 's' : ''}` : 'Add a comment';
 }
 
 function updatePagination() {

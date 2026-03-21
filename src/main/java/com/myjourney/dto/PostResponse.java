@@ -3,7 +3,7 @@ package com.myjourney.dto;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/** A single space post with author info and reaction summary. */
+/** A single space post with author info, reactions, and comments. */
 public record PostResponse(
         Integer id,
         String content,
@@ -13,5 +13,6 @@ public record PostResponse(
         String authorAvatar,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
-        ReactionSummary reactions
+        ReactionSummary reactions,
+        List<CommentResponse> comments
 ) {}

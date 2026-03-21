@@ -39,6 +39,9 @@ public class SpacePostService {
     private SpacePostReactionService reactionService;
 
     @Autowired
+    private SpacePostCommentService commentService;
+
+    @Autowired
     private CloudStorageService cloudStorageService;
 
     // Create a post in a space — members only
@@ -121,7 +124,8 @@ public class SpacePostService {
                 post.getAuthor().getAvatar(), // include avatar for frontend display
                 post.getCreatedAt(),
                 post.getUpdatedAt(),
-                reactionService.buildReactionSummary(post, requestingUserId)
+                reactionService.buildReactionSummary(post, requestingUserId),
+                commentService.getComments(post)
         );
     }
 }
