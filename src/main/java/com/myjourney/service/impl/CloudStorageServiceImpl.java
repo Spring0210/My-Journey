@@ -3,6 +3,8 @@ package com.myjourney.service.impl;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.myjourney.service.CloudStorageService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,6 +16,8 @@ import java.util.Arrays;
 @Service
 public class CloudStorageServiceImpl implements CloudStorageService {
 
+    private static final Logger log = LoggerFactory.getLogger(CloudStorageServiceImpl.class);
+
     private final Cloudinary cloudinary;
 
     @Autowired
@@ -24,7 +28,7 @@ public class CloudStorageServiceImpl implements CloudStorageService {
     @Override
     public String uploadFile(MultipartFile file, String folder) {
         try {
-            System.out.println("Starting upload to Cloudinary - File: " + file.getOriginalFilename() + ", Folder: " + folder);
+            log.info("Uploading to Cloudinary - file: {}, folder: {}", file.getOriginalFilename(), folder);
 
             // Configure upload options
             Map<String, Object> uploadOptions = new HashMap<>();
@@ -45,12 +49,11 @@ public class CloudStorageServiceImpl implements CloudStorageService {
             // Insert q_auto for automatic quality optimization on delivery
             url = url.replace("/upload/", "/upload/q_auto/");
 
-            System.out.println("Successfully uploaded to Cloudinary: " + url);
+            log.info("Uploaded to Cloudinary: {}", url);
             return url;
 
         } catch (IOException e) {
-            System.err.println("Failed to upload file to Cloudinary: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Failed to upload file to Cloudinary: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to upload file to Cloudinary", e);
         }
     }
@@ -88,7 +91,7 @@ public class CloudStorageServiceImpl implements CloudStorageService {
             return "ok".equals(result.get("result"));
 
         } catch (Exception e) {
-            System.err.println("Failed to delete file from Cloudinary: " + e.getMessage());
+            log.error("Failed to delete file from Cloudinary: {}", e.getMessage(), e);
             return false;
         }
     }
@@ -159,7 +162,7 @@ public class CloudStorageServiceImpl implements CloudStorageService {
             return publicId;
 
         } catch (Exception e) {
-            System.err.println("Failed to extract public ID from URL: " + url);
+            log.error("Failed to extract public ID from URL: {}", url);
             return null;
         }
     }
