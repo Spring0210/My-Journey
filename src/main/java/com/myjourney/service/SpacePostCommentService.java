@@ -31,6 +31,9 @@ public class SpacePostCommentService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private NotificationService notificationService;
+
     // Add a comment to a post — members only
     @Transactional
     public CommentResponse addComment(Integer postId, Integer userId, String content) {
@@ -53,6 +56,9 @@ public class SpacePostCommentService {
         comment.setAuthor(user);
         comment.setContent(content.trim());
         commentRepository.save(comment);
+
+        // Notify the post author about the new comment (skips if commenter is the author)
+        notificationService.notifyNewComment(post, user);
 
         return toDto(comment);
     }

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notifications - Journey</title>
+  <link rel="stylesheet" href="/css/ui.css" />
+  <link rel="stylesheet" href="/css/notif-page.css" />
+  <script defer src="js/api.js"></script>
+  <script defer src="js/layout.js"></script>
+  <script defer src="js/notifications.js"></script>
+</head>
+<body>
+<div class="app-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <header class="header">
+      <div class="header-left">
+        <button class="sidebar-toggle">☰</button>
+        <h1 class="header-title">Notifications</h1>
+      </div>
+      <div class="header-right">
+        <button class="btn btn--ghost" id="markAllReadBtn">Mark all as read</button>
+        <button class="btn btn--ghost-danger" id="clearAllBtn">Clear all</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <div id="notifList" class="notif-list">
+        <div class="loading">Loading notifications...</div>
+      </div>
+    </div>
+  </main>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+</body>
+</html>

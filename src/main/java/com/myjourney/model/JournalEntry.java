@@ -27,6 +27,7 @@ public class JournalEntry {
     @Column(name = "image_paths", columnDefinition = "TEXT")
     private String imagePaths; // Store multiple image paths, separated by commas
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

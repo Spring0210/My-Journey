@@ -10,7 +10,7 @@ document.getElementById('loginForm').addEventListener('submit', (e) => {
     })
         .then(res => res.json())
         .then(result => {
-            if (result.message === 'Login successful') {
+            if (result.token) {
                 localStorage.setItem('username', result.username);
                 localStorage.setItem('userId', result.userId);
                 localStorage.setItem('token', result.token);

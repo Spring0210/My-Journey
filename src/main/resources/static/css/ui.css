@@ -213,6 +213,26 @@ a:hover { text-decoration: underline; }
 .nav-item.active { background: var(--primary-bg); color: var(--primary); font-weight: 600; }
 .nav-item .icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
 
+/* Notification unread count badge shown next to the Notifications nav item */
+.notif-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  line-height: 1;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.notif-badge[hidden] { display: none; }
+
 .sidebar-footer {
   padding: 16px;
   border-top: 1px solid var(--separator);
@@ -378,6 +398,8 @@ a:hover { text-decoration: underline; }
 .btn--ghost:hover { background: var(--primary-bg); border-color: var(--primary); color: var(--primary); box-shadow: none; transform: none; }
 .btn--danger  { background: var(--danger); color: white; border-color: transparent; }
 .btn--danger:hover { opacity: 0.88; }
+.btn--ghost-danger { background: transparent; color: var(--text); border-color: var(--border); }
+.btn--ghost-danger:hover { background: rgba(255,59,48,0.08); color: var(--danger); border-color: var(--danger); box-shadow: none; transform: none; }
 .btn--success { background: var(--success); color: white; border-color: transparent; }
 .btn--warning { background: var(--warning); color: white; border-color: transparent; }
 

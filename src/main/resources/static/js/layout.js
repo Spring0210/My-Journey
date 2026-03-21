@@ -15,6 +15,9 @@ class LayoutManager {
         this.setupSignOut();
         this.setupTheme();
         this.setCurrentPageActive();
+        this.loadUnreadCount();
+        // Poll unread notification count every 30 seconds
+        setInterval(() => this.loadUnreadCount(), 30000);
     }
 
     // Verify user is logged in; redirect to login if not
@@ -58,6 +61,9 @@ class LayoutManager {
                 </div>
                 <div class="nav-section">
                     <div class="nav-section-title">Account</div>
+                    <a href="/notifications.html" class="nav-item" id="notifNavItem">
+                        Notifications <span class="notif-badge" id="notifBadge" hidden></span>
+                    </a>
                     <a href="/profile.html" class="nav-item">Profile</a>
                 </div>
             </nav>
@@ -186,6 +192,26 @@ class LayoutManager {
 
     setCurrentPageActive() {
         this.setActiveNavItem(window.location.pathname);
+    }
+
+    // Fetch unread notification count and show/hide the badge in the sidebar
+    loadUnreadCount() {
+        if (!this.currentUser) return;
+        apiRequest('/api/notifications/unread-count')
+            .then(res => res && res.ok ? res.json() : null)
+            .then(data => {
+                if (!data) return;
+                const badge = document.getElementById('notifBadge');
+                if (!badge) return;
+                const count = data.count || 0;
+                if (count > 0) {
+                    badge.textContent = count > 99 ? '99+' : count;
+                    badge.hidden = false;
+                } else {
+                    badge.hidden = true;
+                }
+            })
+            .catch(() => {}); // silently ignore — badge just won't update
     }
 }
 

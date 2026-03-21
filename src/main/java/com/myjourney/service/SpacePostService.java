@@ -41,6 +41,9 @@ public class SpacePostService {
     private SpacePostReactionService reactionService;
 
     @Autowired
+    private NotificationService notificationService;
+
+    @Autowired
     private SpacePostReactionRepository reactionRepository;
 
     @Autowired
@@ -75,6 +78,9 @@ public class SpacePostService {
         post.setContent(content);
         post.setImagePathList(imageUrls);
         spacePostRepository.save(post);
+
+        // Notify all other space members about the new post
+        notificationService.notifyNewPost(post);
 
         return toDto(post, userId);
     }

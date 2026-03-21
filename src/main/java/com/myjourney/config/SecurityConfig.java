@@ -44,6 +44,8 @@ public class SecurityConfig {
                 .requestMatchers("/css/**", "/js/**", "/uploads/**", "/static/**").permitAll()
                 .requestMatchers("/api/entries/**").authenticated()
                 .requestMatchers("/api/spaces/**").authenticated()
+                .requestMatchers("/api/notifications/**").authenticated()
+                .requestMatchers("/notifications.html").permitAll()
                 .anyRequest().permitAll()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
