@@ -1,6 +1,7 @@
 package com.myjourney.controller;
 
 import com.myjourney.service.CloudStorageService;
+import com.myjourney.service.SpacePostReactionService;
 import com.myjourney.service.SpacePostService;
 import com.myjourney.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,9 @@ public class SpacePostController {
 
     @Autowired
     private CloudStorageService cloudStorageService;
+
+    @Autowired
+    private SpacePostReactionService reactionService;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -104,6 +108,48 @@ public class SpacePostController {
             cloudStorageService.deleteFiles(imageUrls);
         }
 
+        return ResponseEntity.ok(result);
+    }
+
+    // POST /api/spaces/{spaceId}/posts/{postId}/reaction — add or switch emoji reaction
+    @PostMapping("/{postId}/reaction")
+    public ResponseEntity<Map<String, Object>> addReaction(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @PathVariable Integer spaceId,
+            @PathVariable Integer postId,
+            @RequestBody Map<String, String> body
+    ) {
+        Integer userId = getJwtUserId(authHeader);
+        if (userId == null) return ResponseEntity.status(401).build();
+
+        String emoji = body.get("emoji");
+        if (emoji == null || emoji.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "emoji is required"));
+        }
+
+        Map<String, Object> result = reactionService.addOrUpdateReaction(postId, userId, emoji);
+        if (result.containsKey("error")) {
+            String error = (String) result.get("error");
+            if (error.equals("Access denied")) return ResponseEntity.status(403).body(result);
+            return ResponseEntity.badRequest().body(result);
+        }
+        return ResponseEntity.ok(result);
+    }
+
+    // DELETE /api/spaces/{spaceId}/posts/{postId}/reaction — remove the user's reaction
+    @DeleteMapping("/{postId}/reaction")
+    public ResponseEntity<Map<String, Object>> removeReaction(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @PathVariable Integer spaceId,
+            @PathVariable Integer postId
+    ) {
+        Integer userId = getJwtUserId(authHeader);
+        if (userId == null) return ResponseEntity.status(401).build();
+
+        Map<String, Object> result = reactionService.removeReaction(postId, userId);
+        if (result.containsKey("error")) {
+            return ResponseEntity.badRequest().body(result);
+        }
         return ResponseEntity.ok(result);
     }
 }

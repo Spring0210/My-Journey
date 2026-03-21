@@ -238,6 +238,44 @@ async function loadPosts(page = 0) {
     }
 }
 
+const ALLOWED_EMOJIS = ['❤️', '👍', '😂', '🐮', '🥲', '😭', '😮'];
+
+function renderReactionBar(post) {
+    const counts = (post.reactions && post.reactions.counts) || {};
+    const myReaction = post.reactions && post.reactions.myReaction;
+
+    // Only show emojis that already have at least 1 reaction
+    const summary = ALLOWED_EMOJIS
+        .filter(e => counts[e] > 0)
+        .map(e => `
+            <button class="reaction-chip${myReaction === e ? ' active' : ''}"
+                    data-emoji="${e}" data-post-id="${post.id}">
+                ${e}<span class="reaction-chip-count">${counts[e]}</span>
+            </button>
+        `).join('');
+
+    // The picker is hidden by default; toggled by the "add reaction" button
+    const picker = ALLOWED_EMOJIS.map(e => `
+        <button class="reaction-pick-btn${myReaction === e ? ' active' : ''}"
+                data-emoji="${e}" data-post-id="${post.id}">${e}</button>
+    `).join('');
+
+    return `
+        <div class="reaction-bar" data-post-id="${post.id}">
+            <div class="reaction-summary">${summary}</div>
+            <button class="reaction-add-btn" data-post-id="${post.id}" title="Add reaction">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                    <line x1="9" y1="9" x2="9.01" y2="9"/>
+                    <line x1="15" y1="9" x2="15.01" y2="9"/>
+                </svg>
+            </button>
+            <div class="reaction-picker" hidden>${picker}</div>
+        </div>
+    `;
+}
+
 function renderPost(post) {
     const canDelete = post.authorId === userId || isOwner;
     return `
@@ -252,6 +290,7 @@ function renderPost(post) {
             </div>
             ${post.content ? `<p class="post-content">${escapeHtml(post.content)}</p>` : ''}
             ${renderImageGrid(post.id, post.images)}
+            ${renderReactionBar(post)}
         </div>
     `;
 }
@@ -277,6 +316,115 @@ function bindPostEvents(container) {
             else alert('Failed to delete post.');
         });
     });
+
+    // "Add reaction" smiley button — toggles the picker popup
+    container.querySelectorAll('.reaction-add-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const bar = container.querySelector(`.reaction-bar[data-post-id="${btn.dataset.postId}"]`);
+            const picker = bar.querySelector('.reaction-picker');
+            picker.hidden = !picker.hidden;
+            btn.classList.toggle('active', !picker.hidden);
+        });
+    });
+
+    // Emoji picker buttons (inside the popup)
+    container.querySelectorAll('.reaction-pick-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const postId = btn.dataset.postId;
+            const emoji = btn.dataset.emoji;
+            const bar = container.querySelector(`.reaction-bar[data-post-id="${postId}"]`);
+            const isSame = btn.classList.contains('active'); // already my reaction
+
+            if (isSame) {
+                // Clicking active emoji again removes the reaction
+                const res = await apiRequest(`/api/spaces/${spaceId}/posts/${postId}/reaction`, { method: 'DELETE' });
+                if (res.ok) updateReactionBar(bar, await res.json());
+            } else {
+                const res = await apiRequest(`/api/spaces/${spaceId}/posts/${postId}/reaction`, {
+                    method: 'POST',
+                    body: JSON.stringify({ emoji })
+                });
+                if (res.ok) updateReactionBar(bar, await res.json());
+            }
+        });
+    });
+
+    // Clicking existing reaction chips also toggles/removes reaction
+    container.querySelectorAll('.reaction-chip').forEach(chip => {
+        chip.addEventListener('click', async () => {
+            const postId = chip.dataset.postId;
+            const emoji = chip.dataset.emoji;
+            const bar = container.querySelector(`.reaction-bar[data-post-id="${postId}"]`);
+            const isMine = chip.classList.contains('active');
+
+            if (isMine) {
+                const res = await apiRequest(`/api/spaces/${spaceId}/posts/${postId}/reaction`, { method: 'DELETE' });
+                if (res.ok) updateReactionBar(bar, await res.json());
+            } else {
+                const res = await apiRequest(`/api/spaces/${spaceId}/posts/${postId}/reaction`, {
+                    method: 'POST',
+                    body: JSON.stringify({ emoji })
+                });
+                if (res.ok) updateReactionBar(bar, await res.json());
+            }
+        });
+    });
+}
+
+// Close all open reaction pickers when clicking elsewhere on the page
+document.addEventListener('click', () => {
+    document.querySelectorAll('.reaction-picker:not([hidden])').forEach(picker => {
+        picker.hidden = true;
+        const bar = picker.closest('.reaction-bar');
+        if (bar) bar.querySelector('.reaction-add-btn')?.classList.remove('active');
+    });
+});
+
+// Update a single post's reaction bar in-place without re-rendering the whole list
+function updateReactionBar(bar, reactions) {
+    const counts = reactions.counts || {};
+    const myReaction = reactions.myReaction;
+    const postId = bar.dataset.postId;
+
+    // Update reaction chips (counts row) — rebuild them since emojis may appear/disappear
+    const summary = bar.querySelector('.reaction-summary');
+    summary.innerHTML = ALLOWED_EMOJIS
+        .filter(e => counts[e] > 0)
+        .map(e => `
+            <button class="reaction-chip${myReaction === e ? ' active' : ''}"
+                    data-emoji="${e}" data-post-id="${postId}">
+                ${e}<span class="reaction-chip-count">${counts[e]}</span>
+            </button>
+        `).join('');
+
+    // Re-attach chip click handlers
+    summary.querySelectorAll('.reaction-chip').forEach(chip => {
+        chip.addEventListener('click', async () => {
+            const emoji = chip.dataset.emoji;
+            const isMine = chip.classList.contains('active');
+            if (isMine) {
+                const res = await apiRequest(`/api/spaces/${spaceId}/posts/${postId}/reaction`, { method: 'DELETE' });
+                if (res.ok) updateReactionBar(bar, await res.json());
+            } else {
+                const res = await apiRequest(`/api/spaces/${spaceId}/posts/${postId}/reaction`, {
+                    method: 'POST',
+                    body: JSON.stringify({ emoji })
+                });
+                if (res.ok) updateReactionBar(bar, await res.json());
+            }
+        });
+    });
+
+    // Update picker active state
+    bar.querySelectorAll('.reaction-pick-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.emoji === myReaction);
+    });
+
+    // Close the picker after reacting
+    const picker = bar.querySelector('.reaction-picker');
+    if (picker) picker.hidden = true;
+    bar.querySelector('.reaction-add-btn')?.classList.remove('active');
 }
 
 function updatePagination() {

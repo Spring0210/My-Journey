@@ -33,6 +33,9 @@ public class SpacePostService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private SpacePostReactionService reactionService;
+
     // Create a post in a space (members only)
     @Transactional
     public Map<String, Object> createPost(Integer spaceId, Integer userId, String content, List<String> imageUrls) {
@@ -62,7 +65,7 @@ public class SpacePostService {
         post.setImagePathList(imageUrls);
         spacePostRepository.save(post);
 
-        return toMap(post);
+        return toMap(post, userId);
     }
 
     // Get posts in a space (members only), newest first, paginated
@@ -84,7 +87,7 @@ public class SpacePostService {
         Page<SpacePost> result = spacePostRepository.findBySpaceOrderByCreatedAtDesc(
                 space, PageRequest.of(page, size));
 
-        response.put("content", result.getContent().stream().map(this::toMap).toList());
+        response.put("content", result.getContent().stream().map(p -> toMap(p, userId)).toList());
         response.put("totalPages", result.getTotalPages());
         response.put("totalElements", result.getTotalElements());
         response.put("currentPage", result.getNumber());
@@ -117,7 +120,7 @@ public class SpacePostService {
         return response;
     }
 
-    private Map<String, Object> toMap(SpacePost post) {
+    private Map<String, Object> toMap(SpacePost post, Integer requestingUserId) {
         Map<String, Object> map = new HashMap<>();
         map.put("id", post.getId());
         map.put("content", post.getContent());
@@ -127,6 +130,11 @@ public class SpacePostService {
         map.put("authorAvatar", post.getAuthor().getAvatar()); // include avatar for frontend display
         map.put("createdAt", post.getCreatedAt());
         map.put("updatedAt", post.getUpdatedAt());
+
+        // Include emoji reaction counts and the requesting user's own reaction
+        Map<String, Object> reactions = reactionService.buildReactionSummary(post, requestingUserId);
+        map.put("reactions", reactions);
+
         return map;
     }
 }

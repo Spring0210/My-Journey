@@ -67,6 +67,20 @@ Each HTML page has one corresponding JS file. Structure:
 // 4. Attach event listeners
 ```
 
+### Mobile Responsiveness
+All frontend features must work comfortably on mobile (phone-sized screens).
+
+**Breakpoints (defined in `ui.css`):**
+- `≤ 1024px` — sidebar collapses to off-canvas drawer, toggle button appears
+- `≤ 768px` — single-column layout, stacked form fields
+- `≤ 480px` — sidebar goes full-width, tighter padding
+
+**Rules for new features:**
+- Every new CSS component must include a `@media (max-width: 768px)` block if it uses fixed widths, multi-column layout, or absolute positioning
+- Tap targets must be at least 44×44px on mobile
+- Floating/popup elements (e.g. reaction picker) must not overflow the screen edge — use `left: 0` or clamp position on small screens
+- Test new UI at 390px width (iPhone 14 viewport) before considering it done
+
 ---
 
 ## Git
