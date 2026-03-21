@@ -178,8 +178,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // File input → add to pendingFiles and re-render
     document.getElementById("imageInput").addEventListener("change", function () {
+        // Deduplicate by base name (without extension) to handle iOS Live Photos,
+        // which can submit both a HEIC and a paired JPEG as two separate files
+        const existingNames = new Set(pendingFiles.map(f => f.name.replace(/\.[^.]+$/, '')));
         Array.from(this.files).forEach(f => {
-            if (f.type.startsWith('image/')) pendingFiles.push(f);
+            const baseName = f.name.replace(/\.[^.]+$/, '');
+            if (f.type.startsWith('image/') && !existingNames.has(baseName)) {
+                pendingFiles.push(f);
+                existingNames.add(baseName);
+            }
         });
         this.value = ""; // reset so same file can be re-added if removed
 

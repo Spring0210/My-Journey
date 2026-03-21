@@ -29,9 +29,10 @@ public class CloudStorageServiceImpl implements CloudStorageService {
             // Configure upload options
             Map<String, Object> uploadOptions = new HashMap<>();
             uploadOptions.put("folder", folder != null ? folder : "my-journey");
-            uploadOptions.put("resource_type", "image"); // Force image type; avoids HEIC being treated as video
+            uploadOptions.put("resource_type", "image");
             uploadOptions.put("quality", "auto");
-            uploadOptions.put("page", 1); // Only take the first page/frame — prevents HEIC Live Photos from producing multiple images
+            uploadOptions.put("format", "jpg");  // Convert all formats (including HEIC) to JPEG at upload time for universal browser support
+            uploadOptions.put("page", 1);        // Only take the first page/frame — prevents HEIC Live Photos from producing multiple images
 
             // Upload file to Cloudinary
             Map<String, Object> result = cloudinary.uploader().upload(
@@ -41,9 +42,8 @@ public class CloudStorageServiceImpl implements CloudStorageService {
 
             String url = (String) result.get("secure_url");
 
-            // Insert f_auto,q_auto transformation so Cloudinary converts non-web formats
-            // (e.g. HEIC) to WebP/JPEG automatically based on the browser's capabilities
-            url = url.replace("/upload/", "/upload/f_auto,q_auto/");
+            // Insert q_auto for automatic quality optimization on delivery
+            url = url.replace("/upload/", "/upload/q_auto/");
 
             System.out.println("Successfully uploaded to Cloudinary: " + url);
             return url;

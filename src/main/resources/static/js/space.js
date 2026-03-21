@@ -293,7 +293,15 @@ document.getElementById('nextPostsBtn').addEventListener('click', () => loadPost
 
 // ── Composer: Image Preview ────────────────────────────────────
 document.getElementById('postImages').addEventListener('change', (e) => {
-    selectedImages = Array.from(e.target.files);
+    // Deduplicate by base name to handle iOS Live Photos, which submit
+    // both a HEIC and a paired JPEG as two separate files
+    const seen = new Set();
+    selectedImages = Array.from(e.target.files).filter(f => {
+        const baseName = f.name.replace(/\.[^.]+$/, '');
+        if (seen.has(baseName)) return false;
+        seen.add(baseName);
+        return true;
+    });
     renderComposerPreviews();
 });
 
