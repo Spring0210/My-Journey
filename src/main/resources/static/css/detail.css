@@ -267,6 +267,73 @@
   color: var(--primary);
 }
 
+/* ── Print / Export PDF ── */
+@media print {
+  /* Hide everything except the entry content */
+  .sidebar,
+  .sidebar-overlay,
+  .header,
+  .photos-header,
+  .photo-cell__del,
+  .photo-cell__remove,
+  .photo-cell--add,
+  .photo-cell--pending::after,
+  #imageInput {
+    display: none !important;
+  }
+
+  /* Full-width single column, no app chrome */
+  .app-layout,
+  .main-content,
+  .content {
+    display: block !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Entry editor: remove card shadow, use full page width */
+  .entry-editor {
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+
+  /* Title */
+  .entry-editor .title-input {
+    font-size: 24px !important;
+    padding: 0 0 8px !important;
+    border-bottom: 1px solid #ccc !important;
+  }
+
+  /* Date bar: hide the date picker input, show only the display text */
+  .entry-meta-bar {
+    padding: 8px 0 16px !important;
+    border-bottom: 1px solid #eee !important;
+  }
+  .entry-editor .date-input { display: none !important; }
+  .date-display { font-size: 13px; color: #666; }
+
+  /* Content */
+  .entry-editor .content-input {
+    min-height: unset !important;
+    padding: 16px 0 !important;
+    font-size: 14px !important;
+    line-height: 1.8 !important;
+    resize: none !important;
+  }
+
+  /* Photos: 3-col grid, no hover effects */
+  .photos-section {
+    box-shadow: none !important;
+    border: none !important;
+    margin-top: 16px !important;
+    padding: 0 !important;
+  }
+  .photo-cell { break-inside: avoid; }
+  .photo-cell img { transform: none !important; }
+}
+
 /* ── Responsive ── */
 @media (max-width: 600px) {
   .entry-editor .title-input   { font-size: 20px; padding: 18px 18px 8px; }

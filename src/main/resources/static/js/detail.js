@@ -237,6 +237,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     // ── EDIT MODE ────────────────────────────────────────────────
     document.getElementById("pageTitle").textContent  = "Edit Entry";
     document.getElementById("saveBtn").textContent    = "Save Changes";
+    document.getElementById("exportBtn").hidden = false;
+    document.getElementById("exportBtn").addEventListener("click", () => window.print());
 
     try {
         await loadEntry(entryId);

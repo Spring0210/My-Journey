@@ -52,7 +52,7 @@
 ### Journal Improvements
 - [~] Rich text editor for journal entries — decided against; plain text fits journaling better
 - [ ] Tag / mood system for entries
-- [ ] Export entries as PDF
+- [x] Export entries as PDF
 
 ### Account
 - [x] User profile page (avatar, username)
