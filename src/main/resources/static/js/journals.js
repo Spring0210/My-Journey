@@ -11,10 +11,18 @@ let isSearchMode = false;
 function loadAllEntries(page = 0) {
     isSearchMode = false;
     apiRequest(`/api/entries/${userId}?page=${page}&size=${PAGE_SIZE}`)
-        .then(res => res.json())
+        .then(res => {
+            if (!res || !res.ok) throw new Error('Failed to load entries');
+            return res.json();
+        })
         .then(data => {
             renderEntryList(data.content);
             renderPagination(data.currentPage, data.totalPages);
+        })
+        .catch(() => {
+            // Don't corrupt currentPage — just show an error without changing state
+            document.getElementById('journalList').innerHTML =
+                '<p style="color:var(--muted);padding:24px 0">Failed to load entries. Please try again.</p>';
         });
 }
 
@@ -73,12 +81,14 @@ function renderPagination(page, totalPages) {
     const nextBtn    = document.getElementById('nextBtn');
     const pageInfo   = document.getElementById('pageInfo');
 
+    // Always update currentPage so Prev/Next handlers have the correct state
+    currentPage = page;
+
     if (totalPages <= 1) {
         pagination.hidden = true;
         return;
     }
 
-    currentPage = page;
     pagination.hidden = false;
     pageInfo.textContent = `Page ${page + 1} of ${totalPages}`;
     prevBtn.disabled = page === 0;
