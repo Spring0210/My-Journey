@@ -4,6 +4,7 @@ const username = localStorage.getItem('username');
 const userId   = localStorage.getItem('userId');
 
 let currentPage = 0;
+let totalPages = 0;
 const PAGE_SIZE = 9;
 let isSearchMode = false;
 
@@ -75,24 +76,25 @@ function renderEntryList(entries) {
     });
 }
 
-function renderPagination(page, totalPages) {
+function renderPagination(page, total) {
     const pagination = document.getElementById('pagination');
     const prevBtn    = document.getElementById('prevBtn');
     const nextBtn    = document.getElementById('nextBtn');
     const pageInfo   = document.getElementById('pageInfo');
 
-    // Always update currentPage so Prev/Next handlers have the correct state
+    // Always update state so Prev/Next handlers have the correct values
     currentPage = page;
+    totalPages = total;
 
-    if (totalPages <= 1) {
+    if (total <= 1) {
         pagination.hidden = true;
         return;
     }
 
     pagination.hidden = false;
-    pageInfo.textContent = `Page ${page + 1} of ${totalPages}`;
+    pageInfo.textContent = `Page ${page + 1} of ${total}`;
     prevBtn.disabled = page === 0;
-    nextBtn.disabled = page >= totalPages - 1;
+    nextBtn.disabled = page >= total - 1;
 }
 
 document.getElementById('prevBtn').addEventListener('click', () => {
@@ -100,7 +102,7 @@ document.getElementById('prevBtn').addEventListener('click', () => {
 });
 
 document.getElementById('nextBtn').addEventListener('click', () => {
-    loadAllEntries(currentPage + 1);
+    if (currentPage < totalPages - 1) loadAllEntries(currentPage + 1);
 });
 
 // Search
