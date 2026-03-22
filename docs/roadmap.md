@@ -50,7 +50,7 @@
 - [ ] Space search / discovery (public spaces)
 
 ### Journal Improvements
-- [ ] Rich text editor for journal entries (bold, italic, lists)
+- [~] Rich text editor for journal entries — decided against; plain text fits journaling better
 - [ ] Tag / mood system for entries
 - [ ] Export entries as PDF
 
