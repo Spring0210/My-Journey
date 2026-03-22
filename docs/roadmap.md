@@ -44,7 +44,7 @@
 - [x] In-app notifications (new post / new comment); sidebar badge with 30s polling; delete single / clear all
 
 ### Spaces Improvements
-- [ ] Space cover image upload
+- [x] Space cover image upload
 - [ ] Kick member from space (owner only)
 - [ ] Space permission tiers (read-only member vs posting member)
 - [ ] Space search / discovery (public spaces)

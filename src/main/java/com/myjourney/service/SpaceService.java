@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.security.SecureRandom;
 import java.util.List;
@@ -37,6 +38,9 @@ public class SpaceService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private CloudStorageService cloudStorageService;
+
     // Create a new space; the creator becomes OWNER
     @Transactional
     public SpaceResponse createSpace(Integer userId, String name, String description) {
@@ -57,7 +61,7 @@ public class SpaceService {
         member.setRole(Role.OWNER);
         spaceMemberRepository.save(member);
 
-        return new SpaceResponse(space.getId(), space.getName(), space.getDescription(), space.getInviteCode());
+        return new SpaceResponse(space.getId(), space.getName(), space.getDescription(), space.getInviteCode(), space.getCoverImage());
     }
 
     // Join a space via invite code
@@ -79,7 +83,7 @@ public class SpaceService {
         member.setRole(Role.MEMBER);
         spaceMemberRepository.save(member);
 
-        return new SpaceResponse(space.getId(), space.getName(), space.getDescription(), space.getInviteCode());
+        return new SpaceResponse(space.getId(), space.getName(), space.getDescription(), space.getInviteCode(), space.getCoverImage());
     }
 
     // Get all spaces the user belongs to
@@ -137,7 +141,7 @@ public class SpaceService {
         if (description != null) space.setDescription(description);
         spaceRepository.save(space);
 
-        return new SpaceResponse(space.getId(), space.getName(), space.getDescription(), space.getInviteCode());
+        return new SpaceResponse(space.getId(), space.getName(), space.getDescription(), space.getInviteCode(), space.getCoverImage());
     }
 
     // Leave a space — owner cannot leave, must delete instead
@@ -171,6 +175,23 @@ public class SpaceService {
         }
 
         spaceRepository.delete(space);
+    }
+
+    // Upload or replace cover image — owner only
+    @Transactional
+    public SpaceResponse updateCoverImage(Integer spaceId, Integer userId, MultipartFile coverFile) {
+        Space space = spaceRepository.findById(spaceId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Space not found"));
+
+        if (!space.getOwner().getId().equals(userId)) {
+            throw new AppException(HttpStatus.FORBIDDEN, "Only the owner can update the cover image");
+        }
+
+        String url = cloudStorageService.uploadFile(coverFile, "my-journey/space-covers");
+        space.setCoverImage(url);
+        spaceRepository.save(space);
+
+        return new SpaceResponse(space.getId(), space.getName(), space.getDescription(), space.getInviteCode(), space.getCoverImage());
     }
 
     private String generateUniqueInviteCode() {

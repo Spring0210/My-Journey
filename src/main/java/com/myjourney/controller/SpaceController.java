@@ -8,6 +8,7 @@ import com.myjourney.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -101,6 +102,19 @@ public class SpaceController {
         if (userId == null) return ResponseEntity.status(401).build();
 
         return ResponseEntity.ok(spaceService.updateSpace(spaceId, userId, body.get("name"), body.get("description")));
+    }
+
+    // PUT /api/spaces/{spaceId}/cover — upload cover image (owner only)
+    @PutMapping("/{spaceId}/cover")
+    public ResponseEntity<SpaceResponse> updateCoverImage(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @PathVariable Integer spaceId,
+            @RequestParam("file") MultipartFile file
+    ) {
+        Integer userId = getJwtUserId(authHeader);
+        if (userId == null) return ResponseEntity.status(401).build();
+
+        return ResponseEntity.ok(spaceService.updateCoverImage(spaceId, userId, file));
     }
 
     // POST /api/spaces/{spaceId}/leave — leave a space

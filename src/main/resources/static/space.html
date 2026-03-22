@@ -59,6 +59,10 @@
       <!-- Right: Space Info -->
       <aside class="space-info-column">
         <div class="card">
+          <!-- Cover image banner (hidden until a cover is set) -->
+          <div class="space-cover-wrap" id="spaceCoverWrap" hidden>
+            <img class="space-cover-img" id="spaceCoverImg" src="" alt="Space cover" />
+          </div>
           <div class="space-info-header">
             <h4 class="card__title">Space Info</h4>
             <div id="spaceInfoActions"></div>
@@ -101,6 +105,17 @@
       <div class="form-group">
         <label>Description</label>
         <textarea id="editSpaceDesc" rows="3"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Cover Image</label>
+        <div class="cover-upload-wrap">
+          <img class="cover-preview" id="coverPreview" src="" alt="Cover preview" hidden />
+          <label class="btn btn--ghost btn--sm cover-upload-label">
+            Choose Image
+            <input type="file" id="coverFileInput" accept="image/*" hidden />
+          </label>
+          <span class="cover-filename" id="coverFilename"></span>
+        </div>
       </div>
     </div>
     <div class="modal-footer">

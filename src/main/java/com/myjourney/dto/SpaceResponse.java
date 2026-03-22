@@ -5,5 +5,6 @@ public record SpaceResponse(
         Integer id,
         String name,
         String description,
-        String inviteCode
+        String inviteCode,
+        String coverImage
 ) {}

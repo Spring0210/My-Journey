@@ -47,6 +47,12 @@ async function loadSpaceDetail() {
         document.getElementById('spaceTitle').textContent = space.name;
         document.getElementById('spaceDescription').textContent = space.description || 'No description.';
 
+        // Show cover image if available
+        if (space.coverImage) {
+            document.getElementById('spaceCoverImg').src = space.coverImage;
+            document.getElementById('spaceCoverWrap').hidden = false;
+        }
+
         isOwner = space.ownerUsername === username;
 
         // Invite code visible to all members
@@ -94,8 +100,31 @@ async function loadSpaceDetail() {
 function openEditModal(space) {
     document.getElementById('editSpaceName').value = space.name;
     document.getElementById('editSpaceDesc').value = space.description || '';
+
+    // Show existing cover as preview
+    const preview = document.getElementById('coverPreview');
+    if (space.coverImage) {
+        preview.src = space.coverImage;
+        preview.hidden = false;
+    } else {
+        preview.src = '';
+        preview.hidden = true;
+    }
+    document.getElementById('coverFileInput').value = '';
+    document.getElementById('coverFilename').textContent = '';
+
     document.getElementById('editSpaceModal').hidden = false;
 }
+
+// Preview selected cover file
+document.getElementById('coverFileInput').addEventListener('change', () => {
+    const file = document.getElementById('coverFileInput').files[0];
+    if (!file) return;
+    document.getElementById('coverFilename').textContent = file.name;
+    const preview = document.getElementById('coverPreview');
+    preview.src = URL.createObjectURL(file);
+    preview.hidden = false;
+});
 
 document.getElementById('closeEditModal').addEventListener('click', () => {
     document.getElementById('editSpaceModal').hidden = true;
@@ -116,6 +145,7 @@ document.getElementById('confirmEdit').addEventListener('click', async () => {
     const btn = document.getElementById('confirmEdit');
     btn.disabled = true;
     try {
+        // Update name and description
         const res = await apiRequest(`/api/spaces/${spaceId}`, {
             method: 'PUT',
             body: JSON.stringify({ name, description })
@@ -125,6 +155,20 @@ document.getElementById('confirmEdit').addEventListener('click', async () => {
         document.getElementById('spaceTitle').textContent = data.name;
         document.getElementById('spaceDescription').textContent = data.description || 'No description.';
         document.title = `${data.name} - Journey`;
+
+        // Upload cover image if a new file was selected
+        const coverFile = document.getElementById('coverFileInput').files[0];
+        if (coverFile) {
+            const formData = new FormData();
+            formData.append('file', coverFile);
+            const coverRes = await apiRequestWithFile(`/api/spaces/${spaceId}/cover`, formData, 'PUT');
+            const coverData = await coverRes.json();
+            if (!coverData.error && coverData.coverImage) {
+                document.getElementById('spaceCoverImg').src = coverData.coverImage;
+                document.getElementById('spaceCoverWrap').hidden = false;
+            }
+        }
+
         document.getElementById('editSpaceModal').hidden = true;
     } catch (e) {
         alert('Failed to update space.');

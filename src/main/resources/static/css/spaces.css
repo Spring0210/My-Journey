@@ -660,6 +660,48 @@
 .btn--danger:hover { opacity: 0.85; }
 .btn--sm { padding: 6px 14px; font-size: 13px; }
 
+/* ── Space Cover Image ── */
+.space-cover-wrap {
+  margin: -16px -16px 16px; /* bleed to card edges */
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  overflow: hidden;
+  line-height: 0;
+}
+.space-cover-img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  display: block;
+}
+
+/* Cover upload UI inside the Edit modal */
+.cover-upload-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.cover-preview {
+  width: 64px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.cover-upload-label {
+  cursor: pointer;
+  white-space: nowrap;
+}
+.cover-filename {
+  font-size: 13px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
+}
+
 /* ── Space Info Header ── */
 .space-info-header {
   display: flex;
