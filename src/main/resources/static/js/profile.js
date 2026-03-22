@@ -1,18 +1,18 @@
-// Profile page — handles avatar preview and saving username/avatar changes
+// Profile page — handles avatar/username update and change password flow
 
 document.addEventListener('DOMContentLoaded', () => {
     const userId = localStorage.getItem('userId');
-    const avatarInput = document.getElementById('avatarInput');
+
+    // ── View 1: Profile ─────────────────────────────────────────
+    const avatarInput   = document.getElementById('avatarInput');
     const avatarPreview = document.getElementById('avatarPreview');
     const usernameInput = document.getElementById('usernameInput');
-    const saveBtn = document.getElementById('saveBtn');
-    const statusMsg = document.getElementById('statusMsg');
+    const saveBtn       = document.getElementById('saveBtn');
+    const statusMsg     = document.getElementById('statusMsg');
 
-    // Populate fields with current values from localStorage
     usernameInput.value = localStorage.getItem('username') || '';
     renderAvatarPreview(localStorage.getItem('avatar'));
 
-    // Show a preview of the selected image before uploading
     avatarInput.addEventListener('change', () => {
         const file = avatarInput.files[0];
         if (!file) return;
@@ -23,9 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     saveBtn.addEventListener('click', async () => {
         const newUsername = usernameInput.value.trim();
-        const avatarFile = avatarInput.files[0];
+        const avatarFile  = avatarInput.files[0];
 
-        // At least one field must be provided
         if (!newUsername && !avatarFile) {
             showStatus('Nothing to update.', false);
             return;
@@ -33,26 +32,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const formData = new FormData();
         if (newUsername) formData.append('username', newUsername);
-        if (avatarFile) formData.append('avatar', avatarFile);
+        if (avatarFile)  formData.append('avatar', avatarFile);
 
         saveBtn.disabled = true;
         saveBtn.textContent = 'Saving...';
-
         try {
-            const res = await apiRequestWithFile(`/api/profile/${userId}`, formData, 'PUT');
+            const res  = await apiRequestWithFile(`/api/profile/${userId}`, formData, 'PUT');
             const data = await res.json();
-
             if (data.error) {
                 showStatus(data.error, false);
             } else {
-                // Update localStorage so sidebar and other pages reflect the new values immediately
                 if (data.username) localStorage.setItem('username', data.username);
-                if (data.avatar) localStorage.setItem('avatar', data.avatar);
-                if (!data.avatar) localStorage.removeItem('avatar');
-
-                // Re-render the sidebar user info with updated values
+                if (data.avatar)   localStorage.setItem('avatar', data.avatar);
+                if (!data.avatar)  localStorage.removeItem('avatar');
                 if (window.layoutManager) window.layoutManager.setupUserInfo();
-
                 showStatus('Profile updated!', true);
             }
         } catch (err) {
@@ -63,7 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Render avatar preview: show image if url provided, else show initial letter
     function renderAvatarPreview(src) {
         if (src) {
             avatarPreview.innerHTML = `<img src="${src}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
@@ -79,19 +71,42 @@ document.addEventListener('DOMContentLoaded', () => {
         statusMsg.style.display = 'block';
     }
 
-    // ── Change Password ──────────────────────────────────────────
-    const sendCodeBtn   = document.getElementById('sendCodeBtn');
-    const confirmPwBtn  = document.getElementById('confirmPwBtn');
-    const cancelPwBtn   = document.getElementById('cancelPwBtn');
-    const pwStep1       = document.getElementById('pwStep1');
-    const pwStep2       = document.getElementById('pwStep2');
-    const pwStatusMsg   = document.getElementById('pwStatusMsg');
+    // ── View 2: Change Password ──────────────────────────────────
+    const viewProfile        = document.getElementById('viewProfile');
+    const viewChangePassword = document.getElementById('viewChangePassword');
+    const sendCodeBtn        = document.getElementById('sendCodeBtn');
+    const confirmPwBtn       = document.getElementById('confirmPwBtn');
+    const cancelPwBtn        = document.getElementById('cancelPwBtn');
+    const pwStep1            = document.getElementById('pwStep1');
+    const pwStep2            = document.getElementById('pwStep2');
+    const pwStatusMsg        = document.getElementById('pwStatusMsg');
 
     function showPwStatus(msg, success) {
         pwStatusMsg.textContent = msg;
         pwStatusMsg.style.color = success ? 'var(--success)' : 'var(--danger)';
         pwStatusMsg.style.display = 'block';
     }
+
+    function resetChangePasswordView() {
+        pwStep1.hidden = false;
+        pwStep2.hidden = true;
+        document.getElementById('pwCode').value    = '';
+        document.getElementById('pwNew').value     = '';
+        document.getElementById('pwConfirm').value = '';
+        pwStatusMsg.style.display = 'none';
+    }
+
+    document.getElementById('openChangePwBtn').addEventListener('click', () => {
+        resetChangePasswordView();
+        viewProfile.hidden        = true;
+        viewChangePassword.hidden = false;
+    });
+
+    cancelPwBtn.addEventListener('click', () => {
+        viewChangePassword.hidden = true;
+        viewProfile.hidden        = false;
+        statusMsg.style.display   = 'none';
+    });
 
     sendCodeBtn.addEventListener('click', async () => {
         sendCodeBtn.disabled = true;
@@ -115,22 +130,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    cancelPwBtn.addEventListener('click', () => {
-        pwStep1.hidden = false;
-        pwStep2.hidden = true;
-        document.getElementById('pwCode').value = '';
-        document.getElementById('pwNew').value = '';
-        document.getElementById('pwConfirm').value = '';
-        pwStatusMsg.style.display = 'none';
-    });
-
     confirmPwBtn.addEventListener('click', async () => {
-        const code       = document.getElementById('pwCode').value.trim();
-        const newPw      = document.getElementById('pwNew').value;
-        const confirmPw  = document.getElementById('pwConfirm').value;
+        const code      = document.getElementById('pwCode').value.trim();
+        const newPw     = document.getElementById('pwNew').value;
+        const confirmPw = document.getElementById('pwConfirm').value;
 
-        if (!code) { showPwStatus('Please enter the verification code.', false); return; }
-        if (newPw.length < 6) { showPwStatus('New password must be at least 6 characters.', false); return; }
+        if (!code)              { showPwStatus('Please enter the verification code.', false); return; }
+        if (newPw.length < 6)   { showPwStatus('New password must be at least 6 characters.', false); return; }
         if (newPw !== confirmPw) { showPwStatus('Passwords do not match.', false); return; }
 
         confirmPwBtn.disabled = true;
@@ -141,12 +147,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ code, newPassword: newPw })
             });
             if (res && res.ok) {
-                pwStep1.hidden = false;
-                pwStep2.hidden = true;
-                document.getElementById('pwCode').value = '';
-                document.getElementById('pwNew').value = '';
-                document.getElementById('pwConfirm').value = '';
-                showPwStatus('Password changed successfully!', true);
+                // Success — switch back to profile view
+                viewChangePassword.hidden = true;
+                viewProfile.hidden        = false;
+                showStatus('Password changed successfully!', true);
             } else {
                 const data = await res.json();
                 showPwStatus(data.error || 'Failed to change password.', false);

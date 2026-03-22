@@ -28,60 +28,67 @@
     <div class="content">
       <div class="card" style="max-width:480px;margin:0 auto;padding:32px;">
 
-        <!-- Avatar section -->
-        <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:32px;">
-          <!-- Shows current avatar image or initial letter -->
-          <div id="avatarPreview" class="user-avatar" style="width:80px;height:80px;font-size:2rem;"></div>
-          <label class="btn btn--ghost" style="cursor:pointer;">
-            Change Avatar
-            <input type="file" id="avatarInput" accept="image/*" style="display:none;" />
-          </label>
+        <!-- ── View 1: Profile ── -->
+        <div id="viewProfile">
+          <!-- Avatar section -->
+          <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:32px;">
+            <div id="avatarPreview" class="user-avatar" style="width:80px;height:80px;font-size:2rem;"></div>
+            <label class="btn btn--ghost" style="cursor:pointer;">
+              Change Avatar
+              <input type="file" id="avatarInput" accept="image/*" style="display:none;" />
+            </label>
+          </div>
+
+          <!-- Username field -->
+          <div style="margin-bottom:20px;">
+            <label class="label" for="usernameInput">Username</label>
+            <input class="input" id="usernameInput" type="text" placeholder="Enter new username" />
+          </div>
+
+          <!-- Save button -->
+          <button class="btn btn--primary" id="saveBtn" style="width:100%;">Save Changes</button>
+          <p id="statusMsg" style="margin-top:12px;text-align:center;color:var(--success);display:none;"></p>
+
+          <hr style="margin:28px 0;border:none;border-top:1px solid var(--border);" />
+
+          <button class="btn btn--ghost" id="openChangePwBtn" style="width:100%;">Change Password</button>
         </div>
 
-        <!-- Username field -->
-        <div style="margin-bottom:20px;">
-          <label class="label" for="usernameInput">Username</label>
-          <input class="input" id="usernameInput" type="text" placeholder="Enter new username" />
-        </div>
-
-        <!-- Save button -->
-        <button class="btn btn--primary" id="saveBtn" style="width:100%;">Save Changes</button>
-
-        <p id="statusMsg" style="margin-top:12px;text-align:center;color:var(--success);display:none;"></p>
-
-        <!-- Divider -->
-        <hr style="margin:28px 0;border:none;border-top:1px solid var(--border);" />
-
-        <!-- Change Password section -->
-        <h3 style="font-size:15px;font-weight:600;margin:0 0 16px;">Change Password</h3>
-
-        <!-- Step 1: send code -->
-        <div id="pwStep1">
-          <p style="font-size:13px;color:var(--muted);margin:0 0 12px;">
-            A verification code will be sent to your registered email address.
+        <!-- ── View 2: Change Password ── -->
+        <div id="viewChangePassword" hidden>
+          <h3 style="font-size:16px;font-weight:600;margin:0 0 6px;">Change Password</h3>
+          <p style="font-size:13px;color:var(--muted);margin:0 0 20px;">
+            A verification code will be sent to your registered email.
           </p>
-          <button class="btn btn--ghost" id="sendCodeBtn" style="width:100%;">Send Verification Code</button>
+
+          <!-- Step 1: send code -->
+          <div id="pwStep1">
+            <button class="btn btn--primary" id="sendCodeBtn" style="width:100%;">Send Verification Code</button>
+          </div>
+
+          <!-- Step 2: enter code + new password (shown after code is sent) -->
+          <div id="pwStep2" hidden>
+            <div style="margin-bottom:14px;">
+              <label class="label">Verification Code</label>
+              <input class="input" id="pwCode" type="text" maxlength="6" placeholder="6-digit code" />
+            </div>
+            <div style="margin-bottom:14px;">
+              <label class="label">New Password</label>
+              <input class="input" id="pwNew" type="password" placeholder="At least 6 characters" />
+            </div>
+            <div style="margin-bottom:14px;">
+              <label class="label">Confirm New Password</label>
+              <input class="input" id="pwConfirm" type="password" placeholder="Repeat new password" />
+            </div>
+            <button class="btn btn--primary" id="confirmPwBtn" style="width:100%;">Confirm Change</button>
+          </div>
+
+          <p id="pwStatusMsg" style="margin-top:12px;text-align:center;display:none;"></p>
+
+          <hr style="margin:24px 0;border:none;border-top:1px solid var(--border);" />
+          <button class="btn btn--ghost" id="cancelPwBtn" style="width:100%;">Cancel</button>
         </div>
 
-        <!-- Step 2: enter code + new password (hidden until code is sent) -->
-        <div id="pwStep2" hidden>
-          <div style="margin-bottom:14px;">
-            <label class="label">Verification Code</label>
-            <input class="input" id="pwCode" type="text" maxlength="6" placeholder="6-digit code" />
-          </div>
-          <div style="margin-bottom:14px;">
-            <label class="label">New Password</label>
-            <input class="input" id="pwNew" type="password" placeholder="At least 6 characters" />
-          </div>
-          <div style="margin-bottom:14px;">
-            <label class="label">Confirm New Password</label>
-            <input class="input" id="pwConfirm" type="password" placeholder="Repeat new password" />
-          </div>
-          <button class="btn btn--primary" id="confirmPwBtn" style="width:100%;">Confirm Change</button>
-          <button class="btn btn--ghost" id="cancelPwBtn" style="width:100%;margin-top:8px;">Cancel</button>
-        </div>
-
-        <p id="pwStatusMsg" style="margin-top:12px;text-align:center;display:none;"></p>
       </div>
     </div>
   </main>
