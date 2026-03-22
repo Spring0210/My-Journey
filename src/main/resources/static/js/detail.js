@@ -196,11 +196,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         renderPhotoGrid(existingPaths, pendingFiles);
     });
 
+    // ── ⋯ Menu toggle (close on outside click) ───────────────────
+    const menuTrigger  = document.getElementById("entryMenuTrigger");
+    const menuDropdown = document.getElementById("entryMenuDropdown");
+    if (menuTrigger) {
+        menuTrigger.addEventListener("click", (e) => {
+            e.stopPropagation();
+            menuDropdown.hidden = !menuDropdown.hidden;
+        });
+        document.addEventListener("click", () => { menuDropdown.hidden = true; });
+    }
+
     // ── CREATE MODE ──────────────────────────────────────────────
     if (!entryId) {
-        document.getElementById("pageTitle").textContent   = "New Entry";
-        document.getElementById("saveBtn").textContent     = "Create Entry";
-        document.getElementById("deleteBtn").style.display = "none";
+        document.getElementById("saveBtn").textContent      = "Create Entry";
         document.getElementById("imageCount").style.display = "none";
 
         const today = new Date().toISOString().split('T')[0];
@@ -235,10 +244,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // ── EDIT MODE ────────────────────────────────────────────────
-    document.getElementById("pageTitle").textContent  = "Edit Entry";
     document.getElementById("saveBtn").textContent    = "Save Changes";
-    document.getElementById("exportBtn").hidden = false;
-    document.getElementById("exportBtn").addEventListener("click", () => window.print());
+    document.getElementById("entryMenuWrap").hidden   = false;
+    document.getElementById("exportBtn").addEventListener("click", () => {
+        menuDropdown.hidden = true;
+        window.print();
+    });
 
     try {
         await loadEntry(entryId);
@@ -269,6 +280,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     document.getElementById("deleteBtn").addEventListener("click", async () => {
+        menuDropdown.hidden = true;
         try { await deleteEntry(entryId); }
         catch (e) { console.error(e); alert("Delete failed."); }
     });

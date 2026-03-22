@@ -19,14 +19,23 @@
     <header class="header">
       <div class="header-left">
         <button class="sidebar-toggle">☰</button>
-        <h1 class="header-title" id="pageTitle">New Entry</h1>
+        <button id="backBtn" class="btn btn--ghost btn--sm">← Back</button>
       </div>
       <div class="header-right">
         <span id="saveStatus" class="save-status"></span>
-        <button id="exportBtn" class="btn btn--ghost" hidden>Export PDF</button>
-        <button id="deleteBtn" class="btn--delete">Delete</button>
-        <button id="saveBtn" class="btn btn--primary">Create Entry</button>
-        <button id="backBtn" class="btn btn--ghost">Back</button>
+        <button id="saveBtn" class="btn btn--primary btn--sm">Create Entry</button>
+        <!-- ⋯ overflow menu — contains secondary/destructive actions -->
+        <div class="entry-menu-wrap" id="entryMenuWrap" hidden>
+          <button class="entry-menu-trigger" id="entryMenuTrigger" title="More options">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="5"  cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
+            </svg>
+          </button>
+          <div class="entry-menu-dropdown" id="entryMenuDropdown" hidden>
+            <button class="entry-menu-item" id="exportBtn">Export PDF</button>
+            <button class="entry-menu-item entry-menu-item--danger" id="deleteBtn">Delete Entry</button>
+          </div>
+        </div>
       </div>
     </header>
 
