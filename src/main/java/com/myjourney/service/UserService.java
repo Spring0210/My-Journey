@@ -108,6 +108,66 @@ public class UserService {
         return new ProfileResponse(user.getUsername(), user.getAvatar());
     }
 
+    // Send a verification code to the logged-in user's registered email
+    @Transactional
+    public void sendChangePasswordCode(Integer userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "No email address on this account");
+        }
+
+        // Reuse the same PasswordResetToken table
+        tokenRepository.deleteByUsername(user.getUsername());
+
+        String code = String.format("%06d", new Random().nextInt(1000000));
+        PasswordResetToken token = new PasswordResetToken();
+        token.setUsername(user.getUsername());
+        token.setCode(code);
+        token.setExpiredAt(LocalDateTime.now().plusMinutes(10));
+        tokenRepository.save(token);
+
+        try {
+            Resend resend = new Resend(resendApiKey);
+            CreateEmailOptions params = CreateEmailOptions.builder()
+                    .from(fromEmail)
+                    .to(user.getEmail())
+                    .subject("My Journey - Change Password Code")
+                    .text("Your verification code is: " + code + "\n\nThis code expires in 10 minutes.\n\nIf you did not request this, please ignore this email.")
+                    .build();
+            resend.emails().send(params);
+        } catch (ResendException e) {
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to send email, please try again later");
+        }
+    }
+
+    // Verify code and set new password for logged-in user
+    @Transactional
+    public void changePasswordWithCode(Integer userId, String code, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (newPassword == null || newPassword.length() < 6) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "New password must be at least 6 characters");
+        }
+
+        Optional<PasswordResetToken> tokenOpt = tokenRepository.findByUsernameAndCode(user.getUsername(), code);
+        if (tokenOpt.isEmpty()) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "Invalid verification code");
+        }
+
+        PasswordResetToken token = tokenOpt.get();
+        if (token.getExpiredAt().isBefore(LocalDateTime.now())) {
+            tokenRepository.delete(token);
+            throw new AppException(HttpStatus.BAD_REQUEST, "Code has expired");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        tokenRepository.delete(token);
+    }
+
     @Transactional
     public String sendResetCode(String username, String email) {
         Optional<User> userOpt = userRepository.findByUsername(username);

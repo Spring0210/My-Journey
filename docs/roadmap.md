@@ -56,7 +56,7 @@
 
 ### Account
 - [x] User profile page (avatar, username)
-- [ ] Change password from settings
+- [x] Change password from settings
 - [ ] Bio / display name field
 
 ### Bug Fixes & Security (done in Phase 2)

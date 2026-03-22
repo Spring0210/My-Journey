@@ -78,4 +78,84 @@ document.addEventListener('DOMContentLoaded', () => {
         statusMsg.style.color = success ? 'var(--success)' : 'var(--danger)';
         statusMsg.style.display = 'block';
     }
+
+    // ── Change Password ──────────────────────────────────────────
+    const sendCodeBtn   = document.getElementById('sendCodeBtn');
+    const confirmPwBtn  = document.getElementById('confirmPwBtn');
+    const cancelPwBtn   = document.getElementById('cancelPwBtn');
+    const pwStep1       = document.getElementById('pwStep1');
+    const pwStep2       = document.getElementById('pwStep2');
+    const pwStatusMsg   = document.getElementById('pwStatusMsg');
+
+    function showPwStatus(msg, success) {
+        pwStatusMsg.textContent = msg;
+        pwStatusMsg.style.color = success ? 'var(--success)' : 'var(--danger)';
+        pwStatusMsg.style.display = 'block';
+    }
+
+    sendCodeBtn.addEventListener('click', async () => {
+        sendCodeBtn.disabled = true;
+        sendCodeBtn.textContent = 'Sending...';
+        pwStatusMsg.style.display = 'none';
+        try {
+            const res = await apiRequest('/api/change-password/send-code', { method: 'POST' });
+            if (res && res.ok) {
+                pwStep1.hidden = true;
+                pwStep2.hidden = false;
+                showPwStatus('Code sent! Check your email.', true);
+            } else {
+                const data = await res.json();
+                showPwStatus(data.error || 'Failed to send code.', false);
+            }
+        } catch (e) {
+            showPwStatus('Failed to send code.', false);
+        } finally {
+            sendCodeBtn.disabled = false;
+            sendCodeBtn.textContent = 'Send Verification Code';
+        }
+    });
+
+    cancelPwBtn.addEventListener('click', () => {
+        pwStep1.hidden = false;
+        pwStep2.hidden = true;
+        document.getElementById('pwCode').value = '';
+        document.getElementById('pwNew').value = '';
+        document.getElementById('pwConfirm').value = '';
+        pwStatusMsg.style.display = 'none';
+    });
+
+    confirmPwBtn.addEventListener('click', async () => {
+        const code       = document.getElementById('pwCode').value.trim();
+        const newPw      = document.getElementById('pwNew').value;
+        const confirmPw  = document.getElementById('pwConfirm').value;
+
+        if (!code) { showPwStatus('Please enter the verification code.', false); return; }
+        if (newPw.length < 6) { showPwStatus('New password must be at least 6 characters.', false); return; }
+        if (newPw !== confirmPw) { showPwStatus('Passwords do not match.', false); return; }
+
+        confirmPwBtn.disabled = true;
+        confirmPwBtn.textContent = 'Confirming...';
+        try {
+            const res = await apiRequest('/api/change-password', {
+                method: 'PUT',
+                body: JSON.stringify({ code, newPassword: newPw })
+            });
+            if (res && res.ok) {
+                pwStep1.hidden = false;
+                pwStep2.hidden = true;
+                document.getElementById('pwCode').value = '';
+                document.getElementById('pwNew').value = '';
+                document.getElementById('pwConfirm').value = '';
+                showPwStatus('Password changed successfully!', true);
+            } else {
+                const data = await res.json();
+                showPwStatus(data.error || 'Failed to change password.', false);
+            }
+        } catch (e) {
+            showPwStatus('Failed to change password.', false);
+        } finally {
+            confirmPwBtn.disabled = false;
+            confirmPwBtn.textContent = 'Confirm Change';
+        }
+    });
 });
