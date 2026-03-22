@@ -67,6 +67,14 @@ Each HTML page has one corresponding JS file. Structure:
 // 4. Attach event listeners
 ```
 
+### UX Principles
+- Follow mainstream industry patterns — use established UI conventions users already know
+- Match the interaction pattern to the weight of the action:
+  - **Card view switch** — secondary actions within the same page (e.g. change password)
+  - **Modal** — focused tasks that need isolation from the current context (e.g. create/edit/confirm)
+  - **Inline** — only for trivial, non-disruptive interactions
+- Think from the user's perspective before choosing an implementation; if it feels awkward to use, redesign it
+
 ### Mobile Responsiveness
 All frontend features must work comfortably on mobile (phone-sized screens).
 
