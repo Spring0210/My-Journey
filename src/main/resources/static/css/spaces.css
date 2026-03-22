@@ -650,6 +650,24 @@
 }
 .member-name { font-size: 14px; font-weight: 500; color: var(--text); }
 
+/* ── Kick button on member rows ── */
+.kick-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.member-row:hover .kick-btn { opacity: 1; }
+.kick-btn:hover { color: var(--danger); }
+
 /* ── Danger Zone ── */
 .danger-card { border: 1px solid rgba(255,59,48,0.2); }
 .btn--danger {

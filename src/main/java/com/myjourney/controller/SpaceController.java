@@ -117,6 +117,20 @@ public class SpaceController {
         return ResponseEntity.ok(spaceService.updateCoverImage(spaceId, userId, file));
     }
 
+    // DELETE /api/spaces/{spaceId}/members/{memberId} — kick a member (owner only)
+    @DeleteMapping("/{spaceId}/members/{memberId}")
+    public ResponseEntity<Void> kickMember(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @PathVariable Integer spaceId,
+            @PathVariable Integer memberId
+    ) {
+        Integer userId = getJwtUserId(authHeader);
+        if (userId == null) return ResponseEntity.status(401).build();
+
+        spaceService.kickMember(spaceId, userId, memberId);
+        return ResponseEntity.ok().build();
+    }
+
     // POST /api/spaces/{spaceId}/leave — leave a space
     @PostMapping("/{spaceId}/leave")
     public ResponseEntity<Void> leaveSpace(

@@ -164,6 +164,29 @@ public class SpaceService {
         spaceMemberRepository.delete(memberOpt.get());
     }
 
+    // Kick a member from a space — owner only, cannot kick self
+    @Transactional
+    public void kickMember(Integer spaceId, Integer ownerId, Integer targetUserId) {
+        Space space = spaceRepository.findById(spaceId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Space not found"));
+
+        if (!space.getOwner().getId().equals(ownerId)) {
+            throw new AppException(HttpStatus.FORBIDDEN, "Only the owner can remove members");
+        }
+
+        if (ownerId.equals(targetUserId)) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "Owner cannot remove themselves");
+        }
+
+        User target = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "User not found"));
+
+        SpaceMember member = spaceMemberRepository.findBySpaceAndUser(space, target)
+                .orElseThrow(() -> new AppException(HttpStatus.BAD_REQUEST, "User is not a member of this space"));
+
+        spaceMemberRepository.delete(member);
+    }
+
     // Delete a space — owner only
     @Transactional
     public void deleteSpace(Integer spaceId, Integer userId) {

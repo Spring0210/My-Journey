@@ -69,16 +69,7 @@ async function loadSpaceDetail() {
         }
 
         // Members
-        document.getElementById('memberCount').textContent = `(${space.members.length})`;
-        document.getElementById('membersList').innerHTML = space.members.map(m => `
-            <div class="member-row">
-                ${renderAvatar(m.avatar, m.username)}
-                <div class="member-info">
-                    <span class="member-name">${escapeHtml(m.username)}</span>
-                    ${m.role === 'OWNER' ? '<span class="role-badge role-badge--owner">Owner</span>' : ''}
-                </div>
-            </div>
-        `).join('');
+        renderMembersList(space.members);
 
         // Danger zone
         const dangerZone = document.getElementById('dangerZone');
@@ -93,6 +84,58 @@ async function loadSpaceDetail() {
         }
     } catch (e) {
         console.error(e);
+    }
+}
+
+// ── Members List ───────────────────────────────────────────────
+function renderMembersList(members) {
+    document.getElementById('memberCount').textContent = `(${members.length})`;
+    const list = document.getElementById('membersList');
+    list.innerHTML = '';
+
+    members.forEach(m => {
+        const row = document.createElement('div');
+        row.className = 'member-row';
+        row.dataset.userId = m.userId;
+
+        // Kick button — owner only, not shown for the owner themselves
+        const kickHtml = (isOwner && m.role !== 'OWNER')
+            ? `<button class="kick-btn" title="Remove member">✕</button>`
+            : '';
+
+        row.innerHTML = `
+            ${renderAvatar(m.avatar, m.username)}
+            <div class="member-info">
+                <span class="member-name">${escapeHtml(m.username)}</span>
+                ${m.role === 'OWNER' ? '<span class="role-badge role-badge--owner">Owner</span>' : ''}
+            </div>
+            ${kickHtml}
+        `;
+
+        if (isOwner && m.role !== 'OWNER') {
+            row.querySelector('.kick-btn').addEventListener('click', () => kickMember(m.userId, m.username, row));
+        }
+
+        list.appendChild(row);
+    });
+}
+
+async function kickMember(targetUserId, targetUsername, rowEl) {
+    if (!confirm(`Remove ${targetUsername} from this space?`)) return;
+    try {
+        const res = await apiRequest(`/api/spaces/${spaceId}/members/${targetUserId}`, { method: 'DELETE' });
+        if (!res.ok) {
+            const data = await res.json();
+            alert(data.error || 'Failed to remove member.');
+            return;
+        }
+        // Remove row from DOM and update count
+        rowEl.remove();
+        const countEl = document.getElementById('memberCount');
+        const current = parseInt(countEl.textContent.replace(/\D/g, '')) || 0;
+        countEl.textContent = `(${current - 1})`;
+    } catch (e) {
+        alert('Failed to remove member.');
     }
 }
 

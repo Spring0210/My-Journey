@@ -45,7 +45,7 @@
 
 ### Spaces Improvements
 - [x] Space cover image upload
-- [ ] Kick member from space (owner only)
+- [x] Kick member from space (owner only)
 - [ ] Space permission tiers (read-only member vs posting member)
 - [ ] Space search / discovery (public spaces)
 
