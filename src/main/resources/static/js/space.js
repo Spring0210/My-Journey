@@ -6,6 +6,8 @@ let currentPage = 0;
 let totalPages = 0;
 let selectedImages = [];
 let objectUrls = [];
+let selectedVideos = [];
+let videoObjectUrls = [];
 let isOwner = false;
 let lightboxImages = [];
 let lightboxIndex = 0;
@@ -403,6 +405,19 @@ function renderCommentSection(post) {
     `;
 }
 
+// ── Video Player ───────────────────────────────────────────────
+function renderVideoList(videos) {
+    if (!videos || videos.length === 0) return '';
+    return `<div class="video-list">${
+        videos.map(url => `
+            <div class="video-wrap">
+                <video controls preload="metadata" playsinline>
+                    <source src="${url}" />
+                </video>
+            </div>`).join('')
+    }</div>`;
+}
+
 function renderPost(post) {
     const canDelete = post.authorId === userId || isOwner;
     return `
@@ -417,6 +432,7 @@ function renderPost(post) {
             </div>
             ${post.content ? `<p class="post-content">${escapeHtml(post.content)}</p>` : ''}
             ${renderImageGrid(post.id, post.images)}
+            ${renderVideoList(post.videos)}
             ${renderReactionBar(post)}
             ${renderCommentSection(post)}
         </div>
@@ -659,7 +675,7 @@ function updatePagination() {
 document.getElementById('prevPostsBtn').addEventListener('click', () => loadPosts(currentPage - 1));
 document.getElementById('nextPostsBtn').addEventListener('click', () => loadPosts(currentPage + 1));
 
-// ── Composer: Image Preview ────────────────────────────────────
+// ── Composer: Image & Video Preview ───────────────────────────
 document.getElementById('postImages').addEventListener('change', (e) => {
     // Deduplicate by base name to handle iOS Live Photos, which submit
     // both a HEIC and a paired JPEG as two separate files
@@ -678,44 +694,105 @@ function renderComposerPreviews() {
     objectUrls.forEach(url => URL.revokeObjectURL(url));
     objectUrls = selectedImages.map(f => URL.createObjectURL(f));
 
+    videoObjectUrls.forEach(url => URL.revokeObjectURL(url));
+    videoObjectUrls = selectedVideos.map(f => URL.createObjectURL(f));
+
     const preview = document.getElementById('imagePreviewList');
-    preview.innerHTML = objectUrls.map((url, i) => `
+
+    const imageItems = objectUrls.map((url, i) => `
         <div class="composer-preview-item">
             <img src="${url}" />
-            <button class="remove-preview" data-index="${i}">&times;</button>
+            <button class="remove-preview" data-index="${i}" data-type="image">&times;</button>
         </div>
     `).join('');
 
+    const videoItems = videoObjectUrls.map((url, i) => `
+        <div class="composer-preview-item composer-preview-video">
+            <video src="${url}" preload="metadata"></video>
+            <div class="video-thumb-play">▶</div>
+            <button class="remove-preview" data-index="${i}" data-type="video">&times;</button>
+        </div>
+    `).join('');
+
+    preview.innerHTML = imageItems + videoItems;
+
     preview.querySelectorAll('.remove-preview').forEach(btn => {
         btn.addEventListener('click', () => {
-            selectedImages.splice(parseInt(btn.dataset.index), 1);
+            const idx = parseInt(btn.dataset.index);
+            if (btn.dataset.type === 'video') {
+                selectedVideos.splice(idx, 1);
+            } else {
+                selectedImages.splice(idx, 1);
+            }
             renderComposerPreviews();
         });
     });
 }
 
+document.getElementById('postVideos').addEventListener('change', (e) => {
+    // Limit to 1 video per post
+    selectedVideos = Array.from(e.target.files).slice(0, 1);
+    renderComposerPreviews();
+});
+
 // ── Submit Post ────────────────────────────────────────────────
 document.getElementById('postBtn').addEventListener('click', async () => {
     const content = document.getElementById('postContent').value.trim();
-    if (!content && selectedImages.length === 0) {
-        alert('Please add some text or images.');
+    if (!content && selectedImages.length === 0 && selectedVideos.length === 0) {
+        alert('Please add some text, images, or a video.');
         return;
     }
 
     const formData = new FormData();
     if (content) formData.append('content', content);
     selectedImages.forEach(f => formData.append('images', f));
+    selectedVideos.forEach(f => formData.append('videos', f));
 
     const btn = document.getElementById('postBtn');
     btn.disabled = true;
     btn.textContent = 'Posting...';
 
+    // Show progress bar when uploading a video (images are fast)
+    const hasVideo = selectedVideos.length > 0;
+    const progressEl = document.getElementById('uploadProgress');
+    const fillEl = document.getElementById('uploadProgressFill');
+    const textEl = document.getElementById('uploadProgressText');
+    if (hasVideo) {
+        progressEl.hidden = false;
+        fillEl.style.width = '0%';
+        textEl.textContent = 'Uploading 0%';
+    }
+
     try {
-        const res = await apiRequestWithFile(`/api/spaces/${spaceId}/posts`, formData);
-        if (res && res.ok) {
+        const token = localStorage.getItem('token');
+        const ok = await new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', `/api/spaces/${spaceId}/posts`);
+            xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+
+            if (hasVideo) {
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const pct = Math.round((e.loaded / e.total) * 100);
+                        fillEl.style.width = `${pct}%`;
+                        textEl.textContent = `Uploading ${pct}%`;
+                    }
+                };
+            }
+
+            xhr.onload = () => resolve(xhr.status >= 200 && xhr.status < 300);
+            xhr.onerror = () => reject(new Error('Network error'));
+            xhr.send(formData);
+        });
+
+        if (ok) {
             document.getElementById('postContent').value = '';
             document.getElementById('imagePreviewList').innerHTML = '';
+            document.getElementById('postVideos').value = '';
             selectedImages = [];
+            selectedVideos = [];
+            objectUrls = [];
+            videoObjectUrls = [];
             loadPosts(0);
         } else {
             alert('Failed to post.');
@@ -725,6 +802,8 @@ document.getElementById('postBtn').addEventListener('click', async () => {
     } finally {
         btn.disabled = false;
         btn.textContent = 'Post';
+        progressEl.hidden = true;
+        fillEl.style.width = '0%';
     }
 });
 

@@ -57,7 +57,7 @@ public class SpacePostService {
 
     // Create a post in a space — members only
     @Transactional
-    public PostResponse createPost(Integer spaceId, Integer userId, String content, List<String> imageUrls) {
+    public PostResponse createPost(Integer spaceId, Integer userId, String content, List<String> imageUrls, List<String> videoUrls) {
         Space space = spaceRepository.findById(spaceId)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Space not found"));
 
@@ -68,8 +68,10 @@ public class SpacePostService {
             throw new AppException(HttpStatus.FORBIDDEN, "Access denied");
         }
 
-        if ((content == null || content.isBlank()) && (imageUrls == null || imageUrls.isEmpty())) {
-            throw new AppException(HttpStatus.BAD_REQUEST, "Post must have content or images");
+        if ((content == null || content.isBlank())
+                && (imageUrls == null || imageUrls.isEmpty())
+                && (videoUrls == null || videoUrls.isEmpty())) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "Post must have content, images, or videos");
         }
 
         SpacePost post = new SpacePost();
@@ -77,6 +79,7 @@ public class SpacePostService {
         post.setAuthor(user);
         post.setContent(content);
         post.setImagePathList(imageUrls);
+        post.setVideoPathList(videoUrls);
         spacePostRepository.save(post);
 
         // Notify all other space members about the new post
@@ -124,11 +127,15 @@ public class SpacePostService {
         reactionRepository.deleteByPost(post);
         commentRepository.deleteByPost(post);
 
-        // Clean up images from Cloudinary before deleting the post record
+        // Clean up images and videos from Cloudinary before deleting the post record
         List<String> imageUrls = post.getImagePathList();
+        List<String> videoUrls = post.getVideoPathList();
         spacePostRepository.delete(post);
         if (imageUrls != null && !imageUrls.isEmpty()) {
             cloudStorageService.deleteFiles(imageUrls);
+        }
+        if (videoUrls != null && !videoUrls.isEmpty()) {
+            cloudStorageService.deleteFiles(videoUrls);
         }
     }
 
@@ -137,9 +144,10 @@ public class SpacePostService {
                 post.getId(),
                 post.getContent(),
                 post.getImagePathList(),
+                post.getVideoPathList(),
                 post.getAuthor().getId(),
                 post.getAuthor().getUsername(),
-                post.getAuthor().getAvatar(), // include avatar for frontend display
+                post.getAuthor().getAvatar(),
                 post.getCreatedAt(),
                 post.getUpdatedAt(),
                 reactionService.buildReactionSummary(post, requestingUserId),

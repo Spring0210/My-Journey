@@ -28,6 +28,9 @@ public class SpacePost {
     @Column(name = "image_paths", columnDefinition = "TEXT")
     private String imagePaths;
 
+    @Column(name = "video_paths", columnDefinition = "TEXT")
+    private String videoPaths;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -62,6 +65,23 @@ public class SpacePost {
         }
     }
 
+    public List<String> getVideoPathList() {
+        if (videoPaths == null || videoPaths.isEmpty()) return new ArrayList<>();
+        List<String> paths = new ArrayList<>();
+        for (String path : videoPaths.split(",")) {
+            if (!path.trim().isEmpty()) paths.add(path.trim());
+        }
+        return paths;
+    }
+
+    public void setVideoPathList(List<String> list) {
+        if (list == null || list.isEmpty()) {
+            this.videoPaths = null;
+        } else {
+            this.videoPaths = String.join(",", list);
+        }
+    }
+
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
@@ -76,6 +96,9 @@ public class SpacePost {
 
     public String getImagePaths() { return imagePaths; }
     public void setImagePaths(String imagePaths) { this.imagePaths = imagePaths; }
+
+    public String getVideoPaths() { return videoPaths; }
+    public void setVideoPaths(String videoPaths) { this.videoPaths = videoPaths; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

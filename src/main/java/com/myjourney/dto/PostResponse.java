@@ -8,6 +8,7 @@ public record PostResponse(
         Integer id,
         String content,
         List<String> images,
+        List<String> videos,
         Integer authorId,
         String authorUsername,
         String authorAvatar,

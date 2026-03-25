@@ -75,6 +75,15 @@ Each HTML page has one corresponding JS file. Structure:
   - **Inline** — only for trivial, non-disruptive interactions
 - Think from the user's perspective before choosing an implementation; if it feels awkward to use, redesign it
 
+### Third-party Libraries
+- Always use actively maintained, currently mainstream libraries — do not default to popular-but-outdated options
+- Before choosing a library, evaluate: Is it still widely adopted? Is it actively maintained? Does it fit the project style?
+- Preferred libraries for this project:
+  - Rich text editor: **Trix** (used by Basecamp/HEY — minimal, modern, CDN-ready)
+  - Calendar: **FullCalendar 6** (already in use)
+  - HTTP: native `fetch` via `api.js` wrapper (no axios needed at this scale)
+- If a better option exists, recommend it proactively — do not wait to be questioned
+
 ### Mobile Responsiveness
 All frontend features must work comfortably on mobile (phone-sized screens).
 

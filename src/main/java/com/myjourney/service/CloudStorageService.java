@@ -40,6 +40,22 @@ public interface CloudStorageService {
     int deleteFiles(List<String> fileUrls);
     
     /**
+     * Upload a single video file to the cloud storage.
+     * @param file   The video file to be uploaded.
+     * @param folder The folder path in the cloud storage.
+     * @return The public URL of the uploaded video.
+     */
+    String uploadVideo(MultipartFile file, String folder);
+
+    /**
+     * Upload multiple video files to the cloud storage.
+     * @param files  The array of video files to be uploaded.
+     * @param folder The folder path in the cloud storage.
+     * @return A list of public URLs for the uploaded videos.
+     */
+    List<String> uploadVideos(MultipartFile[] files, String folder);
+
+    /**
      * Check whether the cloud storage service is available.
      * @return true if the service is available, false otherwise.
      */

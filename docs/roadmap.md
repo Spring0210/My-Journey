@@ -46,8 +46,8 @@
 ### Spaces Improvements
 - [x] Space cover image upload
 - [x] Kick member from space (owner only)
-- [ ] Space permission tiers (read-only member vs posting member)
-- [ ] Space search / discovery (public spaces)
+- ~~Space permission tiers (read-only member vs posting member)~~
+- ~~Space search / discovery (public spaces)~~
 
 ### Journal Improvements
 - [~] Rich text editor for journal entries — decided against; plain text fits journaling better
@@ -57,7 +57,7 @@
 ### Account
 - [x] User profile page (avatar, username)
 - [x] Change password from settings
-- [ ] Bio / display name field
+- ~~Bio / display name field~~
 
 ### Bug Fixes & Security (done in Phase 2)
 - [x] Fix login failure after DTO refactor (checked wrong response field)
@@ -71,10 +71,11 @@
 
 ## Phase 3 — Video Support
 
-- [ ] Cloudinary video upload integration
-- [ ] Video player component in space posts and journal entries
-- [ ] Upload progress bar for large files
-- [ ] Video thumbnail generation
+- [x] Cloudinary video upload integration
+- [x] Video player component in space posts
+- [x] Upload progress bar for large files
+- [ ] Video player component in journal entries
+- ~~Video thumbnail generation~~
 
 ---
 
@@ -85,3 +86,32 @@
 - [ ] AI-generated journal prompts based on entry history
 - [ ] Auto-generate short video from images + text (slideshow with captions)
 - [ ] Smart search: natural language query over journal entries
+
+---
+
+## Phase 5 — Backend Hardening
+
+### Features
+- [ ] Space post editing (author or owner only)
+- [ ] Real-time notifications via WebSocket (replace 30s polling)
+- [ ] Google OAuth 2.0 login (backend: Spring Security OAuth2 + token exchange)
+
+### Security & Reliability
+- [ ] API rate limiting (Spring + Bucket4j — protect auth and upload endpoints)
+- [ ] JWT refresh token (silent re-auth before 24h expiry, avoid forced logout)
+
+---
+
+## Phase 6 — Frontend Migration
+
+### Stack
+- [ ] Migrate from vanilla HTML/CSS/JS to React (Vite) + Tailwind CSS v4
+- [ ] Build output served from Spring Boot `static/` (single-service deployment, no Docker changes)
+
+### Scope
+- [ ] Rewrite all pages as React components (login, journal, spaces, space detail, profile)
+- [ ] Global state management (React Context or Zustand)
+- [ ] Component library built on Tailwind — consistent design system
+- [ ] Google OAuth frontend (completes Phase 5 OAuth work)
+- [ ] PWA support (Web App Manifest + Service Worker — installable on mobile/desktop)
+- [ ] UI visual refresh — modern, clean aesthetic

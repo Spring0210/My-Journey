@@ -73,6 +73,37 @@ public class CloudStorageServiceImpl implements CloudStorageService {
     }
 
     @Override
+    public String uploadVideo(MultipartFile file, String folder) {
+        try {
+            log.info("Uploading video to Cloudinary - file: {}, folder: {}", file.getOriginalFilename(), folder);
+
+            Map<String, Object> uploadOptions = new HashMap<>();
+            uploadOptions.put("folder", folder != null ? folder : "my-journey");
+            uploadOptions.put("resource_type", "video");
+
+            Map<String, Object> result = cloudinary.uploader().upload(file.getBytes(), uploadOptions);
+            String url = (String) result.get("secure_url");
+            log.info("Uploaded video to Cloudinary: {}", url);
+            return url;
+
+        } catch (IOException e) {
+            log.error("Failed to upload video to Cloudinary: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to upload video to Cloudinary", e);
+        }
+    }
+
+    @Override
+    public List<String> uploadVideos(MultipartFile[] files, String folder) {
+        List<String> urls = new ArrayList<>();
+        for (MultipartFile file : files) {
+            if (file != null && !file.isEmpty()) {
+                urls.add(uploadVideo(file, folder));
+            }
+        }
+        return urls;
+    }
+
+    @Override
     public boolean deleteFile(String fileUrl) {
         try {
             // Extract public ID from Cloudinary URL
@@ -82,10 +113,12 @@ public class CloudStorageServiceImpl implements CloudStorageService {
                 return false;
             }
 
-            // Delete file from Cloudinary
+            // Detect resource type from URL path segment — videos use /video/upload/, images use /image/upload/
+            String resourceType = fileUrl.contains("/video/upload/") ? "video" : "image";
+
             Map<String, Object> result = cloudinary.uploader().destroy(
                 publicId,
-                ObjectUtils.emptyMap()
+                ObjectUtils.asMap("resource_type", resourceType)
             );
 
             return "ok".equals(result.get("result"));

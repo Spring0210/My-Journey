@@ -53,7 +53,8 @@ public class SpacePostController {
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Integer spaceId,
             @RequestParam(required = false) String content,
-            @RequestParam(required = false) MultipartFile[] images
+            @RequestParam(required = false) MultipartFile[] images,
+            @RequestParam(required = false) MultipartFile[] videos
     ) {
         Integer userId = getJwtUserId(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
@@ -63,8 +64,13 @@ public class SpacePostController {
             imageUrls = cloudStorageService.uploadFiles(images, "my-journey/spaces/" + spaceId);
         }
 
+        List<String> videoUrls = new ArrayList<>();
+        if (videos != null && videos.length > 0) {
+            videoUrls = cloudStorageService.uploadVideos(videos, "my-journey/spaces/" + spaceId);
+        }
+
         // AppException thrown by service is caught by GlobalExceptionHandler
-        return ResponseEntity.ok(spacePostService.createPost(spaceId, userId, content, imageUrls));
+        return ResponseEntity.ok(spacePostService.createPost(spaceId, userId, content, imageUrls, videoUrls));
     }
 
     // GET /api/spaces/{spaceId}/posts — get posts (paginated)

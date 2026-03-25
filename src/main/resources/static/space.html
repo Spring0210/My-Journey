@@ -21,7 +21,7 @@
     <header class="header">
       <div class="header-left">
         <button class="sidebar-toggle">☰</button>
-        <a href="/spaces.html" class="back-link">← Spaces</a>
+        <a href="/spaces.html" class="btn btn--ghost btn--sm">← Back</a>
         <h1 class="header-title" id="spaceTitle">Loading...</h1>
       </div>
       <div class="header-right" id="spaceActions"></div>
@@ -38,8 +38,18 @@
               <input type="file" id="postImages" multiple accept="image/*" hidden />
               📷 Add Photos
             </label>
+            <label class="upload-label">
+              <input type="file" id="postVideos" accept="video/*" hidden />
+              🎥 Add Video
+            </label>
             <div id="imagePreviewList" class="composer-previews"></div>
             <button class="btn btn--primary" id="postBtn">Post</button>
+          </div>
+          <div id="uploadProgress" class="upload-progress" hidden>
+            <div class="upload-progress-bar">
+              <div class="upload-progress-fill" id="uploadProgressFill"></div>
+            </div>
+            <span class="upload-progress-text" id="uploadProgressText">Uploading 0%</span>
           </div>
         </div>
 

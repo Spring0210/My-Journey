@@ -729,6 +729,72 @@
 }
 .space-info-header .card__title { margin: 0; }
 
+/* ── Video Player in Posts ── */
+.video-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+.video-wrap video {
+  width: 100%;
+  max-height: 480px;
+  border-radius: var(--radius-sm);
+  background: #000;
+  display: block;
+}
+
+/* ── Video Preview in Composer ── */
+.composer-preview-video {
+  position: relative;
+}
+.composer-preview-video video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+.video-thumb-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+}
+
+/* ── Upload Progress Bar ── */
+.upload-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+.upload-progress[hidden] { display: none; }
+.upload-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.upload-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--primary);
+  border-radius: 3px;
+  transition: width 0.2s ease;
+}
+.upload-progress-text {
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
 /* ── Back link ── */
 .back-link {
   font-size: 14px;
