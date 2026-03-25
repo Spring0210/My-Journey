@@ -118,8 +118,20 @@ All frontend features must work comfortably on mobile (phone-sized screens).
 - All secrets in `application.properties` (gitignored)
 - Use `${ENV_VAR:default}` pattern in properties — environment variable takes precedence, default used locally
 - Never hardcode secrets in Java source files
-- Required environment variables for production:
+
+### Adding a new environment variable (3 files required)
+
+When introducing a new external service key or config value, **all three files must be updated together**:
+
+1. `src/main/resources/application-docker.properties` — `key=${ENV_VAR_NAME:}`
+2. `docker-compose.yml` — add `ENV_VAR_NAME: ${ENV_VAR_NAME}` under `app.environment`
+3. Server `.env` file — `ENV_VAR_NAME=actual_value`
+
+> docker-compose does **not** automatically pass all `.env` variables into containers — each one must be explicitly declared in `docker-compose.yml`.
+
+### Required environment variables for production
   - `JWT_SECRET`
   - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
   - `RESEND_API_KEY`
-  - `SPRING_DATASOURCE_PASSWORD`
+  - `ANTHROPIC_API_KEY`
+  - `MYSQL_ROOT_PASSWORD`
