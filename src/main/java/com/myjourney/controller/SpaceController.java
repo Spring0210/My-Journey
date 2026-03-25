@@ -144,6 +144,18 @@ public class SpaceController {
         return ResponseEntity.ok().build();
     }
 
+    // POST /api/spaces/{spaceId}/ai-summary — generate AI recap of recent activity (all members)
+    @PostMapping("/{spaceId}/ai-summary")
+    public ResponseEntity<Map<String, String>> generateAiSummary(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @PathVariable Integer spaceId
+    ) {
+        Integer userId = getJwtUserId(authHeader);
+        if (userId == null) return ResponseEntity.status(401).build();
+        String summary = spaceService.generateAiSummary(spaceId, userId);
+        return ResponseEntity.ok(Map.of("summary", summary));
+    }
+
     // DELETE /api/spaces/{spaceId} — delete a space (owner only)
     @DeleteMapping("/{spaceId}")
     public ResponseEntity<Void> deleteSpace(

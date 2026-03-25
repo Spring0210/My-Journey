@@ -830,6 +830,39 @@ async function deleteSpace() {
     window.location.href = 'spaces.html';
 }
 
+// ── AI Recap ───────────────────────────────────────────────────
+document.getElementById('aiSummaryBtn').addEventListener('click', async () => {
+    const modal = document.getElementById('aiSummaryModal');
+    const textEl = document.getElementById('aiSummaryText');
+    const btn = document.getElementById('aiSummaryBtn');
+
+    textEl.textContent = 'Generating...';
+    modal.hidden = false;
+    btn.disabled = true;
+
+    try {
+        const res = await apiRequest(`/api/spaces/${spaceId}/ai-summary`, { method: 'POST' });
+        const data = await res.json();
+        if (data.error) { textEl.textContent = data.error; return; }
+        textEl.textContent = data.summary;
+    } catch (e) {
+        textEl.textContent = 'Failed to generate summary. Please try again.';
+    } finally {
+        btn.disabled = false;
+    }
+});
+
+document.getElementById('closeAiSummaryModal').addEventListener('click', () => {
+    document.getElementById('aiSummaryModal').hidden = true;
+});
+document.getElementById('closeAiSummaryBtn').addEventListener('click', () => {
+    document.getElementById('aiSummaryModal').hidden = true;
+});
+document.getElementById('aiSummaryModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('aiSummaryModal'))
+        document.getElementById('aiSummaryModal').hidden = true;
+});
+
 // ── Init ───────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     loadSpaceDetail();

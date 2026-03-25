@@ -81,11 +81,19 @@
 
 ## Phase 4 — AI Features
 
-- [ ] Integrate Claude API (`claude-sonnet-4-6`)
-- [ ] Auto-generate text summary of a space (trip recap, monthly recap)
-- [ ] AI-generated journal prompts based on entry history
-- [ ] Auto-generate short video from images + text (slideshow with captions)
-- [ ] Smart search: natural language query over journal entries
+> Model: `claude-haiku-4-5` for all features (fast + low cost). Upgrade to `claude-sonnet-4-6` for search if needed.
+
+### Recap
+- [ ] Space Recap — AI-generated summary of recent space activity (all members can trigger)
+- [ ] Journal Monthly Recap — summarize a month's entries into a warm personal reflection
+
+### Writing Prompts
+- [ ] Personalized journal prompts based on recurring themes in recent entries (not generic prompts)
+
+### Smart Search
+- [ ] Natural language search over journal entries ("find entries about my mom")
+
+~~Auto-generate short video from images + text~~ — not differentiated; CapCut/Reels do this better
 
 ---
 

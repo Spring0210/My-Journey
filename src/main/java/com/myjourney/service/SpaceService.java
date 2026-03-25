@@ -9,7 +9,9 @@ import com.myjourney.model.Space;
 import com.myjourney.model.SpaceMember;
 import com.myjourney.model.SpaceMember.Role;
 import com.myjourney.model.User;
+import com.myjourney.model.SpacePost;
 import com.myjourney.repository.SpaceMemberRepository;
+import com.myjourney.repository.SpacePostRepository;
 import com.myjourney.repository.SpaceRepository;
 import com.myjourney.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +42,12 @@ public class SpaceService {
 
     @Autowired
     private CloudStorageService cloudStorageService;
+
+    @Autowired
+    private SpacePostRepository spacePostRepository;
+
+    @Autowired
+    private AiService aiService;
 
     // Create a new space; the creator becomes OWNER
     @Transactional
@@ -198,6 +206,22 @@ public class SpaceService {
         }
 
         spaceRepository.delete(space);
+    }
+
+    // Generate AI summary of recent space activity — accessible to all members
+    public String generateAiSummary(Integer spaceId, Integer userId) {
+        Space space = spaceRepository.findById(spaceId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Space not found"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "User not found"));
+        if (!spaceMemberRepository.existsBySpaceAndUser(space, user)) {
+            throw new AppException(HttpStatus.FORBIDDEN, "Access denied");
+        }
+        List<SpacePost> posts = spacePostRepository.findTop30BySpaceOrderByCreatedAtDesc(space);
+        if (posts.isEmpty()) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "No posts to summarize yet");
+        }
+        return aiService.generateSpaceSummary(space.getName(), posts);
     }
 
     // Upload or replace cover image — owner only

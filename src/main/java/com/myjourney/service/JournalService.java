@@ -52,6 +52,11 @@ public class JournalService {
         journalRepository.deleteById(id);
     }
 
+    // Fetch entries within a month range for AI recap
+    public List<JournalEntry> getEntriesByUserAndDateRange(User user, LocalDate start, LocalDate end) {
+        return journalRepository.findByUserAndEntryDateBetweenOrderByEntryDateAsc(user, start, end);
+    }
+
     public List<JournalEntry> searchEntries(Integer userId, String keyword, String date) {
         User user = userRepository.findById(userId).orElseThrow();
 

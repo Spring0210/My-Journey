@@ -130,4 +130,60 @@ document.getElementById('clearBtn').addEventListener('click', () => {
     loadAllEntries(0);
 });
 
-document.addEventListener('DOMContentLoaded', () => loadAllEntries(0));
+document.addEventListener('DOMContentLoaded', () => {
+    loadAllEntries(0);
+
+    // Populate year selector with current year and 4 years back
+    const yearSelect = document.getElementById('recapYear');
+    const currentYear = new Date().getFullYear();
+    for (let y = currentYear; y >= currentYear - 4; y--) {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        yearSelect.appendChild(opt);
+    }
+    // Default month selector to current month
+    document.getElementById('recapMonth').value = new Date().getMonth() + 1;
+});
+
+// ── Monthly Recap ───────────────────────────────────────────────
+document.getElementById('monthlyRecapBtn').addEventListener('click', () => {
+    // Reset result text when opening the modal
+    document.getElementById('recapText').hidden = true;
+    document.getElementById('recapModal').hidden = false;
+});
+
+document.getElementById('generateRecapBtn').addEventListener('click', async () => {
+    const year = parseInt(document.getElementById('recapYear').value);
+    const month = parseInt(document.getElementById('recapMonth').value);
+    const textEl = document.getElementById('recapText');
+    const btn = document.getElementById('generateRecapBtn');
+
+    textEl.textContent = 'Generating...';
+    textEl.hidden = false;
+    btn.disabled = true;
+
+    try {
+        const res = await apiRequest('/api/entries/ai-recap', {
+            method: 'POST',
+            body: JSON.stringify({ year, month })
+        });
+        const data = await res.json();
+        textEl.textContent = data.recap || data.error || 'Failed to generate.';
+    } catch (e) {
+        textEl.textContent = 'Failed to generate recap. Please try again.';
+    } finally {
+        btn.disabled = false;
+    }
+});
+
+document.getElementById('closeRecapModal').addEventListener('click', () => {
+    document.getElementById('recapModal').hidden = true;
+});
+document.getElementById('closeRecapBtn').addEventListener('click', () => {
+    document.getElementById('recapModal').hidden = true;
+});
+document.getElementById('recapModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('recapModal'))
+        document.getElementById('recapModal').hidden = true;
+});

@@ -5,6 +5,7 @@ import com.myjourney.dto.PageResponse;
 import com.myjourney.model.JournalEntry;
 import com.myjourney.model.User;
 import com.myjourney.repository.UserRepository;
+import com.myjourney.service.AiService;
 import com.myjourney.service.JournalService;
 import com.myjourney.service.CloudStorageService;
 import com.myjourney.util.JwtUtil;
@@ -25,6 +26,9 @@ public class JournalController {
 
     @Autowired
     private JournalService journalService;
+
+    @Autowired
+    private AiService aiService;
 
     @Autowired
     private UserRepository userRepository;
@@ -237,6 +241,32 @@ public class JournalController {
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error deleting image: " + e.getMessage());
         }
+    }
+
+    // POST /api/entries/ai-recap — generate a monthly recap for the current user
+    @PostMapping("/ai-recap")
+    public ResponseEntity<Map<String, String>> generateMonthlyRecap(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestBody Map<String, Integer> body
+    ) {
+        Integer userId = getJwtUserId(authHeader);
+        if (userId == null) return ResponseEntity.status(401).build();
+
+        Integer year = body.get("year");
+        Integer month = body.get("month");
+        if (year == null || month == null) return ResponseEntity.badRequest().build();
+
+        User user = userRepository.findById(userId).orElseThrow();
+        LocalDate start = LocalDate.of(year, month, 1);
+        LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
+
+        List<JournalEntry> entries = journalService.getEntriesByUserAndDateRange(user, start, end);
+        if (entries.isEmpty()) {
+            return ResponseEntity.ok(Map.of("error", "No entries found for this month"));
+        }
+
+        String recap = aiService.generateJournalMonthlyRecap(user.getUsername(), year, month, entries);
+        return ResponseEntity.ok(Map.of("recap", recap));
     }
 
     @PostMapping("/add-images/{entryId}")
