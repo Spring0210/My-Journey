@@ -24,6 +24,7 @@
         <h1 class="header-title">My Journals</h1>
       </div>
       <div class="header-right">
+        <button class="btn btn--ghost" id="writingPromptsBtn">Writing Prompts</button>
         <button class="btn btn--ghost" id="monthlyRecapBtn">Monthly Recap</button>
         <a href="/detail.html" class="btn btn--primary">New Entry</a>
       </div>
@@ -53,6 +54,24 @@
   </main>
 </div>
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- Writing Prompts Modal -->
+<div class="modal-overlay" id="promptsModal" hidden>
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Writing Prompts</h3>
+      <button class="modal-close" id="closePromptsModal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="prompts-intro" id="promptsIntro">Personalized prompts based on your recent entries.</p>
+      <div id="promptsList"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn--ghost btn--sm" id="refreshPromptsBtn">Refresh</button>
+      <button class="btn btn--ghost" id="closePromptsBtn">Close</button>
+    </div>
+  </div>
+</div>
 
 <!-- Monthly Recap Modal -->
 <div class="modal-overlay" id="recapModal" hidden>

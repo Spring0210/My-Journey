@@ -1,4 +1,52 @@
 /* Page-specific tweaks for journals */
+
+/* Writing Prompts modal */
+.prompts-intro {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.prompts-loading,
+.prompts-empty {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  padding: 0.5rem 0;
+}
+
+.prompt-card {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.prompt-card__text {
+  flex: 1;
+  margin: 0;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.prompt-card__use {
+  flex-shrink: 0;
+  align-self: center;
+}
+
+@media (max-width: 768px) {
+  .prompt-card {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .prompt-card__use {
+    width: 100%;
+  }
+}
+
+
 /* Put emphasis on search and card grid */
 .searchbar{
   display:flex; gap:10px; flex-wrap:wrap;

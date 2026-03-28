@@ -269,6 +269,37 @@ public class JournalController {
         return ResponseEntity.ok(Map.of("recap", recap));
     }
 
+    // POST /api/entries/ai-prompts — generate personalized writing prompts from recent entries
+    @PostMapping("/ai-prompts")
+    public ResponseEntity<Map<String, Object>> generateWritingPrompts(
+            @RequestHeader(value = "Authorization", required = false) String authHeader
+    ) {
+        Integer userId = getJwtUserId(authHeader);
+        if (userId == null) return ResponseEntity.status(401).build();
+
+        User user = userRepository.findById(userId).orElseThrow();
+
+        // Try entries from the last 3 months first
+        LocalDate end = LocalDate.now();
+        LocalDate start = end.minusMonths(3);
+        List<JournalEntry> entries = journalService.getEntriesByUserAndDateRange(user, start, end);
+
+        // Fall back to the most recent entries if the date range returns nothing
+        if (entries.isEmpty()) {
+            entries = journalService.getEntriesByUserPaged(user, 0, 15).content();
+        }
+
+        if (entries.isEmpty()) {
+            return ResponseEntity.ok(Map.of("error", "Write a few journal entries first to get personalized prompts."));
+        }
+
+        // Cap at 15 entries to keep the prompt size reasonable
+        if (entries.size() > 15) entries = entries.subList(0, 15);
+
+        List<String> prompts = aiService.generateWritingPrompts(entries);
+        return ResponseEntity.ok(Map.of("prompts", prompts));
+    }
+
     @PostMapping("/add-images/{entryId}")
     public ResponseEntity<JournalEntry> addImagesToEntry(
             @RequestHeader(value = "Authorization", required = false) String authHeader,

@@ -216,6 +216,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.getElementById("entryDate").value = today;
         updateDateDisplay(today);
 
+        // Pre-fill content if a writing prompt was passed via query param
+        const promptParam = new URL(window.location.href).searchParams.get("prompt");
+        if (promptParam) {
+            document.getElementById("content").value = promptParam;
+        }
+
         // Show empty grid with just the "+" cell
         renderPhotoGrid([], pendingFiles);
 

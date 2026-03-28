@@ -11,6 +11,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.format.TextStyle;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -81,6 +82,63 @@ public class AiService {
         } catch (Exception e) {
             log.error("Anthropic API call failed", e);
             throw new RuntimeException("Failed to generate summary");
+        }
+    }
+
+    // Generate 3 personalized writing prompts based on the user's recent journal entries
+    public List<String> generateWritingPrompts(List<JournalEntry> entries) {
+        StringBuilder entriesText = new StringBuilder();
+        for (JournalEntry entry : entries) {
+            entriesText.append("- [").append(entry.getEntryDate()).append("] ").append(entry.getTitle());
+            if (entry.getContent() != null && !entry.getContent().isBlank()) {
+                String content = entry.getContent().trim();
+                // Truncate to keep the prompt concise
+                if (content.length() > 200) content = content.substring(0, 200) + "...";
+                entriesText.append(": ").append(content);
+            }
+            entriesText.append("\n");
+        }
+
+        String prompt = String.format(
+            "Here are some recent journal entries:\n\n%s\n" +
+            "Based on recurring themes, emotions, and topics in these entries, generate 3 personalized writing prompts " +
+            "that help this person explore their experiences more deeply. " +
+            "Make the prompts specific to what this person has been writing about — not generic. " +
+            "Reply in the same language as the entries. " +
+            "Output exactly 3 prompts separated by |||. No numbering, no extra text.",
+            entriesText
+        );
+
+        Map<String, Object> requestBody = Map.of(
+            "model", "claude-haiku-4-5-20251001",
+            "max_tokens", 400,
+            "system", "You are a thoughtful writing coach. Output exactly 3 journal writing prompts separated by |||. No numbering, no extra text before or after.",
+            "messages", List.of(Map.of("role", "user", "content", prompt))
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("x-api-key", apiKey);
+        headers.set("anthropic-version", "2023-06-01");
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
+
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> response = restTemplate.postForObject(
+                "https://api.anthropic.com/v1/messages", request, Map.class);
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> content = (List<Map<String, Object>>) response.get("content");
+            String text = (String) content.get(0).get("text");
+            // Split on ||| separator and return up to 3 non-blank prompts
+            return Arrays.stream(text.split("\\|\\|\\|"))
+                .map(String::trim)
+                .filter(s -> !s.isBlank())
+                .limit(3)
+                .toList();
+        } catch (Exception e) {
+            log.error("Anthropic API call failed for writing prompts", e);
+            throw new RuntimeException("Failed to generate writing prompts");
         }
     }
 

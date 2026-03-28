@@ -146,6 +146,72 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('recapMonth').value = new Date().getMonth() + 1;
 });
 
+// ── Writing Prompts ─────────────────────────────────────────────
+document.getElementById('writingPromptsBtn').addEventListener('click', () => {
+    document.getElementById('promptsModal').hidden = false;
+    fetchWritingPrompts();
+});
+
+async function fetchWritingPrompts() {
+    const listEl   = document.getElementById('promptsList');
+    const introEl  = document.getElementById('promptsIntro');
+    const refreshBtn = document.getElementById('refreshPromptsBtn');
+
+    listEl.innerHTML = '<p class="prompts-loading">Generating prompts...</p>';
+    introEl.hidden = true;
+    refreshBtn.disabled = true;
+
+    try {
+        const res = await apiRequest('/api/entries/ai-prompts', { method: 'POST' });
+        const data = await res.json();
+
+        if (data.error) {
+            listEl.innerHTML = `<p class="prompts-empty">${data.error}</p>`;
+            return;
+        }
+
+        introEl.hidden = false;
+        listEl.innerHTML = '';
+        (data.prompts || []).forEach(prompt => {
+            const card = document.createElement('div');
+            card.className = 'prompt-card';
+
+            const text = document.createElement('p');
+            text.className = 'prompt-card__text';
+            text.textContent = prompt;
+
+            const btn = document.createElement('button');
+            btn.className = 'btn btn--primary btn--sm prompt-card__use';
+            btn.textContent = 'Use This';
+            btn.addEventListener('click', () => {
+                // Navigate to new entry with prompt pre-filled as content
+                window.location.href = `detail.html?prompt=${encodeURIComponent(prompt)}`;
+            });
+
+            card.appendChild(text);
+            card.appendChild(btn);
+            listEl.appendChild(card);
+        });
+    } catch (e) {
+        listEl.innerHTML = '<p class="prompts-empty">Failed to generate prompts. Please try again.</p>';
+    } finally {
+        refreshBtn.disabled = false;
+    }
+}
+
+document.getElementById('refreshPromptsBtn').addEventListener('click', fetchWritingPrompts);
+
+document.getElementById('closePromptsModal').addEventListener('click', () => {
+    document.getElementById('promptsModal').hidden = true;
+});
+document.getElementById('closePromptsBtn').addEventListener('click', () => {
+    document.getElementById('promptsModal').hidden = true;
+});
+document.getElementById('promptsModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('promptsModal'))
+        document.getElementById('promptsModal').hidden = true;
+});
+
 // ── Monthly Recap ───────────────────────────────────────────────
 document.getElementById('monthlyRecapBtn').addEventListener('click', () => {
     // Reset result text when opening the modal

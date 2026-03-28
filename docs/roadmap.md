@@ -84,11 +84,11 @@
 > Model: `claude-haiku-4-5` for all features (fast + low cost). Upgrade to `claude-sonnet-4-6` for search if needed.
 
 ### Recap
-- [ ] Space Recap — AI-generated summary of recent space activity (all members can trigger)
-- [ ] Journal Monthly Recap — summarize a month's entries into a warm personal reflection
+- [x] Space Recap — AI-generated summary of recent space activity (all members can trigger)
+- [x] Journal Monthly Recap — summarize a month's entries into a warm personal reflection
 
 ### Writing Prompts
-- [ ] Personalized journal prompts based on recurring themes in recent entries (not generic prompts)
+- [x] Personalized journal prompts based on recurring themes in recent entries (not generic prompts)
 
 ### Smart Search
 - [ ] Natural language search over journal entries ("find entries about my mom")
