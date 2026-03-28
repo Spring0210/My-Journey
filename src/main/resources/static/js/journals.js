@@ -233,21 +233,25 @@ async function fetchWritingPrompts() {
         (data.prompts || []).forEach(prompt => {
             const card = document.createElement('div');
             card.className = 'prompt-card';
+            card.title = 'Click to start writing';
 
             const text = document.createElement('p');
             text.className = 'prompt-card__text';
             text.textContent = prompt;
 
-            const btn = document.createElement('button');
-            btn.className = 'btn btn--primary btn--sm prompt-card__use';
-            btn.textContent = 'Use This';
-            btn.addEventListener('click', () => {
-                // Navigate to new entry with prompt pre-filled as content
+            // "Write now" label — decorative, click is on the whole card
+            const cta = document.createElement('span');
+            cta.className = 'prompt-card__cta';
+            cta.textContent = 'Write now →';
+
+            card.appendChild(text);
+            card.appendChild(cta);
+
+            // Entire card navigates to new entry with prompt pre-filled
+            card.addEventListener('click', () => {
                 window.location.href = `detail.html?prompt=${encodeURIComponent(prompt)}`;
             });
 
-            card.appendChild(text);
-            card.appendChild(btn);
             listEl.appendChild(card);
         });
     } catch (e) {
