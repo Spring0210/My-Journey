@@ -73,7 +73,6 @@
 .prompt-card {
   background: var(--muted-card);
   border: 1px solid var(--border);
-  border-left: 3px solid var(--primary);
   border-radius: 0.75rem;
   padding: 1rem 1.25rem;
   margin-bottom: 0.75rem;
