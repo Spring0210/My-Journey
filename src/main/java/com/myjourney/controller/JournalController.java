@@ -269,6 +269,26 @@ public class JournalController {
         return ResponseEntity.ok(Map.of("recap", recap));
     }
 
+    // POST /api/entries/ai-search — natural language search over journal entries
+    @PostMapping("/ai-search")
+    public ResponseEntity<Map<String, Object>> aiSearch(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestBody Map<String, String> body
+    ) {
+        Integer userId = getJwtUserId(authHeader);
+        if (userId == null) return ResponseEntity.status(401).build();
+
+        String query = body.get("query");
+        if (query == null || query.isBlank()) return ResponseEntity.badRequest().build();
+
+        // Extract keywords from the natural language query
+        List<String> keywords = aiService.extractSearchKeywords(query);
+        // Search entries matching any extracted keyword
+        List<JournalEntry> entries = journalService.searchEntriesByKeywords(userId, keywords);
+
+        return ResponseEntity.ok(Map.of("keywords", keywords, "entries", entries));
+    }
+
     // POST /api/entries/ai-prompts — generate personalized writing prompts from recent entries
     @PostMapping("/ai-prompts")
     public ResponseEntity<Map<String, Object>> generateWritingPrompts(

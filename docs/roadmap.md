@@ -91,7 +91,7 @@
 - [x] Personalized journal prompts based on recurring themes in recent entries (not generic prompts)
 
 ### Smart Search
-- [ ] Natural language search over journal entries ("find entries about my mom")
+- [x] Natural language search over journal entries ("find entries about my mom")
 
 ~~Auto-generate short video from images + text~~ — not differentiated; CapCut/Reels do this better
 

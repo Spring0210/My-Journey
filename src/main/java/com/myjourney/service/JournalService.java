@@ -13,6 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,6 +56,33 @@ public class JournalService {
     // Fetch entries within a month range for AI recap
     public List<JournalEntry> getEntriesByUserAndDateRange(User user, LocalDate start, LocalDate end) {
         return journalRepository.findByUserAndEntryDateBetweenOrderByEntryDateAsc(user, start, end);
+    }
+
+    // Search entries matching ANY of the given keywords (OR logic, deduped, sorted newest first)
+    public List<JournalEntry> searchEntriesByKeywords(Integer userId, List<String> keywords) {
+        User user = userRepository.findById(userId).orElseThrow();
+        List<JournalEntry> all = journalRepository.findByUser(user);
+
+        // Collect IDs already added to avoid duplicates while preserving order
+        java.util.Set<Integer> seen = new java.util.LinkedHashSet<>();
+        List<JournalEntry> results = new ArrayList<>();
+
+        for (String keyword : keywords) {
+            String lower = keyword.toLowerCase();
+            for (JournalEntry entry : all) {
+                if (seen.contains(entry.getId())) continue;
+                boolean titleMatch   = entry.getTitle()   != null && entry.getTitle().toLowerCase().contains(lower);
+                boolean contentMatch = entry.getContent() != null && entry.getContent().toLowerCase().contains(lower);
+                if (titleMatch || contentMatch) {
+                    seen.add(entry.getId());
+                    results.add(entry);
+                }
+            }
+        }
+
+        // Sort newest first
+        results.sort((a, b) -> b.getEntryDate().compareTo(a.getEntryDate()));
+        return results;
     }
 
     public List<JournalEntry> searchEntries(Integer userId, String keyword, String date) {

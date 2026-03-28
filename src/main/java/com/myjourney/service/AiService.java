@@ -85,6 +85,48 @@ public class AiService {
         }
     }
 
+    // Extract 2-3 search keywords from a natural language query for journal search
+    public List<String> extractSearchKeywords(String query) {
+        String prompt = String.format(
+            "The user wants to search their personal journal with this query: \"%s\"\n" +
+            "Extract 2-3 essential search keywords from this query. " +
+            "Focus on names, places, topics, and emotions — not stop words. " +
+            "Output only the keywords separated by |||. No explanation, no extra text.",
+            query
+        );
+
+        Map<String, Object> requestBody = Map.of(
+            "model", "claude-haiku-4-5-20251001",
+            "max_tokens", 60,
+            "system", "You extract search keywords. Output only the keywords separated by |||. No extra text.",
+            "messages", List.of(Map.of("role", "user", "content", prompt))
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("x-api-key", apiKey);
+        headers.set("anthropic-version", "2023-06-01");
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
+
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> response = restTemplate.postForObject(
+                "https://api.anthropic.com/v1/messages", request, Map.class);
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> content = (List<Map<String, Object>>) response.get("content");
+            String text = (String) content.get(0).get("text");
+            return Arrays.stream(text.split("\\|\\|\\|"))
+                .map(String::trim)
+                .filter(s -> !s.isBlank())
+                .limit(3)
+                .toList();
+        } catch (Exception e) {
+            log.error("Anthropic API call failed for keyword extraction", e);
+            throw new RuntimeException("Failed to extract search keywords");
+        }
+    }
+
     // Generate 3 personalized writing prompts based on the user's recent journal entries
     public List<String> generateWritingPrompts(List<JournalEntry> entries) {
         StringBuilder entriesText = new StringBuilder();

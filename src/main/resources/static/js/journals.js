@@ -146,6 +146,56 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('recapMonth').value = new Date().getMonth() + 1;
 });
 
+// ── AI Search ───────────────────────────────────────────────────
+document.getElementById('aiSearchBtn').addEventListener('click', runAiSearch);
+document.getElementById('aiSearchInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') runAiSearch();
+});
+
+async function runAiSearch() {
+    const query = document.getElementById('aiSearchInput').value.trim();
+    if (!query) return;
+
+    const btn    = document.getElementById('aiSearchBtn');
+    const metaEl = document.getElementById('aiSearchMeta');
+    const list   = document.getElementById('journalList');
+
+    isSearchMode = true;
+    document.getElementById('pagination').hidden = true;
+    btn.disabled = true;
+    btn.textContent = 'Searching...';
+    metaEl.hidden = true;
+    list.innerHTML = '';
+
+    try {
+        const res = await apiRequest('/api/entries/ai-search', {
+            method: 'POST',
+            body: JSON.stringify({ query })
+        });
+        const data = await res.json();
+
+        // Show which keywords were matched
+        if (data.keywords && data.keywords.length > 0) {
+            metaEl.textContent = `Matched keywords: ${data.keywords.join(', ')}`;
+            metaEl.hidden = false;
+        }
+
+        renderEntryList(data.entries || []);
+    } catch (e) {
+        list.innerHTML = '<p style="color:var(--muted);padding:24px 0">AI search failed. Please try again.</p>';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'AI Search';
+    }
+}
+
+// Clear also resets AI search state
+const _originalClearHandler = document.getElementById('clearBtn').onclick;
+document.getElementById('clearBtn').addEventListener('click', () => {
+    document.getElementById('aiSearchInput').value = '';
+    document.getElementById('aiSearchMeta').hidden = true;
+});
+
 // ── Writing Prompts ─────────────────────────────────────────────
 document.getElementById('writingPromptsBtn').addEventListener('click', () => {
     document.getElementById('promptsModal').hidden = false;

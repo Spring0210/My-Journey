@@ -1,5 +1,37 @@
 /* Page-specific tweaks for journals */
 
+/* AI Search */
+.searchbar-divider {
+  width: 100%;
+  height: 1px;
+  background: var(--border);
+  margin: 0.5rem 0;
+}
+
+.searchbar--ai {
+  flex-wrap: nowrap;
+}
+
+.searchbar--ai input {
+  flex: 1;
+  min-width: 0;
+}
+
+.ai-search-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .searchbar--ai {
+    flex-wrap: wrap;
+  }
+  .searchbar--ai input {
+    width: 100%;
+  }
+}
+
 /* Writing Prompts modal */
 .prompts-intro {
   font-size: 0.875rem;
