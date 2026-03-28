@@ -1,5 +1,29 @@
 /* Page-specific tweaks for journals */
 
+/* Mobile AI action bar — hidden on desktop, shown on mobile */
+.mobile-ai-bar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Hide secondary header buttons on mobile */
+  .header-secondary {
+    display: none;
+  }
+
+  /* Show the in-content action bar instead */
+  .mobile-ai-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .mobile-ai-bar .btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
 /* AI Search */
 .searchbar-divider {
   width: 100%;

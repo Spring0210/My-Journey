@@ -24,13 +24,19 @@
         <h1 class="header-title">My Journals</h1>
       </div>
       <div class="header-right">
-        <button class="btn btn--ghost" id="writingPromptsBtn">Writing Prompts</button>
-        <button class="btn btn--ghost" id="monthlyRecapBtn">Monthly Recap</button>
+        <button class="btn btn--ghost header-secondary" id="writingPromptsBtn">Writing Prompts</button>
+        <button class="btn btn--ghost header-secondary" id="monthlyRecapBtn">Monthly Recap</button>
         <a href="/detail.html" class="btn btn--primary">New Entry</a>
       </div>
     </header>
 
     <div class="content">
+      <!-- Mobile-only AI action bar (hidden on desktop) -->
+      <div class="mobile-ai-bar">
+        <button class="btn btn--ghost btn--sm" id="writingPromptsBtnMobile">Writing Prompts</button>
+        <button class="btn btn--ghost btn--sm" id="monthlyRecapBtnMobile">Monthly Recap</button>
+      </div>
+
       <!-- Search form -->
       <section class="card card--soft">
         <div id="searchForm" class="searchbar">

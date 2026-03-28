@@ -197,10 +197,18 @@ document.getElementById('clearBtn').addEventListener('click', () => {
 });
 
 // ── Writing Prompts ─────────────────────────────────────────────
-document.getElementById('writingPromptsBtn').addEventListener('click', () => {
+function openWritingPrompts() {
     document.getElementById('promptsModal').hidden = false;
     fetchWritingPrompts();
-});
+}
+function openMonthlyRecap() {
+    document.getElementById('recapText').hidden = true;
+    document.getElementById('recapModal').hidden = false;
+}
+
+document.getElementById('writingPromptsBtn').addEventListener('click', openWritingPrompts);
+document.getElementById('writingPromptsBtnMobile').addEventListener('click', openWritingPrompts);
+document.getElementById('monthlyRecapBtnMobile').addEventListener('click', openMonthlyRecap);
 
 async function fetchWritingPrompts() {
     const listEl   = document.getElementById('promptsList');
@@ -263,11 +271,7 @@ document.getElementById('promptsModal').addEventListener('click', (e) => {
 });
 
 // ── Monthly Recap ───────────────────────────────────────────────
-document.getElementById('monthlyRecapBtn').addEventListener('click', () => {
-    // Reset result text when opening the modal
-    document.getElementById('recapText').hidden = true;
-    document.getElementById('recapModal').hidden = false;
-});
+document.getElementById('monthlyRecapBtn').addEventListener('click', openMonthlyRecap);
 
 document.getElementById('generateRecapBtn').addEventListener('click', async () => {
     const year = parseInt(document.getElementById('recapYear').value);
