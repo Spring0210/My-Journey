@@ -16,8 +16,8 @@ class LayoutManager {
         this.setupTheme();
         this.setCurrentPageActive();
         this.loadUnreadCount();
-        // Poll unread notification count every 30 seconds
-        setInterval(() => this.loadUnreadCount(), 30000);
+        this._wsRetries = 0;
+        this.connectNotificationSocket();
     }
 
     // Verify user is logged in; redirect to login if not
@@ -194,23 +194,64 @@ class LayoutManager {
         this.setActiveNavItem(window.location.pathname);
     }
 
+    // Connect to the WebSocket endpoint for real-time notification badge updates
+    connectNotificationSocket() {
+        if (!this.currentUser) return;
+        const token = this.currentUser.token;
+        const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(`${protocol}//${location.host}/ws/notifications?token=${token}`);
+
+        ws.onmessage = (e) => {
+            try {
+                const data = JSON.parse(e.data);
+                if (data.unreadCount !== undefined) {
+                    this.updateNotifBadge(data.unreadCount);
+                }
+            } catch {}
+        };
+
+        ws.onopen = () => {
+            // Reset retry counter on successful connection
+            this._wsRetries = 0;
+        };
+
+        ws.onclose = () => {
+            // Reconnect with exponential backoff; fall back to polling after 5 failures
+            this._wsRetries = (this._wsRetries || 0) + 1;
+            if (this._wsRetries <= 5) {
+                const delay = Math.min(1000 * Math.pow(2, this._wsRetries - 1), 30000);
+                setTimeout(() => this.connectNotificationSocket(), delay);
+            } else {
+                // WebSocket unavailable — fall back to 30s polling
+                setInterval(() => this.loadUnreadCount(), 30000);
+            }
+        };
+
+        ws.onerror = () => {
+            // Error always triggers onclose, which handles reconnect/fallback
+        };
+
+        this._ws = ws;
+    }
+
+    // Update the notification badge with a given unread count
+    updateNotifBadge(count) {
+        const badge = document.getElementById('notifBadge');
+        if (!badge) return;
+        if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.hidden = false;
+        } else {
+            badge.hidden = true;
+        }
+    }
+
     // Fetch unread notification count and show/hide the badge in the sidebar
     loadUnreadCount() {
         if (!this.currentUser) return;
         apiRequest('/api/notifications/unread-count')
             .then(res => res && res.ok ? res.json() : null)
-            .then(data => {
-                if (!data) return;
-                const badge = document.getElementById('notifBadge');
-                if (!badge) return;
-                const count = data.count || 0;
-                if (count > 0) {
-                    badge.textContent = count > 99 ? '99+' : count;
-                    badge.hidden = false;
-                } else {
-                    badge.hidden = true;
-                }
-            })
+            .then(data => { if (data) this.updateNotifBadge(data.count || 0); })
             .catch(() => {}); // silently ignore — badge just won't update
     }
 }

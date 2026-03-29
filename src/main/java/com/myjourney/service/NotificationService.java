@@ -9,6 +9,7 @@ import com.myjourney.model.User;
 import com.myjourney.repository.NotificationRepository;
 import com.myjourney.repository.SpaceMemberRepository;
 import com.myjourney.repository.UserRepository;
+import com.myjourney.websocket.NotificationWebSocketHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,9 @@ public class NotificationService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private NotificationWebSocketHandler webSocketHandler;
 
     // Notify all space members (except the poster) when a new post is created
     @Transactional
@@ -47,6 +51,9 @@ public class NotificationService {
                 n.setSpaceName(spaceName);
                 n.setPostId(postId);
                 notificationRepository.save(n);
+                // Push updated unread count to recipient via WebSocket
+                long count = notificationRepository.countByRecipientAndReadFalse(member.getUser());
+                webSocketHandler.sendUnreadCount(member.getUser().getId(), count);
             }
         });
     }
@@ -65,6 +72,9 @@ public class NotificationService {
         n.setSpaceName(post.getSpace().getName());
         n.setPostId(post.getId());
         notificationRepository.save(n);
+        // Push updated unread count to the post author via WebSocket
+        long count = notificationRepository.countByRecipientAndReadFalse(post.getAuthor());
+        webSocketHandler.sendUnreadCount(post.getAuthor().getId(), count);
     }
 
     // Get all notifications for the current user

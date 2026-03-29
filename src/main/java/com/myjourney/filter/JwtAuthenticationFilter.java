@@ -24,10 +24,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        return path.startsWith("/css/") || 
-               path.startsWith("/js/") || 
-               path.startsWith("/uploads/") || 
+        return path.startsWith("/css/") ||
+               path.startsWith("/js/") ||
+               path.startsWith("/uploads/") ||
                path.startsWith("/static/") ||
+               path.startsWith("/ws/") ||        // WebSocket handshake — auth handled by handler
                path.equals("/") ||
                path.endsWith(".html") ||
                path.startsWith("/api/login") ||

@@ -101,7 +101,7 @@
 
 ### Features
 - [x] Space post editing (author or owner only)
-- [ ] Real-time notifications via WebSocket (replace 30s polling)
+- [x] Real-time notifications via WebSocket (replace 30s polling)
 - [ ] Google OAuth 2.0 login (backend: Spring Security OAuth2 + token exchange)
 
 ### Security & Reliability

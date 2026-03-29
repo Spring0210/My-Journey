@@ -99,6 +99,12 @@
             <version>1.39.0</version>
         </dependency>
 
+        <!-- WebSocket for real-time notifications -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
         <!-- Resend Email -->
         <dependency>
             <groupId>com.resend</groupId>
