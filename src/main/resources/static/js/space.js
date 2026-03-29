@@ -432,10 +432,18 @@ function renderPost(post) {
                     <span class="post-author">${escapeHtml(post.authorUsername)}</span>
                     <span class="post-date">${formatDate(post.createdAt)}${wasEdited ? ' <span class="post-edited">(edited)</span>' : ''}</span>
                 </div>
-                <div class="post-actions">
-                    ${canEdit   ? `<button class="post-edit-btn"   data-post-id="${post.id}" title="Edit">Edit</button>` : ''}
-                    ${canDelete ? `<button class="post-delete-btn" data-post-id="${post.id}" title="Delete">&times;</button>` : ''}
-                </div>
+                ${(canEdit || canDelete) ? `
+                <div class="post-menu-wrap">
+                    <button class="post-menu-trigger" data-post-id="${post.id}" title="More options">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
+                        </svg>
+                    </button>
+                    <div class="post-menu-dropdown" hidden>
+                        ${canEdit   ? `<button class="post-menu-item post-edit-btn"                      data-post-id="${post.id}">Edit</button>` : ''}
+                        ${canDelete ? `<button class="post-menu-item post-menu-item--danger post-delete-btn" data-post-id="${post.id}">Delete</button>` : ''}
+                    </div>
+                </div>` : ''}
             </div>
             ${post.content ? `<p class="post-content">${escapeHtml(post.content)}</p>` : ''}
             ${renderImageGrid(post.id, post.images)}
@@ -457,9 +465,25 @@ function bindPostEvents(container) {
         });
     });
 
+    // ⋯ menu trigger — toggle dropdown
+    container.querySelectorAll('.post-menu-trigger').forEach(trigger => {
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const wrap    = trigger.closest('.post-menu-wrap');
+            const dropdown = wrap.querySelector('.post-menu-dropdown');
+            // Close all other open dropdowns first
+            container.querySelectorAll('.post-menu-dropdown:not([hidden])').forEach(d => {
+                if (d !== dropdown) d.hidden = true;
+            });
+            dropdown.hidden = !dropdown.hidden;
+        });
+    });
+
     // Edit buttons — inline editing of post text
     container.querySelectorAll('.post-edit-btn').forEach(btn => {
         btn.addEventListener('click', () => {
+            // Close the dropdown menu
+            btn.closest('.post-menu-dropdown')?.setAttribute('hidden', '');
             const card     = container.querySelector(`.post-card[data-post-id="${btn.dataset.postId}"]`);
             const contentEl = card.querySelector('.post-content');
             // Prevent opening a second editor on the same post
@@ -537,6 +561,7 @@ function bindPostEvents(container) {
     container.querySelectorAll('.post-delete-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             e.stopPropagation();
+            btn.closest('.post-menu-dropdown')?.setAttribute('hidden', '');
             if (!confirm('Delete this post?')) return;
             const res = await apiRequest(`/api/spaces/${spaceId}/posts/${btn.dataset.postId}`, { method: 'DELETE' });
             if (res.ok) loadPosts(currentPage);
@@ -640,12 +665,15 @@ function bindPostEvents(container) {
     });
 }
 
-// Close all open reaction pickers when clicking elsewhere on the page
+// Close all open reaction pickers and post menus when clicking elsewhere on the page
 document.addEventListener('click', () => {
     document.querySelectorAll('.reaction-picker:not([hidden])').forEach(picker => {
         picker.hidden = true;
         const bar = picker.closest('.reaction-bar');
         if (bar) bar.querySelector('.reaction-add-btn')?.classList.remove('active');
+    });
+    document.querySelectorAll('.post-menu-dropdown:not([hidden])').forEach(d => {
+        d.hidden = true;
     });
 });
 
