@@ -105,7 +105,7 @@
 - [x] Google OAuth 2.0 login (Spring Security OAuth2 + JWT exchange; account linking by email)
 
 ### Security & Reliability
-- [ ] API rate limiting (Spring + Bucket4j — protect auth and upload endpoints)
+- [x] API rate limiting (Bucket4j in-memory — 10/min on login, 5/min on register/forgot-password, 5/min per user on AI endpoints)
 - [ ] JWT refresh token (silent re-auth before 24h expiry, avoid forced logout)
 
 ---
