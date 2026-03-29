@@ -4,6 +4,7 @@ import com.myjourney.dto.AuthResponse;
 import com.myjourney.dto.ProfileResponse;
 import com.myjourney.exception.AppException;
 import com.myjourney.model.PasswordResetToken;
+import com.myjourney.model.RefreshToken;
 import com.myjourney.model.User;
 import com.myjourney.repository.PasswordResetTokenRepository;
 import com.myjourney.repository.UserRepository;
@@ -41,6 +42,9 @@ public class UserService {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private RefreshTokenService refreshTokenService;
 
     @Autowired
     private CloudStorageService cloudStorageService;
@@ -86,7 +90,8 @@ public class UserService {
         }
 
         String token = jwtUtil.generateToken(found.getId(), found.getUsername());
-        return new AuthResponse(token, found.getUsername(), found.getId(), found.getAvatar());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(found.getId());
+        return new AuthResponse(token, refreshToken.getToken(), found.getUsername(), found.getId(), found.getAvatar());
     }
 
     @Transactional

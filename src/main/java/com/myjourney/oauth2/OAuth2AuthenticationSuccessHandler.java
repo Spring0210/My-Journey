@@ -1,5 +1,7 @@
 package com.myjourney.oauth2;
 
+import com.myjourney.model.RefreshToken;
+import com.myjourney.service.RefreshTokenService;
 import com.myjourney.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,21 +20,26 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private RefreshTokenService refreshTokenService;
+
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException {
         CustomOAuth2User oauthUser = (CustomOAuth2User) authentication.getPrincipal();
 
-        String token    = jwtUtil.generateToken(oauthUser.getAppUserId(), oauthUser.getAppUsername());
-        String username = URLEncoder.encode(oauthUser.getAppUsername(), StandardCharsets.UTF_8);
-        String avatar   = oauthUser.getAppAvatar() != null
+        String token        = jwtUtil.generateToken(oauthUser.getAppUserId(), oauthUser.getAppUsername());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(oauthUser.getAppUserId());
+        String username     = URLEncoder.encode(oauthUser.getAppUsername(), StandardCharsets.UTF_8);
+        String avatar       = oauthUser.getAppAvatar() != null
                 ? URLEncoder.encode(oauthUser.getAppAvatar(), StandardCharsets.UTF_8)
                 : "";
 
         // Pass JWT and user info to the frontend callback page via query params.
         // The callback page reads them immediately and stores them in localStorage.
         String redirectUrl = "/oauth2-callback.html?token=" + token
+                + "&refreshToken=" + refreshToken.getToken()
                 + "&userId=" + oauthUser.getAppUserId()
                 + "&username=" + username
                 + "&avatar=" + avatar;

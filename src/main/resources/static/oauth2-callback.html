@@ -44,10 +44,11 @@
 <script>
     (function () {
         const params = new URLSearchParams(window.location.search);
-        const token    = params.get('token');
-        const userId   = params.get('userId');
-        const username = params.get('username');
-        const avatar   = params.get('avatar');
+        const token        = params.get('token');
+        const refreshToken = params.get('refreshToken');
+        const userId       = params.get('userId');
+        const username     = params.get('username');
+        const avatar       = params.get('avatar');
 
         if (!token || !userId || !username) {
             // Missing required params — show error and link back to login
@@ -59,9 +60,10 @@
         }
 
         // Store session data the same way login.js does
-        localStorage.setItem('token',    token);
-        localStorage.setItem('userId',   userId);
-        localStorage.setItem('username', username);
+        localStorage.setItem('token',        token);
+        localStorage.setItem('refreshToken', refreshToken || '');
+        localStorage.setItem('userId',       userId);
+        localStorage.setItem('username',     username);
         if (avatar) {
             localStorage.setItem('avatar', avatar);
         } else {

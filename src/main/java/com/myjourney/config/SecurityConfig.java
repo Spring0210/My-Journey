@@ -45,7 +45,8 @@ public class SecurityConfig {
             // IF_REQUIRED allows sessions for the OAuth2 state flow while keeping API calls stateless
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/login", "/api/register", "/api/forgot-password", "/api/reset-password").permitAll()
+                .requestMatchers("/api/login", "/api/register", "/api/forgot-password", "/api/reset-password",
+                                 "/api/auth/refresh", "/api/auth/logout").permitAll()
                 .requestMatchers("/api/profile/**").authenticated()
                 .requestMatchers("/", "/login.html", "/register.html", "/forgot-password.html",
                                "/journals.html", "/calendar.html", "/day.html", "/detail.html",

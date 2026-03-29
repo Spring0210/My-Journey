@@ -19,9 +19,10 @@ document.getElementById('loginForm').addEventListener('submit', (e) => {
         .then(res => res.json())
         .then(result => {
             if (result.token) {
-                localStorage.setItem('username', result.username);
-                localStorage.setItem('userId', result.userId);
-                localStorage.setItem('token', result.token);
+                localStorage.setItem('username',     result.username);
+                localStorage.setItem('userId',       result.userId);
+                localStorage.setItem('token',        result.token);
+                localStorage.setItem('refreshToken', result.refreshToken || '');
                 if (result.avatar) localStorage.setItem('avatar', result.avatar);
                 window.location.href = 'dashboard.html';
             } else {
