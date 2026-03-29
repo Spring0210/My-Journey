@@ -34,15 +34,6 @@ public class UserController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    private Integer getJwtUserId(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) return null;
-        try {
-            return jwtUtil.extractUserId(authHeader.substring(7));
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     @PostMapping("/register")
     public String register(@RequestBody User user) {
         return userService.register(user);
@@ -66,7 +57,7 @@ public class UserController {
     @PostMapping("/change-password/send-code")
     public ResponseEntity<Void> sendChangePasswordCode(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
         userService.sendChangePasswordCode(userId);
         return ResponseEntity.ok().build();
@@ -77,7 +68,7 @@ public class UserController {
     public ResponseEntity<Void> changePassword(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody Map<String, String> body) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
         userService.changePasswordWithCode(userId, body.get("code"), body.get("newPassword"));
         return ResponseEntity.ok().build();

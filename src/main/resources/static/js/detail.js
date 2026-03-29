@@ -71,7 +71,7 @@ function renderPhotoGrid(existingPaths, pending) {
                 existingPaths.splice(i, 1);
                 renderPhotoGrid(existingPaths, pending);
             } catch {
-                alert('Failed to delete photo.');
+                showToast('Failed to delete photo.');
             }
         });
 
@@ -229,7 +229,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             const title     = document.getElementById("title").value.trim();
             const entryDate = document.getElementById("entryDate").value;
             if (!title || !entryDate) {
-                alert("Title and date are required.");
+                showToast("Title and date are required.");
                 return;
             }
             const btn = document.getElementById("saveBtn");
@@ -240,7 +240,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 window.location.href = "journals.html";
             } catch (e) {
                 console.error(e);
-                alert("Failed to create entry.");
+                showToast("Failed to create entry.");
                 btn.disabled    = false;
                 btn.textContent = "Create Entry";
             }
@@ -261,7 +261,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         await loadEntry(entryId);
     } catch (e) {
         console.error(e);
-        alert("Failed to load entry.");
+        showToast("Failed to load entry.");
         return;
     }
 
@@ -278,7 +278,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             setTimeout(() => setSaveStatus(""), 2500);
         } catch (e) {
             console.error(e);
-            alert("Save failed.");
+            showToast("Save failed.");
         } finally {
             btn.disabled    = false;
             btn.textContent = "Save Changes";
@@ -288,6 +288,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("deleteBtn").addEventListener("click", async () => {
         menuDropdown.hidden = true;
         try { await deleteEntry(entryId); }
-        catch (e) { console.error(e); alert("Delete failed."); }
+        catch (e) { console.error(e); showToast("Delete failed."); }
     });
 });

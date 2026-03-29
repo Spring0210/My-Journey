@@ -38,9 +38,9 @@ function renderDayEntries(entries) {
     }
     
     card.innerHTML = `
-      <h3><a class="title" href="detail.html?id=${entry.id}">${entry.title}</a></h3>
-      <div class="meta">${entry.entryDate}</div>
-      <p>${entry.content ?? ""}</p>
+      <h3><a class="title" href="detail.html?id=${entry.id}">${escapeHtml(entry.title)}</a></h3>
+      <div class="meta">${escapeHtml(entry.entryDate)}</div>
+      <p>${escapeHtml(entry.content ?? "")}</p>
       ${imagesHtml}
     `;
     
@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("dayText").textContent = dateStr || "";
 
   if (!dateStr) {
-    alert("Missing date parameter.");
+    showToast("Missing date parameter.");
     window.location.href = "calendar.html";
     return;
   }

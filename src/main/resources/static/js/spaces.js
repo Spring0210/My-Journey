@@ -35,10 +35,7 @@ async function loadSpaces() {
     }
 }
 
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
+// escapeHtml is defined in api.js (loaded before this file)
 
 function showModal(id) { document.getElementById(id).hidden = false; }
 function hideModal(id) { document.getElementById(id).hidden = true; }
@@ -51,7 +48,7 @@ document.getElementById('cancelCreate').addEventListener('click', () => hideModa
 document.getElementById('confirmCreate').addEventListener('click', async () => {
     const name = document.getElementById('spaceName').value.trim();
     const desc = document.getElementById('spaceDesc').value.trim();
-    if (!name) { alert('Space name is required.'); return; }
+    if (!name) { showToast('Space name is required.'); return; }
 
     try {
         const res = await apiRequest('/api/spaces', {
@@ -59,13 +56,13 @@ document.getElementById('confirmCreate').addEventListener('click', async () => {
             body: JSON.stringify({ name, description: desc })
         });
         const data = await res.json();
-        if (data.error) { alert(data.error); return; }
+        if (data.error) { showToast(data.error); return; }
         hideModal('createModal');
         document.getElementById('spaceName').value = '';
         document.getElementById('spaceDesc').value = '';
         window.location.href = `space.html?id=${data.id}`;
     } catch (e) {
-        alert('Failed to create space.');
+        showToast('Failed to create space.');
     }
 });
 
@@ -76,7 +73,7 @@ document.getElementById('cancelJoin').addEventListener('click', () => hideModal(
 
 document.getElementById('confirmJoin').addEventListener('click', async () => {
     const inviteCode = document.getElementById('inviteCodeInput').value.trim();
-    if (!inviteCode) { alert('Invite code is required.'); return; }
+    if (!inviteCode) { showToast('Invite code is required.'); return; }
 
     try {
         const res = await apiRequest('/api/spaces/join', {
@@ -84,11 +81,11 @@ document.getElementById('confirmJoin').addEventListener('click', async () => {
             body: JSON.stringify({ inviteCode })
         });
         const data = await res.json();
-        if (data.error) { alert(data.error); return; }
+        if (data.error) { showToast(data.error); return; }
         hideModal('joinModal');
         window.location.href = `space.html?id=${data.id}`;
     } catch (e) {
-        alert('Failed to join space.');
+        showToast('Failed to join space.');
     }
 });
 

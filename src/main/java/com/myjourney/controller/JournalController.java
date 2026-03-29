@@ -39,17 +39,6 @@ public class JournalController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    private Integer getJwtUserId(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return null;
-        }
-        try {
-            return jwtUtil.extractUserId(authHeader.substring(7));
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     @PostMapping("/{userId}")
     public ResponseEntity<JournalEntry> createEntry(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
@@ -59,7 +48,7 @@ public class JournalController {
             @RequestParam String entryDate,
             @RequestParam(required = false) MultipartFile[] images
     ) throws IOException {
-        Integer jwtUserId = getJwtUserId(authHeader);
+        Integer jwtUserId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (jwtUserId == null || !jwtUserId.equals(userId)) {
             return ResponseEntity.status(403).build();
         }
@@ -88,7 +77,7 @@ public class JournalController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        Integer jwtUserId = getJwtUserId(authHeader);
+        Integer jwtUserId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (jwtUserId == null || !jwtUserId.equals(userId)) {
             return ResponseEntity.status(403).build();
         }
@@ -105,7 +94,7 @@ public class JournalController {
             @RequestParam String entryDate,
             @RequestParam(required = false) MultipartFile[] images
     ) throws IOException {
-        Integer jwtUserId = getJwtUserId(authHeader);
+        Integer jwtUserId = jwtUtil.extractUserIdFromHeader(authHeader);
         JournalEntry existing = journalService.getEntryById(entryId).orElseThrow();
 
         if (jwtUserId == null || !jwtUserId.equals(existing.getUser().getId())) {
@@ -132,7 +121,7 @@ public class JournalController {
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Integer entryId
     ) throws IOException {
-        Integer jwtUserId = getJwtUserId(authHeader);
+        Integer jwtUserId = jwtUtil.extractUserIdFromHeader(authHeader);
         JournalEntry entry = journalService.getEntryById(entryId).orElseThrow();
 
         if (jwtUserId == null || !jwtUserId.equals(entry.getUser().getId())) {
@@ -154,7 +143,7 @@ public class JournalController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String date
     ) {
-        Integer jwtUserId = getJwtUserId(authHeader);
+        Integer jwtUserId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (jwtUserId == null || !jwtUserId.equals(userId)) {
             return ResponseEntity.status(403).build();
         }
@@ -166,7 +155,7 @@ public class JournalController {
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Integer userId
     ) {
-        Integer jwtUserId = getJwtUserId(authHeader);
+        Integer jwtUserId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (jwtUserId == null || !jwtUserId.equals(userId)) {
             return ResponseEntity.status(403).build();
         }
@@ -185,7 +174,7 @@ public class JournalController {
             @PathVariable Integer userId,
             @PathVariable String entryDate
     ) {
-        Integer jwtUserId = getJwtUserId(authHeader);
+        Integer jwtUserId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (jwtUserId == null || !jwtUserId.equals(userId)) {
             return ResponseEntity.status(403).build();
         }
@@ -201,7 +190,7 @@ public class JournalController {
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Integer entryId
     ) {
-        Integer jwtUserId = getJwtUserId(authHeader);
+        Integer jwtUserId = jwtUtil.extractUserIdFromHeader(authHeader);
         Optional<JournalEntry> entryOpt = journalService.getEntryById(entryId);
         if (entryOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -219,7 +208,7 @@ public class JournalController {
             @RequestBody Map<String, Object> request
     ) {
         try {
-            Integer jwtUserId = getJwtUserId(authHeader);
+            Integer jwtUserId = jwtUtil.extractUserIdFromHeader(authHeader);
             Integer entryId = (Integer) request.get("entryId");
             String imageUrl = (String) request.get("imagePath");
 
@@ -249,7 +238,7 @@ public class JournalController {
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody Map<String, Integer> body
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
 
         Integer year = body.get("year");
@@ -275,7 +264,7 @@ public class JournalController {
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody Map<String, String> body
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
 
         String query = body.get("query");
@@ -294,7 +283,7 @@ public class JournalController {
     public ResponseEntity<Map<String, Object>> generateWritingPrompts(
             @RequestHeader(value = "Authorization", required = false) String authHeader
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
 
         User user = userRepository.findById(userId).orElseThrow();
@@ -327,7 +316,7 @@ public class JournalController {
             @RequestParam("images") MultipartFile[] images
     ) throws IOException {
         try {
-            Integer jwtUserId = getJwtUserId(authHeader);
+            Integer jwtUserId = jwtUtil.extractUserIdFromHeader(authHeader);
             JournalEntry entry = journalService.getEntryById(entryId).orElseThrow();
 
             if (jwtUserId == null || !jwtUserId.equals(entry.getUser().getId())) {

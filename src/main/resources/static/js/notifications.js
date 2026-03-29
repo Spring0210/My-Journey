@@ -130,13 +130,7 @@ function buildNotifText(n) {
     return `New activity in ${space}`;
 }
 
-function escapeHtml(str) {
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-}
+// escapeHtml is defined in api.js (loaded before this file)
 
 function formatRelativeTime(isoString) {
     if (!isoString) return '';

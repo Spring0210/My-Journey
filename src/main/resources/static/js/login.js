@@ -26,11 +26,15 @@ document.getElementById('loginForm').addEventListener('submit', (e) => {
                 if (result.avatar) localStorage.setItem('avatar', result.avatar);
                 window.location.href = 'dashboard.html';
             } else {
-                alert(result.error || 'Login failed');
+                const el = document.getElementById('err-identifier');
+                el.textContent = result.error || 'Login failed';
+                el.removeAttribute('hidden');
             }
         })
         .catch(error => {
             console.error('Login error:', error);
-            alert('Login failed');
+            const el = document.getElementById('err-identifier');
+            el.textContent = 'Login failed. Please try again.';
+            el.removeAttribute('hidden');
         });
 });

@@ -15,6 +15,7 @@ import org.springframework.data.domain.Sort;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Optional;
 
 @Service
@@ -58,44 +59,25 @@ public class JournalService {
         return journalRepository.findByUserAndEntryDateBetweenOrderByEntryDateAsc(user, start, end);
     }
 
-    // Search entries matching ANY of the given keywords (OR logic, deduped, sorted newest first)
+    // AI search: OR across keywords using DB LIKE — deduped by id, sorted newest first
     public List<JournalEntry> searchEntriesByKeywords(Integer userId, List<String> keywords) {
         User user = userRepository.findById(userId).orElseThrow();
-        List<JournalEntry> all = journalRepository.findByUser(user);
-
-        // Collect IDs already added to avoid duplicates while preserving order
-        java.util.Set<Integer> seen = new java.util.LinkedHashSet<>();
-        List<JournalEntry> results = new ArrayList<>();
-
+        java.util.LinkedHashMap<Integer, JournalEntry> seen = new java.util.LinkedHashMap<>();
         for (String keyword : keywords) {
-            String lower = keyword.toLowerCase();
-            for (JournalEntry entry : all) {
-                if (seen.contains(entry.getId())) continue;
-                boolean titleMatch   = entry.getTitle()   != null && entry.getTitle().toLowerCase().contains(lower);
-                boolean contentMatch = entry.getContent() != null && entry.getContent().toLowerCase().contains(lower);
-                if (titleMatch || contentMatch) {
-                    seen.add(entry.getId());
-                    results.add(entry);
-                }
+            for (JournalEntry entry : journalRepository.findByUserAndKeyword(user, keyword)) {
+                seen.putIfAbsent(entry.getId(), entry);
             }
         }
-
-        // Sort newest first
-        results.sort((a, b) -> b.getEntryDate().compareTo(a.getEntryDate()));
-        return results;
+        return new ArrayList<>(seen.values());
     }
 
+    // Keyword + date filter search using DB LIKE query
     public List<JournalEntry> searchEntries(Integer userId, String keyword, String date) {
         User user = userRepository.findById(userId).orElseThrow();
 
-        List<JournalEntry> entries = journalRepository.findByUser(user);
-
-        if (keyword != null && !keyword.isEmpty()) {
-            entries = entries.stream()
-                    .filter(e -> e.getTitle().toLowerCase().contains(keyword.toLowerCase()) ||
-                            e.getContent().toLowerCase().contains(keyword.toLowerCase()))
-                    .toList();
-        }
+        List<JournalEntry> entries = (keyword != null && !keyword.isEmpty())
+                ? journalRepository.findByUserAndKeyword(user, keyword)
+                : journalRepository.findByUser(user);
 
         if (date != null && !date.isEmpty()) {
             LocalDate targetDate = LocalDate.parse(date);

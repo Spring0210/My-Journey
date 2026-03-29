@@ -8,14 +8,18 @@ form.addEventListener('submit', (e) => {
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
 
+    const errEl = document.getElementById('err-password');
+
     const emailPattern = /^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
     if (!emailPattern.test(email)) {
-        alert("Please enter a valid email address.");
+        document.getElementById('err-email').textContent = 'Please enter a valid email address.';
+        document.getElementById('err-email').removeAttribute('hidden');
         return;
     }
 
     if (password !== confirmPassword) {
-        alert("Passwords do not match!");
+        errEl.textContent = 'Passwords do not match.';
+        errEl.removeAttribute('hidden');
         return;
     }
 
@@ -26,13 +30,15 @@ form.addEventListener('submit', (e) => {
     })
     .then(res => res.text())
     .then(message => {
-        alert(message);
-        if (message.includes("successful")) {
+        if (message.includes('successful')) {
             window.location.href = 'login.html';
+        } else {
+            errEl.textContent = message;
+            errEl.removeAttribute('hidden');
         }
     })
-    .catch(error => {
-        console.error('Registration failed:', error);
-        alert('Registration failed. Please try again.');
+    .catch(() => {
+        errEl.textContent = 'Registration failed. Please try again.';
+        errEl.removeAttribute('hidden');
     });
 });

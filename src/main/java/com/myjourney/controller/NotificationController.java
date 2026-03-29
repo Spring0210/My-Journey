@@ -21,21 +21,12 @@ public class NotificationController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    private Integer getJwtUserId(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) return null;
-        try {
-            return jwtUtil.extractUserId(authHeader.substring(7));
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     // GET /api/notifications — get all notifications for the current user
     @GetMapping
     public ResponseEntity<List<NotificationResponse>> getNotifications(
             @RequestHeader(value = "Authorization", required = false) String authHeader
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
         return ResponseEntity.ok(notificationService.getNotifications(userId));
     }
@@ -45,7 +36,7 @@ public class NotificationController {
     public ResponseEntity<Map<String, Long>> getUnreadCount(
             @RequestHeader(value = "Authorization", required = false) String authHeader
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
         return ResponseEntity.ok(Map.of("count", notificationService.getUnreadCount(userId)));
     }
@@ -55,7 +46,7 @@ public class NotificationController {
     public ResponseEntity<Void> markAllRead(
             @RequestHeader(value = "Authorization", required = false) String authHeader
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
         notificationService.markAllRead(userId);
         return ResponseEntity.ok().build();
@@ -67,7 +58,7 @@ public class NotificationController {
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Integer id
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
         notificationService.deleteNotification(id, userId);
         return ResponseEntity.ok().build();
@@ -78,7 +69,7 @@ public class NotificationController {
     public ResponseEntity<Void> deleteAll(
             @RequestHeader(value = "Authorization", required = false) String authHeader
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
         notificationService.deleteAllNotifications(userId);
         return ResponseEntity.ok().build();

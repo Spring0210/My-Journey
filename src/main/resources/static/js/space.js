@@ -25,10 +25,7 @@ function renderAvatar(avatarUrl, username, cssClass = 'member-avatar') {
 if (!spaceId) window.location.href = 'spaces.html';
 
 // ── Helpers ───────────────────────────────────────────────────
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
+// escapeHtml is defined in api.js (loaded before this file)
 
 function formatDate(isoStr) {
     return new Date(isoStr + 'Z').toLocaleString('en-US', {
@@ -41,9 +38,9 @@ function formatDate(isoStr) {
 async function loadSpaceDetail() {
     try {
         const res = await apiRequest(`/api/spaces/${spaceId}`);
-        if (res.status === 403) { alert('Access denied.'); window.location.href = 'spaces.html'; return; }
+        if (res.status === 403) { showToast('Access denied.'); window.location.href = 'spaces.html'; return; }
         const space = await res.json();
-        if (space.error) { alert(space.error); window.location.href = 'spaces.html'; return; }
+        if (space.error) { showToast(space.error); window.location.href = 'spaces.html'; return; }
 
         document.title = `${space.name} - Journey`;
         document.getElementById('spaceTitle').textContent = space.name;
@@ -128,7 +125,7 @@ async function kickMember(targetUserId, targetUsername, rowEl) {
         const res = await apiRequest(`/api/spaces/${spaceId}/members/${targetUserId}`, { method: 'DELETE' });
         if (!res.ok) {
             const data = await res.json();
-            alert(data.error || 'Failed to remove member.');
+            showToast(data.error || 'Failed to remove member.');
             return;
         }
         // Remove row from DOM and update count
@@ -137,7 +134,7 @@ async function kickMember(targetUserId, targetUsername, rowEl) {
         const current = parseInt(countEl.textContent.replace(/\D/g, '')) || 0;
         countEl.textContent = `(${current - 1})`;
     } catch (e) {
-        alert('Failed to remove member.');
+        showToast('Failed to remove member.');
     }
 }
 
@@ -185,7 +182,7 @@ document.getElementById('editSpaceModal').addEventListener('click', (e) => {
 document.getElementById('confirmEdit').addEventListener('click', async () => {
     const name = document.getElementById('editSpaceName').value.trim();
     const description = document.getElementById('editSpaceDesc').value.trim();
-    if (!name) { alert('Space name is required.'); return; }
+    if (!name) { showToast('Space name is required.'); return; }
 
     const btn = document.getElementById('confirmEdit');
     btn.disabled = true;
@@ -196,7 +193,7 @@ document.getElementById('confirmEdit').addEventListener('click', async () => {
             body: JSON.stringify({ name, description })
         });
         const data = await res.json();
-        if (data.error) { alert(data.error); return; }
+        if (data.error) { showToast(data.error); return; }
         document.getElementById('spaceTitle').textContent = data.name;
         document.getElementById('spaceDescription').textContent = data.description || 'No description.';
         document.title = `${data.name} - Journey`;
@@ -216,7 +213,7 @@ document.getElementById('confirmEdit').addEventListener('click', async () => {
 
         document.getElementById('editSpaceModal').hidden = true;
     } catch (e) {
-        alert('Failed to update space.');
+        showToast('Failed to update space.');
     } finally {
         btn.disabled = false;
     }
@@ -518,7 +515,7 @@ function bindPostEvents(container) {
             // Save — call API and update DOM on success
             editor.querySelector('.post-edit-save').addEventListener('click', async () => {
                 const newContent = editor.querySelector('.post-edit-textarea').value.trim();
-                if (!newContent) { alert('Content cannot be empty.'); return; }
+                if (!newContent) { showToast('Content cannot be empty.'); return; }
 
                 const saveBtn = editor.querySelector('.post-edit-save');
                 saveBtn.disabled = true;
@@ -529,7 +526,7 @@ function bindPostEvents(container) {
                         `/api/spaces/${spaceId}/posts/${btn.dataset.postId}`,
                         { method: 'PATCH', body: JSON.stringify({ content: newContent }) }
                     );
-                    if (!res.ok) { alert('Failed to save.'); return; }
+                    if (!res.ok) { showToast('Failed to save.'); return; }
 
                     // Update the content paragraph in-place
                     if (contentEl) {
@@ -549,7 +546,7 @@ function bindPostEvents(container) {
                     }
                     editor.remove();
                 } catch (e) {
-                    alert('Failed to save.');
+                    showToast('Failed to save.');
                     saveBtn.disabled = false;
                     saveBtn.textContent = 'Save';
                 }
@@ -565,7 +562,7 @@ function bindPostEvents(container) {
             if (!confirm('Delete this post?')) return;
             const res = await apiRequest(`/api/spaces/${spaceId}/posts/${btn.dataset.postId}`, { method: 'DELETE' });
             if (res.ok) loadPosts(currentPage);
-            else alert('Failed to delete post.');
+            else showToast('Failed to delete post.');
         });
     });
 
@@ -737,7 +734,7 @@ async function sendComment(postId, container) {
             method: 'POST',
             body: JSON.stringify({ content })
         });
-        if (!res.ok) { alert('Failed to post comment.'); return; }
+        if (!res.ok) { showToast('Failed to post comment.'); return; }
 
         const comment = await res.json();
 
@@ -850,7 +847,7 @@ document.getElementById('postVideos').addEventListener('change', (e) => {
 document.getElementById('postBtn').addEventListener('click', async () => {
     const content = document.getElementById('postContent').value.trim();
     if (!content && selectedImages.length === 0 && selectedVideos.length === 0) {
-        alert('Please add some text, images, or a video.');
+        showToast('Please add some text, images, or a video.');
         return;
     }
 
@@ -906,10 +903,10 @@ document.getElementById('postBtn').addEventListener('click', async () => {
             videoObjectUrls = [];
             loadPosts(0);
         } else {
-            alert('Failed to post.');
+            showToast('Failed to post.');
         }
     } catch (e) {
-        alert('Failed to post.');
+        showToast('Failed to post.');
     } finally {
         btn.disabled = false;
         btn.textContent = 'Post';
@@ -924,7 +921,7 @@ async function leaveSpace() {
     const res = await apiRequest(`/api/spaces/${spaceId}/leave`, { method: 'POST' });
     if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        alert(data.error || 'Failed to leave space.');
+        showToast(data.error || 'Failed to leave space.');
         return;
     }
     window.location.href = 'spaces.html';
@@ -935,7 +932,7 @@ async function deleteSpace() {
     const res = await apiRequest(`/api/spaces/${spaceId}`, { method: 'DELETE' });
     if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        alert(data.error || 'Failed to delete space.');
+        showToast(data.error || 'Failed to delete space.');
         return;
     }
     window.location.href = 'spaces.html';

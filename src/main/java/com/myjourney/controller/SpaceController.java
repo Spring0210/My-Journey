@@ -24,22 +24,13 @@ public class SpaceController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    private Integer getJwtUserId(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) return null;
-        try {
-            return jwtUtil.extractUserId(authHeader.substring(7));
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     // POST /api/spaces — create a new space
     @PostMapping
     public ResponseEntity<SpaceResponse> createSpace(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody Map<String, String> body
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
 
         String name = body.get("name");
@@ -57,7 +48,7 @@ public class SpaceController {
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody Map<String, String> body
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
 
         String inviteCode = body.get("inviteCode");
@@ -73,7 +64,7 @@ public class SpaceController {
     public ResponseEntity<List<SpaceSummaryResponse>> getMySpaces(
             @RequestHeader(value = "Authorization", required = false) String authHeader
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
 
         return ResponseEntity.ok(spaceService.getMySpaces(userId));
@@ -85,7 +76,7 @@ public class SpaceController {
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Integer spaceId
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
 
         return ResponseEntity.ok(spaceService.getSpaceDetail(spaceId, userId));
@@ -98,7 +89,7 @@ public class SpaceController {
             @PathVariable Integer spaceId,
             @RequestBody Map<String, String> body
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
 
         return ResponseEntity.ok(spaceService.updateSpace(spaceId, userId, body.get("name"), body.get("description")));
@@ -111,7 +102,7 @@ public class SpaceController {
             @PathVariable Integer spaceId,
             @RequestParam("file") MultipartFile file
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
 
         return ResponseEntity.ok(spaceService.updateCoverImage(spaceId, userId, file));
@@ -124,7 +115,7 @@ public class SpaceController {
             @PathVariable Integer spaceId,
             @PathVariable Integer memberId
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
 
         spaceService.kickMember(spaceId, userId, memberId);
@@ -137,7 +128,7 @@ public class SpaceController {
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Integer spaceId
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
 
         spaceService.leaveSpace(spaceId, userId);
@@ -150,7 +141,7 @@ public class SpaceController {
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Integer spaceId
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
         String summary = spaceService.generateAiSummary(spaceId, userId);
         return ResponseEntity.ok(Map.of("summary", summary));
@@ -162,7 +153,7 @@ public class SpaceController {
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Integer spaceId
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
 
         spaceService.deleteSpace(spaceId, userId);

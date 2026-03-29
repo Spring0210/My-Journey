@@ -127,11 +127,11 @@ async function deleteImage(entryId, imagePath, imageElement) {
                 imageCount.textContent = `${remainingImages.length} photo${remainingImages.length !== 1 ? 's' : ''}`;
             }
         } else {
-            alert('Failed to delete image');
+            showToast('Failed to delete image');
         }
     } catch (error) {
         console.error('Error deleting image:', error);
-        alert('Error deleting image');
+        showToast('Error deleting image');
     }
 }
 
@@ -160,10 +160,10 @@ async function addImagesToEntry(entryId, files) {
                 imageCount.textContent = `${imagePaths.length} photo${imagePaths.length !== 1 ? 's' : ''}`;
             }
         } else {
-            alert('Failed to add images');
+            showToast('Failed to add images');
         }
     } catch (error) {
         console.error('Error adding images:', error);
-        alert('Error adding images');
+        showToast('Error adding images');
     }
 }

@@ -41,6 +41,16 @@ public class JwtUtil {
                 .compact();
     }
 
+    // Extract userId from an "Authorization: Bearer <token>" header — null if absent or invalid
+    public Integer extractUserIdFromHeader(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) return null;
+        try {
+            return extractUserId(authHeader.substring(7));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public Boolean validateToken(String token) {
         return !isTokenExpired(token);
     }

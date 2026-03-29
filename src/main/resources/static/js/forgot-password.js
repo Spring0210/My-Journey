@@ -116,7 +116,6 @@ step2Form.addEventListener('submit', e => {
     .then(res => res.text())
     .then(message => {
         if (message === 'Password reset successful') {
-            alert('Password reset successfully! Please log in.');
             window.location.href = '/login.html';
         } else {
             errStep2.textContent = message;

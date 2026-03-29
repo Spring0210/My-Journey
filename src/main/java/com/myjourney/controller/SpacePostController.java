@@ -38,15 +38,6 @@ public class SpacePostController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    private Integer getJwtUserId(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) return null;
-        try {
-            return jwtUtil.extractUserId(authHeader.substring(7));
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     // POST /api/spaces/{spaceId}/posts — create a post
     @PostMapping
     public ResponseEntity<PostResponse> createPost(
@@ -56,7 +47,7 @@ public class SpacePostController {
             @RequestParam(required = false) MultipartFile[] images,
             @RequestParam(required = false) MultipartFile[] videos
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
 
         List<String> imageUrls = new ArrayList<>();
@@ -81,7 +72,7 @@ public class SpacePostController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
 
         return ResponseEntity.ok(spacePostService.getPosts(spaceId, userId, page, size));
@@ -95,7 +86,7 @@ public class SpacePostController {
             @PathVariable Integer postId,
             @RequestBody Map<String, String> body
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
 
         return ResponseEntity.ok(spacePostService.editPost(postId, userId, body.get("content")));
@@ -108,7 +99,7 @@ public class SpacePostController {
             @PathVariable Integer spaceId,
             @PathVariable Integer postId
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
 
         // Cloudinary cleanup is now handled inside the service
@@ -124,7 +115,7 @@ public class SpacePostController {
             @PathVariable Integer postId,
             @RequestBody Map<String, String> body
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
 
         String emoji = body.get("emoji");
@@ -143,7 +134,7 @@ public class SpacePostController {
             @PathVariable Integer postId,
             @RequestBody Map<String, String> body
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
 
         return ResponseEntity.ok(commentService.addComment(postId, userId, body.get("content")));
@@ -157,7 +148,7 @@ public class SpacePostController {
             @PathVariable Integer postId,
             @PathVariable Integer commentId
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
 
         commentService.deleteComment(commentId, userId);
@@ -171,7 +162,7 @@ public class SpacePostController {
             @PathVariable Integer spaceId,
             @PathVariable Integer postId
     ) {
-        Integer userId = getJwtUserId(authHeader);
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
         if (userId == null) return ResponseEntity.status(401).build();
 
         return ResponseEntity.ok(reactionService.removeReaction(postId, userId));

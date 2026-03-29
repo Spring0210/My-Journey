@@ -58,9 +58,9 @@ function renderEntryList(entries) {
         }
 
         div.innerHTML = `
-            <h3>${entry.title}</h3>
-            <p>${entry.content}</p>
-            <small>${entry.entryDate}</small>
+            <h3>${escapeHtml(entry.title)}</h3>
+            <p>${escapeHtml(entry.content)}</p>
+            <small>${escapeHtml(entry.entryDate)}</small>
             ${imagesHtml}
         `;
 
