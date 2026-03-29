@@ -87,6 +87,20 @@ public class SpacePostController {
         return ResponseEntity.ok(spacePostService.getPosts(spaceId, userId, page, size));
     }
 
+    // PATCH /api/spaces/{spaceId}/posts/{postId} — edit a post's text content (author only)
+    @PatchMapping("/{postId}")
+    public ResponseEntity<PostResponse> editPost(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @PathVariable Integer spaceId,
+            @PathVariable Integer postId,
+            @RequestBody Map<String, String> body
+    ) {
+        Integer userId = getJwtUserId(authHeader);
+        if (userId == null) return ResponseEntity.status(401).build();
+
+        return ResponseEntity.ok(spacePostService.editPost(postId, userId, body.get("content")));
+    }
+
     // DELETE /api/spaces/{spaceId}/posts/{postId} — delete a post
     @DeleteMapping("/{postId}")
     public ResponseEntity<Void> deletePost(

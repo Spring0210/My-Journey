@@ -100,7 +100,7 @@
 ## Phase 5 — Backend Hardening
 
 ### Features
-- [ ] Space post editing (author or owner only)
+- [x] Space post editing (author or owner only)
 - [ ] Real-time notifications via WebSocket (replace 30s polling)
 - [ ] Google OAuth 2.0 login (backend: Spring Security OAuth2 + token exchange)
 

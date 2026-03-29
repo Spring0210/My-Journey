@@ -420,15 +420,22 @@ function renderVideoList(videos) {
 
 function renderPost(post) {
     const canDelete = post.authorId === userId || isOwner;
+    const canEdit   = post.authorId === userId;
+    // Show "(edited)" if the post was updated after creation (allow 1s tolerance)
+    const wasEdited = post.updatedAt && post.createdAt &&
+        new Date(post.updatedAt + 'Z') - new Date(post.createdAt + 'Z') > 1000;
     return `
         <div class="post-card" data-post-id="${post.id}">
             <div class="post-header">
                 ${renderAvatar(post.authorAvatar, post.authorUsername)}
                 <div class="post-meta">
                     <span class="post-author">${escapeHtml(post.authorUsername)}</span>
-                    <span class="post-date">${formatDate(post.createdAt)}</span>
+                    <span class="post-date">${formatDate(post.createdAt)}${wasEdited ? ' <span class="post-edited">(edited)</span>' : ''}</span>
                 </div>
-                ${canDelete ? `<button class="post-delete-btn" data-post-id="${post.id}" title="Delete">&times;</button>` : ''}
+                <div class="post-actions">
+                    ${canEdit   ? `<button class="post-edit-btn"   data-post-id="${post.id}" title="Edit">Edit</button>` : ''}
+                    ${canDelete ? `<button class="post-delete-btn" data-post-id="${post.id}" title="Delete">&times;</button>` : ''}
+                </div>
             </div>
             ${post.content ? `<p class="post-content">${escapeHtml(post.content)}</p>` : ''}
             ${renderImageGrid(post.id, post.images)}
@@ -447,6 +454,82 @@ function bindPostEvents(container) {
             const index = parseInt(cell.dataset.index);
             const images = postImagesMap.get(postId) || [];
             openLightbox(images, index);
+        });
+    });
+
+    // Edit buttons — inline editing of post text
+    container.querySelectorAll('.post-edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const card     = container.querySelector(`.post-card[data-post-id="${btn.dataset.postId}"]`);
+            const contentEl = card.querySelector('.post-content');
+            // Prevent opening a second editor on the same post
+            if (card.querySelector('.post-edit-area')) return;
+
+            const original = contentEl ? contentEl.textContent : '';
+
+            // Hide the original content paragraph while editing
+            if (contentEl) contentEl.hidden = true;
+
+            const editor = document.createElement('div');
+            editor.className = 'post-edit-area';
+            editor.innerHTML = `
+                <textarea class="post-edit-textarea">${escapeHtml(original)}</textarea>
+                <div class="post-edit-btns">
+                    <button class="btn btn--primary btn--sm post-edit-save">Save</button>
+                    <button class="btn btn--ghost  btn--sm post-edit-cancel">Cancel</button>
+                </div>
+            `;
+
+            // Insert editor right after the post header
+            const header = card.querySelector('.post-header');
+            header.insertAdjacentElement('afterend', editor);
+            editor.querySelector('.post-edit-textarea').focus();
+
+            // Cancel — restore original state
+            editor.querySelector('.post-edit-cancel').addEventListener('click', () => {
+                editor.remove();
+                if (contentEl) contentEl.hidden = false;
+            });
+
+            // Save — call API and update DOM on success
+            editor.querySelector('.post-edit-save').addEventListener('click', async () => {
+                const newContent = editor.querySelector('.post-edit-textarea').value.trim();
+                if (!newContent) { alert('Content cannot be empty.'); return; }
+
+                const saveBtn = editor.querySelector('.post-edit-save');
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Saving...';
+
+                try {
+                    const res = await apiRequest(
+                        `/api/spaces/${spaceId}/posts/${btn.dataset.postId}`,
+                        { method: 'PATCH', body: JSON.stringify({ content: newContent }) }
+                    );
+                    if (!res.ok) { alert('Failed to save.'); return; }
+
+                    // Update the content paragraph in-place
+                    if (contentEl) {
+                        contentEl.textContent = newContent;
+                        contentEl.hidden = false;
+                    } else {
+                        // Post had no text before — create the element
+                        const p = document.createElement('p');
+                        p.className = 'post-content';
+                        p.textContent = newContent;
+                        editor.insertAdjacentElement('beforebegin', p);
+                    }
+                    // Mark post as edited
+                    const dateEl = card.querySelector('.post-date');
+                    if (dateEl && !dateEl.querySelector('.post-edited')) {
+                        dateEl.insertAdjacentHTML('beforeend', ' <span class="post-edited">(edited)</span>');
+                    }
+                    editor.remove();
+                } catch (e) {
+                    alert('Failed to save.');
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Save';
+                }
+            });
         });
     });
 

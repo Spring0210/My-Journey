@@ -110,6 +110,24 @@ public class SpacePostService {
         return new PageResponse<>(posts, result.getTotalPages(), result.getTotalElements(), result.getNumber());
     }
 
+    // Edit a post's text content — author only
+    @Transactional
+    public PostResponse editPost(Integer postId, Integer userId, String content) {
+        SpacePost post = spacePostRepository.findById(postId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Post not found"));
+
+        if (!post.getAuthor().getId().equals(userId)) {
+            throw new AppException(HttpStatus.FORBIDDEN, "Only the author can edit this post");
+        }
+
+        if (content == null || content.isBlank()) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "Content cannot be empty");
+        }
+
+        post.setContent(content.trim());
+        return toDto(spacePostRepository.save(post), userId);
+    }
+
     // Delete a post — author or space owner only; also deletes images from Cloudinary
     @Transactional
     public void deletePost(Integer postId, Integer userId) {
