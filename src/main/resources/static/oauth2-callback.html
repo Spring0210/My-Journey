@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Signing in · Journey</title>
+    <link rel="stylesheet" href="/css/auth.css" />
+    <style>
+        .signing-in {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            padding: 40px 0 20px;
+            color: var(--muted);
+            font-size: 15px;
+        }
+        /* Simple spinner */
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+<main class="auth-shell">
+    <section class="card" aria-label="OAuth callback">
+        <div class="brand">
+            <div class="logo">J</div>
+            <h1>Journey</h1>
+        </div>
+        <div class="signing-in">
+            <div class="spinner" aria-hidden="true"></div>
+            <span>Signing you in…</span>
+        </div>
+        <p class="error" id="errMsg" hidden style="text-align:center"></p>
+    </section>
+</main>
+<script>
+    (function () {
+        const params = new URLSearchParams(window.location.search);
+        const token    = params.get('token');
+        const userId   = params.get('userId');
+        const username = params.get('username');
+        const avatar   = params.get('avatar');
+
+        if (!token || !userId || !username) {
+            // Missing required params — show error and link back to login
+            const err = document.getElementById('errMsg');
+            err.textContent = 'Sign-in failed. Please try again.';
+            err.removeAttribute('hidden');
+            setTimeout(() => { window.location.href = '/login.html?error=oauth2'; }, 2000);
+            return;
+        }
+
+        // Store session data the same way login.js does
+        localStorage.setItem('token',    token);
+        localStorage.setItem('userId',   userId);
+        localStorage.setItem('username', username);
+        if (avatar) {
+            localStorage.setItem('avatar', avatar);
+        } else {
+            localStorage.removeItem('avatar');
+        }
+
+        // Redirect to dashboard
+        window.location.href = '/dashboard.html';
+    })();
+</script>
+</body>
+</html>

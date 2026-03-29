@@ -277,6 +277,54 @@ body {
   margin-top: 4px;
 }
 
+/* ── OAuth Divider ── */
+.oauth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.oauth-divider::before,
+.oauth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── Google Button ── */
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 46px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 15px;
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  letter-spacing: -0.1px;
+}
+.btn-google:hover {
+  background: var(--bg);
+  border-color: rgba(0,0,0,0.2);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+@media (prefers-color-scheme: dark) {
+  .btn-google:hover {
+    border-color: rgba(255,255,255,0.2);
+  }
+}
+html.dark .btn-google:hover { border-color: rgba(255,255,255,0.2); }
+
 /* ── Footer ── */
 .footer {
   text-align: center;

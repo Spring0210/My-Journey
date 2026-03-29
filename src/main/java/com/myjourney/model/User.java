@@ -14,7 +14,7 @@ public class User {
     private String username;
 
     @JsonIgnore
-    @Column(nullable = false)
+    @Column(nullable = true)  // null for Google OAuth users who have no password
     private String password;
 
     @JsonIgnore
@@ -23,6 +23,10 @@ public class User {
 
     @Column
     private String avatar;
+
+    // Google OAuth2 subject ID — null for password-based users
+    @Column(name = "google_id", unique = true)
+    private String googleId;
 
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
@@ -38,4 +42,7 @@ public class User {
 
     public String getAvatar() { return avatar; }
     public void setAvatar(String avatar) { this.avatar = avatar; }
+
+    public String getGoogleId() { return googleId; }
+    public void setGoogleId(String googleId) { this.googleId = googleId; }
 }

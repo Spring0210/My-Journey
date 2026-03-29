@@ -102,7 +102,7 @@
 ### Features
 - [x] Space post editing (author or owner only)
 - [x] Real-time notifications via WebSocket (replace 30s polling)
-- [ ] Google OAuth 2.0 login (backend: Spring Security OAuth2 + token exchange)
+- [x] Google OAuth 2.0 login (Spring Security OAuth2 + JWT exchange; account linking by email)
 
 ### Security & Reliability
 - [ ] API rate limiting (Spring + Bucket4j — protect auth and upload endpoints)

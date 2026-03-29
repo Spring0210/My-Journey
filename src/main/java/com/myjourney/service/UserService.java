@@ -73,14 +73,20 @@ public class UserService {
                 ? userRepository.findByEmail(identifier)
                 : userRepository.findByUsername(identifier);
 
-        if (userOpt.isEmpty() || !passwordEncoder.matches(password, userOpt.get().getPassword())) {
-            // Use 400 (not 401) to avoid the frontend's global 401 → redirect-to-login handler
+        if (userOpt.isEmpty()) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "Invalid credentials");
+        }
+        User found = userOpt.get();
+        // Google OAuth users have no password — prompt them to use Google sign-in
+        if (found.getPassword() == null) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "This account uses Google sign-in. Please sign in with Google.");
+        }
+        if (!passwordEncoder.matches(password, found.getPassword())) {
             throw new AppException(HttpStatus.BAD_REQUEST, "Invalid credentials");
         }
 
-        User dbUser = userOpt.get();
-        String token = jwtUtil.generateToken(dbUser.getId(), dbUser.getUsername());
-        return new AuthResponse(token, dbUser.getUsername(), dbUser.getId(), dbUser.getAvatar());
+        String token = jwtUtil.generateToken(found.getId(), found.getUsername());
+        return new AuthResponse(token, found.getUsername(), found.getId(), found.getAvatar());
     }
 
     @Transactional

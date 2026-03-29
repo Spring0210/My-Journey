@@ -1,3 +1,11 @@
+// Show error message if Google OAuth2 sign-in failed
+const urlErr = new URLSearchParams(window.location.search).get('error');
+if (urlErr === 'oauth2') {
+    const el = document.getElementById('err-identifier');
+    el.textContent = 'Google sign-in failed. Please try again.';
+    el.removeAttribute('hidden');
+}
+
 document.getElementById('loginForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const identifier = document.getElementById('identifier').value.trim();
