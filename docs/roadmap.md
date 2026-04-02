@@ -113,11 +113,12 @@
 ## Phase 6 — Frontend Migration
 
 ### Stack
-- [ ] Migrate from vanilla HTML/CSS/JS to React (Vite) + Tailwind CSS v4
+- [ ] Migrate from vanilla HTML/CSS/JS to React (Vite) + TypeScript + Tailwind CSS v4
 - [ ] Build output served from Spring Boot `static/` (single-service deployment, no Docker changes)
 
 ### Scope
 - [ ] Rewrite all pages as React components (login, journal, spaces, space detail, profile)
+- [ ] TypeScript types for all API responses and shared data models
 - [ ] Global state management (React Context or Zustand)
 - [ ] Component library built on Tailwind — consistent design system
 - [ ] Google OAuth frontend (completes Phase 5 OAuth work)

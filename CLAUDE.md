@@ -1,12 +1,12 @@
 # My Journey — Claude Context
 
 ## Project
-Full-stack journaling app with shared spaces. Java Spring Boot backend + vanilla JS frontend.
+Full-stack journaling app with shared spaces. Java Spring Boot backend + React (TypeScript) frontend (migrating in Phase 6).
 
 ## Stack
 - Backend: Java 21, Spring Boot 3.4.5, Spring Security (JWT), Spring Data JPA, MySQL 8
-- Frontend: Vanilla HTML/CSS/JS, FullCalendar 6
-- Storage: Cloudinary (images)
+- Frontend: Vanilla HTML/CSS/JS, FullCalendar 6 → migrating to React + TypeScript + Tailwind CSS v4 (Phase 6)
+- Storage: Cloudinary (images + videos)
 - Email: Resend (`noreply@myjourneycloud.com`)
 - Deploy: Docker + Docker Compose
 
@@ -19,10 +19,10 @@ Full-stack journaling app with shared spaces. Java Spring Boot backend + vanilla
 - Config: `src/main/resources/application.properties` (gitignored — contains secrets)
 
 ## Auth
-JWT stateless, 24h expiration. Token stored in `localStorage`. All `/api/entries/**` and `/api/spaces/**` require `Authorization: Bearer <token>`.
+JWT access token (24h) + refresh token (30-day, stored in DB, rotated on use). Tokens stored in `localStorage`. All `/api/entries/**` and `/api/spaces/**` require `Authorization: Bearer <token>`. Silent re-auth on 401 via `POST /api/auth/refresh`.
 
 ## Current State
-Phase 1 (Shared Spaces MVP) is complete. See `docs/roadmap.md` for what's next.
+Phases 1–5 complete. Phase 6 (Frontend Migration to React + TypeScript + Tailwind) is next. See `docs/roadmap.md`.
 
 ## Conventions
 See `docs/conventions.md`.

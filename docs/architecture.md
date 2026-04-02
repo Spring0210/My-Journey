@@ -10,18 +10,25 @@ Browser
   ▼
 Spring Boot (port 8080)
   ├── Static files (HTML/CSS/JS)  →  src/main/resources/static/
+  ├── WebSocket (/ws)             →  real-time notifications
   └── REST API (/api/**)
         ├── UserController
         ├── JournalController
         ├── SpaceController
-        └── SpacePostController
+        ├── SpacePostController
+        └── NotificationController
               │
               ├── Service Layer (business logic)
               │     ├── UserService
               │     ├── JournalService
               │     ├── SpaceService
               │     ├── SpacePostService
-              │     └── CloudStorageService  →  Cloudinary
+              │     ├── SpacePostReactionService
+              │     ├── SpacePostCommentService
+              │     ├── NotificationService
+              │     ├── RefreshTokenService
+              │     ├── AiService              →  Anthropic Claude API
+              │     └── CloudStorageService    →  Cloudinary
               │
               └── Repository Layer (JPA)
                     └── MySQL 8
@@ -33,16 +40,21 @@ Spring Boot (port 8080)
 Client                          Server
   │─── POST /api/login ────────▶│
   │                              │  Validate credentials
-  │                              │  Generate JWT (24h, HMAC-SHA256)
-  │◀─── { token, userId } ──────│
+  │                              │  Generate JWT (24h) + refresh token (30-day)
+  │◀─── { token, refreshToken } ─│
   │
   │─── GET /api/entries/{id}    │
   │    Authorization: Bearer ... │
   │                              │  JwtAuthenticationFilter validates token
   │◀─── entries JSON ───────────│
+  │
+  │  (token expires / 401)
+  │─── POST /api/auth/refresh ──▶│
+  │    { refreshToken }          │  Verify + rotate refresh token
+  │◀─── { token, refreshToken } ─│  New access token + new refresh token issued
 ```
 
-JWT is stored in `localStorage` on the client. The `api.js` utility automatically injects the `Authorization` header on every request.
+Both tokens are stored in `localStorage`. The `api.js` utility automatically injects the `Authorization` header and handles silent re-auth on 401 before retrying the original request.
 
 ## Data Model
 
@@ -72,17 +84,35 @@ space_post
 
 password_reset_token
  ├── id, username, code (6-digit), expired_at (10 min TTL)
+
+refresh_token
+ ├── id, token (unique UUID), user_id → user.id, expires_at (30-day)
+
+space_post_reaction
+ ├── id, emoji
+ ├── post_id → space_post.id
+ └── user_id → user.id
+
+space_post_comment
+ ├── id, content, created_at
+ ├── post_id → space_post.id
+ └── user_id → user.id
+
+notification
+ ├── id, type, message, is_read, created_at
+ ├── space_id → space.id (nullable)
+ └── user_id → user.id
 ```
 
-## Image Storage
+## Media Storage
 
-All images go to Cloudinary. Local `uploads/` directory is not used in production.
+All images and videos go to Cloudinary. Local `uploads/` directory is not used in production.
 
 - Journal images → `my-journey/journals/`
-- Space post images → `my-journey/spaces/{spaceId}/`
+- Space post images/videos → `my-journey/spaces/{spaceId}/`
 - User avatars → `my-journey/avatars/`
 
-Image URLs are stored as comma-separated strings in the `image_paths` column. `getImagePathList()` / `setImagePathList()` on the entity handle serialization.
+Image/video URLs are stored as comma-separated strings in the `image_paths` / `video_paths` columns. `getImagePathList()` / `setImagePathList()` on the entity handle serialization.
 
 ## Email
 
@@ -96,13 +126,20 @@ Docker Compose starts two containers:
 
 All secrets (JWT secret, Cloudinary credentials, Resend API key) are injected as environment variables at runtime. `application.properties` is gitignored.
 
+## WebSocket
+
+STOMP over WebSocket at `/ws`. After login, clients subscribe to `/user/queue/notifications` to receive real-time notification pushes. Replaces the previous 30-second polling approach.
+
 ## Technology Decisions
 
 | Decision | Choice | Reason |
 |----------|--------|--------|
-| Frontend framework | None (vanilla JS) | Simplicity, no build step |
-| Auth mechanism | JWT (stateless) | No server-side session management needed |
-| Image storage | Cloudinary | Managed CDN, easy Java SDK, free tier |
+| Frontend framework | React + TypeScript + Tailwind (Phase 6) | Type safety, component reuse, modern tooling |
+| Auth mechanism | JWT + Refresh Token | 24h access token + 30-day rotating refresh |
+| Rate limiting | Bucket4j (in-memory) | Login/register/AI endpoints protected against abuse |
+| Real-time | WebSocket (STOMP) | Push notifications without polling |
+| AI features | Anthropic Claude (Haiku) | Fast, low-cost; used for recap/prompts/search |
+| Media storage | Cloudinary | Managed CDN, supports images + videos, easy Java SDK |
 | Email provider | Resend | Better deliverability than Gmail SMTP, simple API |
 | ORM | Spring Data JPA + Hibernate | Standard Spring ecosystem |
 | Calendar | FullCalendar 6 | Mature, feature-rich, easy integration |

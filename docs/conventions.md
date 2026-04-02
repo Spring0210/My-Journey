@@ -100,6 +100,43 @@ All frontend features must work comfortably on mobile (phone-sized screens).
 
 ---
 
+## Frontend (Phase 6 — React + TypeScript)
+
+### Naming
+- Components: `PascalCase` — `JournalCard`, `SpaceHeader`
+- Hooks: `camelCase` prefixed with `use` — `useAuth`, `useEntries`
+- Types / interfaces: `PascalCase` — `JournalEntry`, `SpacePost`
+- Files: `PascalCase` for components (`JournalCard.tsx`), `camelCase` for hooks/utils (`useAuth.ts`)
+- CSS classes: `kebab-case` via Tailwind utilities; custom classes stay `kebab-case`
+
+### TypeScript
+- Define types for all API responses in `src/types/api.ts`
+- Prefer `interface` for object shapes, `type` for unions and aliases
+- Avoid `any`; use `unknown` when the type is genuinely unknown, then narrow it
+- Mark optional fields with `?`, nullable fields with `T | null`
+
+### State Management
+- React Context for global auth state (`userId`, `username`, `avatar`, `token`)
+- Local `useState` / `useReducer` for component-level state
+- Zustand if Context + prop drilling becomes unwieldy across many components
+
+### API Layer
+- All API calls go through a typed wrapper in `src/api/` — never call `fetch` directly in components
+- Mirror the existing `apiRequest` / `apiRequestWithFile` pattern with TypeScript generics
+
+### Component Structure
+```
+src/
+  components/   # shared UI components
+  pages/        # one component per route (Journal, Spaces, SpaceDetail, Profile, Login)
+  hooks/        # custom React hooks
+  api/          # typed fetch wrappers
+  types/        # shared TypeScript interfaces
+  context/      # React Context providers
+```
+
+---
+
 ## Git
 
 ### Commit Messages

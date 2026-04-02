@@ -9,6 +9,19 @@ Authorization: Bearer <jwt_token>
 
 ---
 
+## Rate Limiting
+
+Enforced via Bucket4j (in-memory, per IP):
+
+| Endpoint | Limit |
+|----------|-------|
+| `POST /api/login` | 10 requests / min |
+| `POST /api/register` | 5 requests / min |
+| `POST /api/forgot-password` | 5 requests / min |
+| AI endpoints (`/ai-recap`, `/ai-search`, `/ai-prompts`, `/ai-summary`) | 5 requests / min per user |
+
+---
+
 ## Authentication
 
 ### POST /api/register
@@ -66,6 +79,54 @@ Login with username or email, receive a JWT token.
 
 ---
 
+### POST /api/auth/refresh
+Exchange a valid refresh token for a new access token and a rotated refresh token.
+
+**Request**
+```json
+{ "refreshToken": "uuid-string" }
+```
+
+**Response** `200 OK`
+```json
+{
+  "token": "eyJhbGci...",
+  "refreshToken": "new-uuid-string",
+  "username": "ben",
+  "userId": 1,
+  "avatar": "https://res.cloudinary.com/..."
+}
+```
+
+**Errors**
+- `401` — token expired or not found
+
+---
+
+### POST /api/auth/logout
+Revoke the refresh token (explicit logout). Access token is not invalidated server-side (stateless JWT), so the client should clear localStorage.
+
+**Request**
+```json
+{ "refreshToken": "uuid-string" }
+```
+
+**Response** `200 OK` (always — even if token was already invalid)
+
+---
+
+### POST /api/auth/google
+Exchange a Google ID token for a My Journey JWT. Account is linked by email; a new account is created if none exists.
+
+**Request**
+```json
+{ "idToken": "google-id-token" }
+```
+
+**Response** `200 OK` — same shape as `/api/login`
+
+---
+
 ### POST /api/forgot-password
 Send a 6-digit reset code to the user's registered email.
 
@@ -110,6 +171,34 @@ Password reset successful
 - `Invalid code`
 - `Code has expired`
 - `User not found`
+
+---
+
+---
+
+### POST /api/change-password/send-code
+Send a verification code to the logged-in user's registered email. Requires JWT.
+
+**Response** `200 OK`
+
+---
+
+### PUT /api/change-password
+Verify the code and set a new password. Requires JWT.
+
+**Request**
+```json
+{
+  "code": "482910",
+  "newPassword": "newSecret123"
+}
+```
+
+**Response** `200 OK`
+
+**Errors**
+- `Invalid code`
+- `Code has expired`
 
 ---
 
@@ -201,6 +290,59 @@ Get all entries for a specific date (yyyy-MM-dd).
 
 ---
 
+### POST /api/entries/ai-recap
+Generate a monthly recap of the current user's journal entries. Requires JWT.
+
+**Request**
+```json
+{ "year": 2026, "month": 3 }
+```
+
+**Response** `200 OK`
+```json
+{ "recap": "March was a reflective month for you..." }
+```
+
+**Error**
+```json
+{ "error": "No entries found for this month" }
+```
+
+---
+
+### POST /api/entries/ai-search
+Natural language search over journal entries. Requires JWT.
+
+**Request**
+```json
+{ "query": "find entries about my mom" }
+```
+
+**Response** `200 OK`
+```json
+{
+  "keywords": ["mom", "mother", "family"],
+  "entries": [ /* matching JournalEntry objects */ ]
+}
+```
+
+---
+
+### POST /api/entries/ai-prompts
+Generate personalized writing prompts based on the user's recent entries. Requires JWT.
+
+**Response** `200 OK`
+```json
+{ "prompts": ["What would you tell your past self about...", "..."] }
+```
+
+**Error**
+```json
+{ "error": "Write a few journal entries first to get personalized prompts." }
+```
+
+---
+
 ### POST /api/entries/add-images/{entryId}
 Add images to an existing entry.
 
@@ -282,6 +424,36 @@ Leave a space. Owners cannot leave (must delete instead).
 
 ---
 
+### PUT /api/spaces/{spaceId}/cover
+Upload or replace the space cover image. Owner only.
+
+**Content-Type:** `multipart/form-data`
+
+| Field | Type |
+|-------|------|
+| file | File |
+
+**Response** `200 OK` — Returns updated `Space` object.
+
+---
+
+### DELETE /api/spaces/{spaceId}/members/{memberId}
+Kick a member from the space. Owner only. The owner cannot kick themselves.
+
+**Response** `200 OK`
+
+---
+
+### POST /api/spaces/{spaceId}/ai-summary
+Generate an AI recap of recent space activity. Available to all members.
+
+**Response** `200 OK`
+```json
+{ "summary": "This week, the group visited three cities..." }
+```
+
+---
+
 ### DELETE /api/spaces/{spaceId}
 Delete a space and all its posts. Owner only.
 
@@ -354,5 +526,121 @@ Get paginated posts, newest first.
 
 ---
 
+### PATCH /api/spaces/{spaceId}/posts/{postId}
+Edit a post's text content. Author or space owner only.
+
+**Request**
+```json
+{ "content": "Updated text" }
+```
+
+**Response** `200 OK` — Returns updated `PostResponse`.
+
+---
+
 ### DELETE /api/spaces/{spaceId}/posts/{postId}
 Delete a post. Allowed for the post author or the space owner.
+
+---
+
+### POST /api/spaces/{spaceId}/posts/{postId}/reaction
+Add or switch an emoji reaction on a post.
+
+**Request**
+```json
+{ "emoji": "heart" }
+```
+
+**Response** `200 OK`
+```json
+{
+  "counts": { "heart": 3, "fire": 1 },
+  "myReaction": "heart"
+}
+```
+
+---
+
+### DELETE /api/spaces/{spaceId}/posts/{postId}/reaction
+Remove the current user's reaction from a post.
+
+**Response** `200 OK` — Returns updated `ReactionSummary`.
+
+---
+
+### POST /api/spaces/{spaceId}/posts/{postId}/comments
+Add a comment to a post.
+
+**Request**
+```json
+{ "content": "Great photo!" }
+```
+
+**Response** `200 OK`
+```json
+{
+  "id": 1,
+  "content": "Great photo!",
+  "username": "ben",
+  "createdAt": "2026-04-02T10:00:00Z"
+}
+```
+
+---
+
+### DELETE /api/spaces/{spaceId}/posts/{postId}/comments/{commentId}
+Delete a comment. Author only.
+
+---
+
+## Notifications
+
+All endpoints require JWT.
+
+### GET /api/notifications
+Get all notifications for the current user, newest first.
+
+**Response** `200 OK`
+```json
+[
+  {
+    "id": 1,
+    "type": "NEW_POST",
+    "message": "ben posted in Europe Trip",
+    "isRead": false,
+    "createdAt": "2026-04-02T10:00:00Z",
+    "spaceId": 3
+  }
+]
+```
+
+---
+
+### GET /api/notifications/unread-count
+Get the number of unread notifications.
+
+**Response** `200 OK`
+```json
+{ "count": 4 }
+```
+
+---
+
+### POST /api/notifications/mark-read
+Mark all notifications as read.
+
+**Response** `200 OK`
+
+---
+
+### DELETE /api/notifications/{id}
+Delete a single notification.
+
+**Response** `200 OK`
+
+---
+
+### DELETE /api/notifications
+Delete all notifications for the current user.
+
+**Response** `200 OK`
