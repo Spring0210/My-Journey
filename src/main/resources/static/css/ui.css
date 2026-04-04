@@ -775,7 +775,7 @@ input:focus, textarea:focus, select:focus {
   .actions { justify-content: stretch; }
   .actions .btn { flex: 1; justify-content: center; }
   .searchbar { flex-direction: column; align-items: stretch; }
-  .searchbar input { min-width: auto; }
+  .searchbar input { min-width: auto; width: 100%; box-sizing: border-box; } /* date input on iOS has intrinsic width */
   .searchbar .btn { width: 100%; justify-content: center; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
