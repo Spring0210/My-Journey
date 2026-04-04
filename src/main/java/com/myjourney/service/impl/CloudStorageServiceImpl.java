@@ -26,6 +26,7 @@ public class CloudStorageServiceImpl implements CloudStorageService {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public String uploadFile(MultipartFile file, String folder) {
         try {
             log.info("Uploading to Cloudinary - file: {}, folder: {}", file.getOriginalFilename(), folder);
@@ -73,6 +74,7 @@ public class CloudStorageServiceImpl implements CloudStorageService {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public String uploadVideo(MultipartFile file, String folder) {
         try {
             log.info("Uploading video to Cloudinary - file: {}, folder: {}", file.getOriginalFilename(), folder);
@@ -104,6 +106,7 @@ public class CloudStorageServiceImpl implements CloudStorageService {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public boolean deleteFile(String fileUrl) {
         try {
             // Extract public ID from Cloudinary URL
