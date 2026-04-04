@@ -24,11 +24,9 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
 
-    /* Path aliases — baseUrl needed for paths resolution */
-    "ignoreDeprecations": "5.0",
-    "baseUrl": ".",
+    /* Path aliases — paths relative to tsconfig location, no baseUrl needed in TS 5.0+ */
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src"]
