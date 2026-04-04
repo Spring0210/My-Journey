@@ -185,21 +185,28 @@
 }
 
 /* ── Username edit state ─────────────────────────────────── */
-/* Row grows and wraps when in edit mode */
+/* Row becomes a column form — label, full-width input, actions */
 .prof-row--editing {
-  flex-wrap: wrap;
-  padding: 12px 16px;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 14px 16px 16px;
+  gap: 10px;
+  min-height: unset;
+}
+
+/* Small label at top of edit form */
+.prof-row-edit-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--label-secondary);
 }
 
 .prof-row-edit-input {
-  flex: 1;
-  min-width: 0;
-  height: 38px;
-  padding: 0 12px;
+  width: 100%;
+  height: 42px;
+  padding: 0 14px;
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: 16px;   /* 16px prevents iOS Safari zoom-on-focus */
   color: var(--label-primary);
   background: var(--surface-secondary);
   border: 1px solid var(--separator);
@@ -212,10 +219,11 @@
   border-color: var(--accent);
 }
 
+/* Cancel on the left, Save on the right */
 .prof-row-edit-actions {
   display: flex;
-  gap: 6px;
-  flex-shrink: 0;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 /* ── Expandable row (Change Password) ────────────────────── */
@@ -267,9 +275,12 @@
   line-height: 1.50;
 }
 
-.prof-pw-idle-actions {
-  display: flex;
-  gap: 8px;
+/* Idle state: full-width "Send code" button */
+.prof-pw-send-btn {
+  width: 100%;
+  height: 44px;
+  font-size: 15px;
+  border-radius: var(--radius-lg);
 }
 
 /* ── Form fields inside expand ───────────────────────────── */
@@ -374,11 +385,12 @@
 .prof-pw-bar--fair   ~ .prof-pw-strength-label { color: var(--system-orange);  }
 .prof-pw-bar--strong ~ .prof-pw-strength-label { color: var(--system-green);   }
 
-/* Actions row inside password expand */
+/* Code step: Cancel on the left, Change password on the right */
 .prof-pw-actions {
   display: flex;
-  gap: 8px;
   justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 /* Resend code link-style button */
@@ -495,22 +507,11 @@
     padding: 28px 20px 24px;
   }
 
-  /* Edit actions stack below the input on narrow screens */
-  .prof-row--editing {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .prof-row-edit-actions {
-    justify-content: flex-end;
-  }
-
-  .prof-pw-idle-actions,
+  /* Password actions stack full-width on mobile */
   .prof-pw-actions {
     flex-direction: column-reverse;
   }
 
-  .prof-pw-idle-actions .prof-btn,
   .prof-pw-actions .prof-btn {
     width: 100%;
     height: 44px;

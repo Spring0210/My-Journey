@@ -213,8 +213,9 @@ export default function ProfilePage() {
 
             {/* Username row */}
             {editingUsername ? (
+              /* Edit mode — column form: label / input / actions */
               <div className="prof-row prof-row--editing">
-                <span className="prof-row-label">Username</span>
+                <span className="prof-row-edit-label">Username</span>
                 <input
                   className="prof-row-edit-input"
                   value={nameVal}
@@ -228,20 +229,21 @@ export default function ProfilePage() {
                   }}
                 />
                 <div className="prof-row-edit-actions">
-                  <button className="prof-btn prof-btn--ghost prof-btn--sm"
+                  <button className="prof-btn prof-btn--ghost"
                     onClick={cancelEditUsername}>
                     Cancel
                   </button>
                   <button
-                    className="prof-btn prof-btn--primary prof-btn--sm"
+                    className="prof-btn prof-btn--primary"
                     onClick={handleSaveUsername}
                     disabled={nameSaving || !nameVal.trim()}
                   >
-                    {nameSaving ? 'Saving...' : 'Save'}
+                    {nameSaving ? 'Saving...' : 'Save changes'}
                   </button>
                 </div>
               </div>
             ) : (
+              /* Display mode — label / value / edit icon */
               <div className="prof-row">
                 <span className="prof-row-label">Username</span>
                 <span className="prof-row-value">@{username}</span>
@@ -263,13 +265,23 @@ export default function ProfilePage() {
           <p className="prof-section-label">Security</p>
           <div className="prof-rows-card">
 
-            {/* Change Password row — tap to expand */}
+            {/* Change Password row — tap header to open; locked while filling the form */}
             <div
               className={`prof-row prof-row--expandable${pwOpen ? ' prof-row--open' : ''}`}
-              onClick={() => pwOpen ? closePw() : setPwOpen(true)}
+              // Only toggle when closed or in idle state — lock the header while user is
+              // filling in the code+password form to prevent accidental data loss
+              onClick={() => {
+                if (!pwOpen) setPwOpen(true)
+                else if (pwStep === 'idle' || pwStep === 'done') closePw()
+              }}
+              style={pwOpen && pwStep === 'code' ? { cursor: 'default' } : undefined}
               role="button"
               tabIndex={0}
-              onKeyDown={e => e.key === 'Enter' && (pwOpen ? closePw() : setPwOpen(true))}
+              onKeyDown={e => {
+                if (e.key !== 'Enter') return
+                if (!pwOpen) setPwOpen(true)
+                else if (pwStep === 'idle' || pwStep === 'done') closePw()
+              }}
             >
               <span style={{ flex: 1, fontSize: 15, color: 'var(--label-primary)' }}>
                 Change Password
@@ -286,24 +298,19 @@ export default function ProfilePage() {
                     Password changed successfully.
                   </div>
                 ) : pwStep === 'idle' ? (
+                  /* Idle — single prominent "Send code" button, no redundant Cancel */
                   <>
                     <p className="prof-pw-hint">
                       A 6-digit verification code will be sent to your registered email address.
                     </p>
                     {pwError && <p className="prof-error">{pwError}</p>}
-                    <div className="prof-pw-idle-actions">
-                      <button className="prof-btn prof-btn--ghost prof-btn--sm"
-                        onClick={closePw}>
-                        Cancel
-                      </button>
-                      <button
-                        className="prof-btn prof-btn--primary prof-btn--sm"
-                        onClick={handleSendCode}
-                        disabled={sending}
-                      >
-                        {sending ? 'Sending...' : 'Send code'}
-                      </button>
-                    </div>
+                    <button
+                      className="prof-btn prof-btn--primary prof-pw-send-btn"
+                      onClick={handleSendCode}
+                      disabled={sending}
+                    >
+                      {sending ? 'Sending...' : 'Send verification code'}
+                    </button>
                   </>
                 ) : (
                   /* Step: code + new password form */
@@ -378,13 +385,14 @@ export default function ProfilePage() {
 
                     {pwError && <p className="prof-error">{pwError}</p>}
 
+                    {/* Cancel on left, Change password on right — standard form footer */}
                     <div className="prof-pw-actions">
-                      <button className="prof-btn prof-btn--ghost prof-btn--sm"
+                      <button className="prof-btn prof-btn--ghost"
                         onClick={closePw}>
                         Cancel
                       </button>
                       <button
-                        className="prof-btn prof-btn--primary prof-btn--sm"
+                        className="prof-btn prof-btn--primary"
                         onClick={handleChangePw}
                         disabled={changingPw}
                       >
