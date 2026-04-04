@@ -118,13 +118,22 @@ export interface PostResponse {
 
 // ── Notifications ─────────────────────────────────────────
 
+// Matches NotificationResponse record in the backend
+// type: "NEW_POST" | "NEW_COMMENT"
 export interface Notification {
   id: number
   type: string
-  message: string
+  actorUsername: string
+  actorAvatar: string | null
+  spaceId: number
+  spaceName: string
+  postId: number
   read: boolean
-  referenceId: number | null
-  createdAt: string
+  createdAt: string   // ISO datetime string from LocalDateTime
+}
+
+export interface UnreadCountResponse {
+  count: number
 }
 
 // ── AI ───────────────────────────────────────────────────

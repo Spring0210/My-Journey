@@ -12,8 +12,9 @@ import OAuth2CallbackPage from '@/pages/auth/OAuth2CallbackPage'
 import JournalListPage   from '@/pages/journal/JournalListPage'
 import JournalDetailPage from '@/pages/journal/JournalDetailPage'
 import CalendarPage      from '@/pages/journal/CalendarPage'
-import SpacesListPage   from '@/pages/spaces/SpacesListPage'
-import SpaceDetailPage  from '@/pages/spaces/SpaceDetailPage'
+import SpacesListPage      from '@/pages/spaces/SpacesListPage'
+import SpaceDetailPage     from '@/pages/spaces/SpaceDetailPage'
+import NotificationsPage   from '@/pages/notifications/NotificationsPage'
 
 // Placeholder — replaced page by page during migration
 function ComingSoon({ name }: { name: string }) {
@@ -71,7 +72,7 @@ function AppRoutes() {
         <Route path="/calendar"      element={<CalendarPage />} />
         <Route path="/spaces"        element={<SpacesListPage />} />
         <Route path="/spaces/:id"    element={<SpaceDetailPage />} />
-        <Route path="/notifications" element={<ComingSoon name="Notifications" />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/profile"       element={<ComingSoon name="Profile" />} />
         <Route path="/search"        element={<ComingSoon name="Smart Search" />} />
       </Route>

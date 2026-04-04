@@ -31,8 +31,8 @@ export default function AppLayout() {
 
   // Fetch unread notification count for the sidebar badge
   useEffect(() => {
-    apiRequest<{ unreadCount: number }>('/notifications/unread-count')
-      .then(data => setNotifCount(data.unreadCount))
+    apiRequest<{ count: number }>('/notifications/unread-count')
+      .then(data => setNotifCount(data.count))
       .catch(() => { /* ignore — badge stays at 0 */ })
   }, [])
 
