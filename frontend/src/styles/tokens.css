@@ -1,92 +1,222 @@
-/* ─────────────────────────────────────────────────────────
-   Design Tokens — Apple HIG-inspired
-   All components reference these variables; never hard-code
-   hex colors directly in component files.
-   ───────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   Design Tokens — MyJourney Design System
+   Based on Apple Human Interface Guidelines (HIG)
+
+   RULES:
+   1. This is the ONLY place where raw hex/rgba values live.
+   2. All component CSS files must reference these variables.
+   3. Never hardcode a color, shadow, or spacing value outside
+      this file — always define a token here first.
+   4. See docs/design-system.md for full specification.
+   ═══════════════════════════════════════════════════════════ */
 
 @import "tailwindcss";
 
-/* ── Light mode (default) ────────────────────────────────── */
+/* ──────────────────────────────────────────────────────────
+   LIGHT MODE (default)
+   ────────────────────────────────────────────────────────── */
 :root {
-  /* Surfaces */
-  --surface-primary:   #ffffff;
-  --surface-secondary: #f5f5f7;
-  --surface-tertiary:  #e8e8ed;
-  --surface-card:      #ffffff;
 
-  /* Text labels */
-  --label-primary:   #1d1d1f;
-  --label-secondary: rgba(0, 0, 0, 0.56);
-  --label-tertiary:  rgba(0, 0, 0, 0.36);
-  --label-link:      #0071e3;
+  /* ── Typography ────────────────────────────────────────── */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+               "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
 
-  /* Accent — system blue */
-  --accent:       #0071e3;
-  --accent-hover: #0077ed;
+  /* ── Web Marketing Surfaces (apple.com style) ──────────── */
+  --surface-primary:   #ffffff;    /* page background */
+  --surface-secondary: #f5f5f7;    /* section bg, sidebar */
+  --surface-tertiary:  #e8e8ed;    /* hover, active bg */
+  --surface-card:      #ffffff;    /* card background */
+  --surface-overlay:   rgba(255, 255, 255, 0.72); /* frosted panels */
 
-  /* System status colors */
-  --color-green:  #34c759;
-  --color-red:    #ff3b30;
-  --color-orange: #ff9500;
-  --color-purple: #af52de;
-  --color-indigo: #5856d6;
+  /* ── iOS App Backgrounds ───────────────────────────────── */
+  --bg-primary:   #ffffff;   /* main window */
+  --bg-secondary: #f2f2f7;   /* grouped table, list bg */
+  --bg-tertiary:  #ffffff;   /* card on grouped bg */
 
-  /* Separator / border */
-  --separator: rgba(0, 0, 0, 0.10);
+  /* ── Text Labels (apple.com — off-black, not pure black) ─ */
+  --label-primary:     #1d1d1f;
+  --label-secondary:   #6e6e73;
+  --label-tertiary:    #86868b;
+  --label-quaternary:  #aeaeb2;
 
-  /* Navigation bar (frosted glass) */
+  /* ── Interactive Accent (apple.com CTA blue) ───────────── */
+  --accent:         #0071e3;
+  --accent-hover:   #0077ed;
+  --accent-pressed: #006edb;
+
+  /* ── Separators / Borders ──────────────────────────────── */
+  --separator:        rgba(0, 0, 0, 0.08);
+  --separator-strong: rgba(0, 0, 0, 0.16);
+  --separator-opaque: #d2d2d7;
+
+  /* ── Navigation Bar (frosted glass) ────────────────────── */
   --nav-bg: rgba(255, 255, 255, 0.82);
 
-  /* Card shadows */
-  --shadow-card:     0 2px 16px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
-  --shadow-elevated: 0 4px 24px rgba(0, 0, 0, 0.12);
+  /* ── iOS System Colors — Light ─────────────────────────── */
+  --system-blue:   #007aff;
+  --system-green:  #34c759;
+  --system-red:    #ff3b30;
+  --system-orange: #ff9500;
+  --system-yellow: #ffcc00;
+  --system-purple: #af52de;
+  --system-indigo: #5856d6;
+  --system-pink:   #ff2d55;
+  --system-teal:   #30b0c7;
+  --system-cyan:   #32ade6;
+  --system-mint:   #00c7be;
+  --system-brown:  #a2845e;
 
-  /* Border radius */
+  /* ── Fill Colors (transparent tints) ───────────────────── */
+  --fill-primary:     rgba(120, 120, 128, 0.20);
+  --fill-secondary:   rgba(120, 120, 128, 0.16);
+  --fill-tertiary:    rgba(118, 118, 128, 0.12);
+  --fill-quaternary:  rgba(116, 116, 128, 0.08);
+
+  /* ── Shadows ────────────────────────────────────────────── */
+  --shadow-flat:     none;
+  --shadow-raised:   0 1px 3px rgba(0, 0, 0, 0.04), 0 2px 12px rgba(0, 0, 0, 0.06);
+  --shadow-elevated: 0 2px 8px rgba(0, 0, 0, 0.08), 0 4px 24px rgba(0, 0, 0, 0.10);
+  --shadow-floating: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-hero-img: 0 24px 80px rgba(0, 0, 0, 0.16), 0 4px 20px rgba(0, 0, 0, 0.08);
+  /* Button accent shadow */
+  --shadow-btn-accent: 0 2px 12px rgba(0, 113, 227, 0.28);
+
+  /* ── Border Radius ──────────────────────────────────────── */
+  --radius-xs:   4px;
   --radius-sm:   8px;
   --radius-md:   12px;
   --radius-lg:   18px;
   --radius-xl:   22px;
+  --radius-2xl:  28px;
   --radius-pill: 980px;
+  --radius-full: 50%;
 
-  /* Typography */
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display",
-               "Helvetica Neue", Arial, sans-serif;
+  /* ── Gradients ──────────────────────────────────────────── */
+  /* Hero background glow */
+  --gradient-hero-glow: radial-gradient(
+    ellipse 60% 50% at 50% 20%,
+    rgba(0, 113, 227, 0.10) 0%,
+    rgba(175, 82, 222, 0.05) 50%,
+    transparent 75%
+  );
+  /* Gradient text: blue → purple (Apple Intelligence style) */
+  --gradient-text-accent: linear-gradient(135deg, #0071e3 0%, #af52de 100%);
+  /* Dark CTA card background */
+  --gradient-cta-dark: linear-gradient(145deg, #1d1d1f 0%, #2c2c2e 100%);
+  /* Feature icon backgrounds */
+  --gradient-icon-blue:   linear-gradient(145deg, #0071e3, #0052cc);
+  --gradient-icon-purple: linear-gradient(145deg, #af52de, #7c3aed);
+  --gradient-icon-orange: linear-gradient(145deg, #ff9500, #e07800);
+  --gradient-icon-green:  linear-gradient(145deg, #34c759, #1da647);
+  --gradient-icon-teal:   linear-gradient(145deg, #30b0c7, #1a8fa8);
+  --gradient-icon-pink:   linear-gradient(145deg, #ff2d55, #d4004c);
+  --gradient-icon-indigo: linear-gradient(145deg, #5856d6, #3634b8);
 
-  /* Motion */
-  --ease-default: 200ms ease;
-  --ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
-  --ease-out:     180ms ease-in;
+  /* ── Motion ─────────────────────────────────────────────── */
+  --ease-micro:    150ms ease;              /* hover, focus, color */
+  --ease-standard: 200ms ease;             /* button, toggle, tab */
+  --ease-spring:   cubic-bezier(0.34, 1.56, 0.64, 1); /* modal open */
+  --ease-exit:     180ms ease-in;          /* modal close */
+  --ease-page:     350ms ease-out;         /* page transitions */
+
+  /* ── Layout ─────────────────────────────────────────────── */
+  --content-wide:   1100px;
+  --content-std:    980px;
+  --content-narrow: 692px;
+  --content-auth:   400px;
+
+  --section-pad-desktop: 100px;
+  --section-pad-tablet:  80px;
+  --section-pad-mobile:  60px;
+  --section-pad-sm:      40px;
+  --page-gutter:         24px;
+  --page-gutter-mobile:  20px;
 }
 
-/* ── Dark mode ───────────────────────────────────────────── */
+
+/* ──────────────────────────────────────────────────────────
+   DARK MODE
+   Activated by: document.documentElement.setAttribute('data-theme', 'dark')
+   ────────────────────────────────────────────────────────── */
 [data-theme="dark"] {
+
+  /* ── Web Marketing Surfaces ─────────────────────────────── */
   --surface-primary:   #000000;
-  --surface-secondary: #1c1c1e;
+  --surface-secondary: #1d1d1f;
   --surface-tertiary:  #2c2c2e;
   --surface-card:      #1c1c1e;
+  --surface-overlay:   rgba(28, 28, 30, 0.72);
 
-  --label-primary:   #f5f5f7;
-  --label-secondary: rgba(255, 255, 255, 0.56);
-  --label-tertiary:  rgba(255, 255, 255, 0.36);
-  --label-link:      #2997ff;
+  /* ── iOS App Backgrounds ───────────────────────────────── */
+  --bg-primary:   #000000;
+  --bg-secondary: #1c1c1e;
+  --bg-tertiary:  #2c2c2e;
 
-  --accent:       #2997ff;
-  --accent-hover: #0a84ff;
+  /* ── Text Labels ────────────────────────────────────────── */
+  --label-primary:    #f5f5f7;
+  --label-secondary:  rgba(235, 235, 245, 0.60);
+  --label-tertiary:   rgba(235, 235, 245, 0.36);
+  --label-quaternary: rgba(235, 235, 245, 0.18);
 
-  --color-green:  #30d158;
-  --color-red:    #ff453a;
-  --color-orange: #ff9f0a;
-  --color-purple: #bf5af2;
-  --color-indigo: #5e5ce6;
+  /* ── Interactive Accent ─────────────────────────────────── */
+  --accent:         #2997ff;
+  --accent-hover:   #0a84ff;
+  --accent-pressed: #007aff;
 
-  --separator: rgba(255, 255, 255, 0.12);
-  --nav-bg:    rgba(28, 28, 30, 0.82);
+  /* ── Separators ─────────────────────────────────────────── */
+  --separator:        rgba(255, 255, 255, 0.12);
+  --separator-strong: rgba(255, 255, 255, 0.20);
+  --separator-opaque: #38383a;
 
-  --shadow-card:     0 2px 16px rgba(0, 0, 0, 0.40), 0 1px 3px rgba(0, 0, 0, 0.20);
-  --shadow-elevated: 0 4px 24px rgba(0, 0, 0, 0.50);
+  /* ── Navigation Bar ─────────────────────────────────────── */
+  --nav-bg: rgba(29, 29, 31, 0.82);
+
+  /* ── iOS System Colors — Dark ───────────────────────────── */
+  --system-blue:   #0a84ff;
+  --system-green:  #30d158;
+  --system-red:    #ff453a;
+  --system-orange: #ff9f0a;
+  --system-yellow: #ffd60a;
+  --system-purple: #bf5af2;
+  --system-indigo: #5e5ce6;
+  --system-pink:   #ff375f;
+  --system-teal:   #40cbe0;
+  --system-cyan:   #64d2ff;
+  --system-mint:   #63e6e2;
+  --system-brown:  #ac8e68;
+
+  /* ── Fill Colors ────────────────────────────────────────── */
+  --fill-primary:    rgba(120, 120, 128, 0.36);
+  --fill-secondary:  rgba(120, 120, 128, 0.32);
+  --fill-tertiary:   rgba(118, 118, 128, 0.24);
+  --fill-quaternary: rgba(116, 116, 128, 0.18);
+
+  /* ── Shadows (heavier in dark mode) ────────────────────── */
+  --shadow-flat:     none;
+  --shadow-raised:   0 1px 3px rgba(0, 0, 0, 0.20), 0 2px 12px rgba(0, 0, 0, 0.30);
+  --shadow-elevated: 0 2px 8px rgba(0, 0, 0, 0.40), 0 4px 24px rgba(0, 0, 0, 0.50);
+  --shadow-floating: 0 8px 32px rgba(0, 0, 0, 0.60), 0 2px 8px rgba(0, 0, 0, 0.30);
+  --shadow-hero-img: 0 24px 80px rgba(0, 0, 0, 0.50), 0 4px 20px rgba(0, 0, 0, 0.30);
+  --shadow-btn-accent: 0 2px 12px rgba(41, 151, 255, 0.30);
+
+  /* ── Gradients (dark mode variants) ────────────────────── */
+  --gradient-hero-glow: radial-gradient(
+    ellipse 60% 50% at 50% 20%,
+    rgba(41, 151, 255, 0.14) 0%,
+    rgba(191, 90, 242, 0.07) 50%,
+    transparent 75%
+  );
+  --gradient-text-accent: linear-gradient(135deg, #2997ff 0%, #bf5af2 100%);
+  /* CTA gradient stays same in dark mode — it's already dark */
+  --gradient-cta-dark: linear-gradient(145deg, #1d1d1f 0%, #2c2c2e 100%);
 }
 
-/* ── Base styles ─────────────────────────────────────────── */
+
+/* ──────────────────────────────────────────────────────────
+   BASE STYLES
+   Global resets and defaults that apply to the whole app.
+   ────────────────────────────────────────────────────────── */
+
 *,
 *::before,
 *::after {
@@ -106,7 +236,6 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background var(--ease-default), color var(--ease-default);
 }
 
 img,
@@ -128,46 +257,116 @@ a {
   text-decoration: none;
 }
 
-/* ── Layout helpers ──────────────────────────────────────── */
-
-/* Mobile content padding */
-@media (max-width: 768px) {
-  .app-content {
-    padding: 20px 16px 40px !important;
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
-/* Mobile sidebar overlay — must display as block when active */
+
+/* ──────────────────────────────────────────────────────────
+   TAILWIND CUSTOM THEME
+   Maps design tokens into Tailwind's utility classes.
+   ────────────────────────────────────────────────────────── */
+@theme {
+  --font-family-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+                      "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+
+  /* Accent */
+  --color-accent:       #0071e3;
+  --color-accent-dark:  #2997ff;
+
+  /* Surfaces */
+  --color-surface:         #f5f5f7;
+  --color-surface-dark:    #1d1d1f;
+  --color-card:            #ffffff;
+  --color-card-dark:       #1c1c1e;
+
+  /* Labels */
+  --color-label:           #1d1d1f;
+  --color-label-dark:      #f5f5f7;
+  --color-label-secondary: #6e6e73;
+
+  /* System */
+  --color-system-blue:   #007aff;
+  --color-system-green:  #34c759;
+  --color-system-red:    #ff3b30;
+  --color-system-orange: #ff9500;
+  --color-system-purple: #af52de;
+  --color-system-indigo: #5856d6;
+
+  /* Separators */
+  --color-separator:      rgba(0, 0, 0, 0.08);
+  --color-separator-dark: rgba(255, 255, 255, 0.12);
+
+  /* Border radius */
+  --radius-xs:   4px;
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   18px;
+  --radius-xl:   22px;
+  --radius-2xl:  28px;
+  --radius-pill: 980px;
+}
+
+
+/* ──────────────────────────────────────────────────────────
+   LAYOUT HELPERS
+   Utility classes used across multiple pages.
+   ────────────────────────────────────────────────────────── */
+
+/* Constrain content width */
+.content-wide   { max-width: var(--content-wide);   margin-inline: auto; }
+.content-std    { max-width: var(--content-std);    margin-inline: auto; }
+.content-narrow { max-width: var(--content-narrow); margin-inline: auto; }
+
+/* Section vertical padding */
+.section-pad {
+  padding-block: var(--section-pad-desktop);
+  padding-inline: var(--page-gutter);
+}
+
+@media (max-width: 1068px) {
+  .section-pad { padding-block: var(--section-pad-tablet); }
+}
+
+@media (max-width: 768px) {
+  .section-pad { padding-block: var(--section-pad-mobile); }
+  .section-pad { padding-inline: var(--page-gutter-mobile); }
+}
+
+@media (max-width: 480px) {
+  .section-pad { padding-block: var(--section-pad-sm); }
+}
+
+/* Gradient text utility */
+.text-gradient {
+  background: var(--gradient-text-accent);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Card base — used by all cards across the app */
+.card-base {
+  background: var(--surface-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--separator);
+  box-shadow: var(--shadow-raised);
+}
+
+/* Mobile sidebar overlay */
 @media (max-width: 768px) {
   .sidebar-mobile-overlay {
     display: block !important;
   }
 }
 
-/* Sidebar close button — visible on mobile only */
+/* Sidebar close button — desktop only */
 @media (min-width: 769px) {
   .sidebar-close-btn {
     display: none !important;
   }
-}
-
-/* ── Tailwind custom theme ───────────────────────────────── */
-@theme {
-  --font-family-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display",
-                      "Helvetica Neue", Arial, sans-serif;
-
-  --color-accent:          #0071e3;
-  --color-accent-dark:     #2997ff;
-  --color-surface:         #f5f5f7;
-  --color-surface-dark:    #1c1c1e;
-  --color-label:           #1d1d1f;
-  --color-label-dark:      #f5f5f7;
-  --color-separator:       rgba(0, 0, 0, 0.10);
-  --color-separator-dark:  rgba(255, 255, 255, 0.12);
-
-  --radius-sm:   8px;
-  --radius-md:   12px;
-  --radius-lg:   18px;
-  --radius-xl:   22px;
-  --radius-pill: 980px;
 }
