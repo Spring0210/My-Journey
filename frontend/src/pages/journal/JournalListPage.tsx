@@ -247,19 +247,19 @@ export default function JournalListPage() {
                 to={`/journal/${entry.id}`}
                 className="jlist-card"
               >
-                <span className="jlist-card-date">{formatDate(entry.createdAt.slice(0, 10))}</span>
+                <span className="jlist-card-date">{formatDate(entry.entryDate)}</span>
                 <span className="jlist-card-title">{entry.title}</span>
                 {entry.content && (
                   <span className="jlist-card-excerpt">{entry.content}</span>
                 )}
-                {entry.imageUrls?.length > 0 && (
+                {entry.imagePathList?.length > 0 && (
                   <div className="jlist-card-thumbs">
-                    {entry.imageUrls.slice(0, 3).map((url, i) => (
+                    {entry.imagePathList.slice(0, 3).map((url, i) => (
                       <img key={i} src={url} alt="" className="jlist-card-thumb" />
                     ))}
-                    {entry.imageUrls.length > 3 && (
+                    {entry.imagePathList.length > 3 && (
                       <div className="jlist-card-thumb-more">
-                        +{entry.imageUrls.length - 3}
+                        +{entry.imagePathList.length - 3}
                       </div>
                     )}
                   </div>

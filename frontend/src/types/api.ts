@@ -32,12 +32,10 @@ export interface User {
 export interface JournalEntry {
   id: number
   title: string
-  content: string
-  mood: string | null
-  imageUrls: string[]
-  videoUrls: string[]
-  createdAt: string
-  updatedAt: string
+  content: string | null
+  entryDate: string        // "YYYY-MM-DD" from LocalDate
+  imagePaths: string | null   // raw comma-separated (backend storage field)
+  imagePathList: string[]     // parsed array — use this in components
 }
 
 export interface PageResponse<T> {

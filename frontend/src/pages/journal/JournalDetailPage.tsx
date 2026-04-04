@@ -59,9 +59,9 @@ export default function JournalDetailPage() {
     getEntry(entryId)
       .then((entry: JournalEntry) => {
         setTitle(entry.title)
-        setContent(entry.content)
-        setEntryDate(entry.createdAt.slice(0, 10))
-        setExistingPhotos(entry.imageUrls ?? [])
+        setContent(entry.content ?? '')
+        setEntryDate(entry.entryDate)
+        setExistingPhotos(entry.imagePathList ?? [])
       })
       .catch(() => setLoadError('Failed to load entry.'))
   }, [id, isNew]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -124,7 +124,7 @@ export default function JournalDetailPage() {
       } else {
         const updated = await editEntry(Number(id), title.trim(), content, entryDate, pendingFiles)
         setPendingFiles([])
-        setExistingPhotos(updated.imageUrls ?? [])
+        setExistingPhotos(updated.imagePathList ?? [])
         setSaveStatus('Saved')
         setTimeout(() => setSaveStatus(''), 2500)
       }
