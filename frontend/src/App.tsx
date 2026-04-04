@@ -4,6 +4,7 @@ import { ThemeProvider } from '@/context/ThemeContext'
 import AppLayout    from '@/components/layout/AppLayout'
 import PublicLayout from '@/components/layout/PublicLayout'
 import AuthLayout   from '@/components/layout/AuthLayout'
+import LandingPage  from '@/pages/LandingPage'
 
 // Placeholder — replaced page by page during migration
 function ComingSoon({ name }: { name: string }) {
@@ -38,7 +39,7 @@ function AppRoutes() {
     <Routes>
       {/* ── Public pages (NavBar + Footer) ───────────────── */}
       <Route element={<PublicLayout />}>
-        <Route path="/"        element={<ComingSoon name="Landing" />} />
+        <Route path="/"        element={<LandingPage />} />
         <Route path="/privacy" element={<ComingSoon name="Privacy Policy" />} />
         <Route path="/terms"   element={<ComingSoon name="Terms of Service" />} />
       </Route>
