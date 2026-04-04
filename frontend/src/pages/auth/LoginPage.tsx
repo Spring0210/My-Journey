@@ -39,7 +39,7 @@ export default function LoginPage() {
         refreshToken: data.refreshToken,
         userId: data.userId,
         username: data.username,
-        avatarUrl: data.avatarUrl,
+        avatarUrl: data.avatar,
       })
       navigate('/journal', { replace: true })
     } catch (err) {

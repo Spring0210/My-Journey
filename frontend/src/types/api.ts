@@ -9,7 +9,7 @@ export interface AuthResponse {
   refreshToken: string
   userId: number
   username: string
-  avatarUrl: string | null
+  avatar: string | null   // backend field name is "avatar", not "avatarUrl"
 }
 
 export interface RefreshResponse {
