@@ -394,7 +394,11 @@
 /* ── Responsive — mobile (≤768px) ───────────────────────── */
 @media (max-width: 768px) {
   .jdetail-page {
-    padding: 16px 16px 48px;
+    padding-bottom: 48px;   /* no top/side padding — sticky topbar must be flush at top */
+  }
+
+  .jdetail-inner {
+    padding: 16px 16px 0;
   }
 
   .jdetail-card {

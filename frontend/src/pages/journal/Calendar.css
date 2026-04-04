@@ -84,6 +84,11 @@
   outline-offset: 2px;
 }
 
+/* Column header row (Mon–Sun) — explicit background to prevent white bleed in dark mode */
+.cal-wrap .fc .fc-col-header-cell {
+  background: var(--surface-secondary);
+}
+
 /* Day column headers (Mon, Tue…) */
 .cal-wrap .fc .fc-col-header-cell-cushion {
   font-weight: 600;
