@@ -36,9 +36,9 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
                 ? URLEncoder.encode(oauthUser.getAppAvatar(), StandardCharsets.UTF_8)
                 : "";
 
-        // Pass JWT and user info to the frontend callback page via query params.
-        // The callback page reads them immediately and stores them in localStorage.
-        String redirectUrl = "/oauth2-callback.html?token=" + token
+        // Pass JWT and user info to the React SPA callback page via query params.
+        // OAuth2CallbackPage reads them, populates auth context, and navigates into the app.
+        String redirectUrl = "/oauth2/callback?token=" + token
                 + "&refreshToken=" + refreshToken.getToken()
                 + "&userId=" + oauthUser.getAppUserId()
                 + "&username=" + username

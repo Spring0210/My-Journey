@@ -4,7 +4,11 @@ import { ThemeProvider } from '@/context/ThemeContext'
 import AppLayout    from '@/components/layout/AppLayout'
 import PublicLayout from '@/components/layout/PublicLayout'
 import AuthLayout   from '@/components/layout/AuthLayout'
-import LandingPage  from '@/pages/LandingPage'
+import LandingPage        from '@/pages/LandingPage'
+import LoginPage          from '@/pages/auth/LoginPage'
+import RegisterPage       from '@/pages/auth/RegisterPage'
+import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage'
+import OAuth2CallbackPage from '@/pages/auth/OAuth2CallbackPage'
 
 // Placeholder — replaced page by page during migration
 function ComingSoon({ name }: { name: string }) {
@@ -46,13 +50,13 @@ function AppRoutes() {
 
       {/* ── Auth pages (centered card, no sidebar) ────────── */}
       <Route element={<RedirectIfAuth><AuthLayout /></RedirectIfAuth>}>
-        <Route path="/login"           element={<ComingSoon name="Login" />} />
-        <Route path="/register"        element={<ComingSoon name="Register" />} />
-        <Route path="/forgot-password" element={<ComingSoon name="Forgot Password" />} />
+        <Route path="/login"           element={<LoginPage />} />
+        <Route path="/register"        element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       </Route>
 
-      {/* OAuth2 callback — no layout, handles redirect itself */}
-      <Route path="/oauth2/callback" element={<ComingSoon name="OAuth2 Callback" />} />
+      {/* OAuth2 callback — no layout, reads params and redirects into app */}
+      <Route path="/oauth2/callback" element={<OAuth2CallbackPage />} />
 
       {/* ── App pages (Sidebar layout, require auth) ──────── */}
       <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
