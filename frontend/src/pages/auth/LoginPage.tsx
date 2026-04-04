@@ -41,7 +41,7 @@ export default function LoginPage() {
         username: data.username,
         avatarUrl: data.avatar,
       })
-      navigate('/journal', { replace: true })
+      navigate('/dashboard', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')
     } finally {

@@ -28,7 +28,7 @@ export default function OAuth2CallbackPage() {
 
     if (token && refreshToken && userId && username) {
       login({ token, refreshToken, userId, username, avatarUrl })
-      navigate('/journal', { replace: true })
+      navigate('/dashboard', { replace: true })
     } else {
       // Missing params — treat as failed OAuth attempt
       navigate('/login?error=oauth2', { replace: true })

@@ -16,6 +16,7 @@ import SpacesListPage      from '@/pages/spaces/SpacesListPage'
 import SpaceDetailPage     from '@/pages/spaces/SpaceDetailPage'
 import NotificationsPage   from '@/pages/notifications/NotificationsPage'
 import ProfilePage         from '@/pages/profile/ProfilePage'
+import DashboardPage       from '@/pages/dashboard/DashboardPage'
 
 // Placeholder — replaced page by page during migration
 function ComingSoon({ name }: { name: string }) {
@@ -42,7 +43,7 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 // Redirect already-authenticated users away from auth pages
 function RedirectIfAuth({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth()
-  return isAuthenticated ? <Navigate to="/journal" replace /> : <>{children}</>
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <>{children}</>
 }
 
 function AppRoutes() {
@@ -67,6 +68,7 @@ function AppRoutes() {
 
       {/* ── App pages (Sidebar layout, require auth) ──────── */}
       <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
+        <Route path="/dashboard"     element={<DashboardPage />} />
         <Route path="/journal"       element={<JournalListPage />} />
         <Route path="/journal/new"   element={<JournalDetailPage />} />
         <Route path="/journal/:id"   element={<JournalDetailPage />} />
