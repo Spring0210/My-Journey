@@ -141,7 +141,7 @@
 ### Module Progress
 - [x] Module 1 — Project scaffold (Vite + React + TypeScript + Tailwind v4, SpaController, Dockerfile)
 - [x] Module 2 — Global components (AppLayout, PublicLayout, AuthLayout, Sidebar, NavBar, Footer, Icon)
-- [ ] Module 3 — Landing page
+- [x] Module 3 — Landing page
 - [ ] Module 4 — Auth pages (Login, Register, Forgot Password, OAuth2 callback)
 - [ ] Module 5 — Journal pages (list, detail, create/edit, calendar)
 - [ ] Module 6 — Spaces pages (list, detail, posts, comments, reactions)
