@@ -1,18 +1,21 @@
 /* ─────────────────────────────────────────────────────────
-   Landing page styles — Apple HIG-inspired
+   Landing page — Apple HIG-inspired
+   All colors and gradients use tokens from tokens.css.
+   Never add raw hex values here.
    ───────────────────────────────────────────────────────── */
 
-/* ── Section base ───────────────────────────────────────── */
+/* ── Section skeleton ────────────────────────────────────── */
 .landing-section {
-  padding: 100px 24px;
+  padding: var(--section-pad-desktop) var(--page-gutter);
 }
 
 .landing-inner {
-  max-width: 980px;
+  max-width: var(--content-std);   /* 980px */
   margin: 0 auto;
 }
 
 /* ── Eyebrow label ───────────────────────────────────────── */
+/* 12px / 600 / uppercase / accent color — see design-system.md §3.2 */
 .landing-eyebrow {
   font-size: 12px;
   font-weight: 600;
@@ -22,16 +25,19 @@
   margin-bottom: 16px;
 }
 
-/* ── Hero ────────────────────────────────────────────────── */
+/* ──────────────────────────────────────────────────────────
+   HERO
+   ────────────────────────────────────────────────────────── */
 .landing-hero {
   text-align: center;
   padding-top: 140px;
   padding-bottom: 0;
+  padding-inline: var(--page-gutter);
   position: relative;
   overflow: hidden;
 }
 
-/* Radial gradient glow centered behind hero text */
+/* Radial gradient glow behind hero text — token handles dark mode */
 .landing-hero::before {
   content: '';
   position: absolute;
@@ -40,23 +46,9 @@
   transform: translateX(-50%);
   width: 900px;
   height: 640px;
-  background: radial-gradient(
-    ellipse 60% 50% at 50% 20%,
-    rgba(0, 113, 227, 0.10) 0%,
-    rgba(175, 82, 222, 0.05) 50%,
-    transparent 75%
-  );
+  background: var(--gradient-hero-glow);
   pointer-events: none;
   z-index: 0;
-}
-
-[data-theme="dark"] .landing-hero::before {
-  background: radial-gradient(
-    ellipse 60% 50% at 50% 20%,
-    rgba(41, 151, 255, 0.14) 0%,
-    rgba(191, 90, 242, 0.07) 50%,
-    transparent 75%
-  );
 }
 
 .landing-hero-content {
@@ -66,30 +58,31 @@
   z-index: 1;
 }
 
-/* Display / Hero — 76px / 700 */
+/* Display / Hero — 64px / 700 / 1.05 / -0.030em  (design-system.md §3.2) */
 .landing-hero-title {
-  font-size: 76px;
+  font-size: 64px;
   font-weight: 700;
-  line-height: 1.02;
-  letter-spacing: -0.035em;
+  line-height: 1.05;
+  letter-spacing: -0.030em;
   color: var(--label-primary);
   margin-bottom: 28px;
 }
 
-/* Gradient accent on the second line of the hero title */
+/* Gradient text on the accented line — uses token var */
 .landing-hero-title-gradient {
-  background: linear-gradient(135deg, var(--accent) 0%, #af52de 100%);
+  background: var(--gradient-text-accent);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
+/* 21px body — generous subtitle size for hero context */
 .landing-hero-sub {
   font-size: 21px;
   font-weight: 400;
   line-height: 1.47;
   color: var(--label-secondary);
-  max-width: 560px;
+  max-width: 540px;
   margin: 0 auto 48px;
 }
 
@@ -104,6 +97,7 @@
   z-index: 1;
 }
 
+/* ── Hero screenshot ─────────────────────────────────────── */
 .landing-hero-img-wrap {
   max-width: 980px;
   margin: 0 auto;
@@ -111,7 +105,7 @@
   z-index: 1;
 }
 
-/* Gradient fade at the bottom so the screenshot bleeds into the next section */
+/* Gradient fade so the screenshot bleeds into the next section */
 .landing-hero-img-wrap::after {
   content: '';
   position: absolute;
@@ -128,41 +122,37 @@
   width: 100%;
   height: auto;
   border-radius: 22px 22px 0 0;
-  box-shadow:
-    0 24px 80px rgba(0, 0, 0, 0.16),
-    0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-hero-img);
   display: block;
 }
 
-/* ── Buttons ─────────────────────────────────────────────── */
+/* ──────────────────────────────────────────────────────────
+   BUTTONS
+   Pill-shaped, matching design-system.md §8.3
+   ────────────────────────────────────────────────────────── */
 .landing-btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 14px 28px;
   border-radius: var(--radius-pill);
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 500;
   color: #ffffff;
   background: var(--accent);
   border: 1px solid transparent;
   text-decoration: none;
-  transition: background 200ms ease, transform 200ms ease, box-shadow 200ms ease;
-  box-shadow: 0 2px 12px rgba(0, 113, 227, 0.30);
+  transition: background var(--ease-standard), transform var(--ease-standard),
+              box-shadow var(--ease-standard);
+  box-shadow: var(--shadow-btn-accent);
 }
 
 .landing-btn-primary:hover {
   background: var(--accent-hover);
-  box-shadow: 0 4px 20px rgba(0, 113, 227, 0.40);
 }
 
 .landing-btn-primary:active {
   transform: scale(0.97);
-}
-
-.landing-btn-primary--lg {
-  padding: 15px 32px;
-  font-size: 17px;
 }
 
 .landing-btn-ghost {
@@ -171,13 +161,13 @@
   justify-content: center;
   padding: 14px 28px;
   border-radius: var(--radius-pill);
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 400;
   color: var(--label-primary);
   background: var(--surface-secondary);
   border: 1px solid var(--separator);
   text-decoration: none;
-  transition: background 200ms ease, transform 200ms ease;
+  transition: background var(--ease-standard), transform var(--ease-standard);
 }
 
 .landing-btn-ghost:hover {
@@ -188,48 +178,54 @@
   transform: scale(0.97);
 }
 
-/* ── Section title ───────────────────────────────────────── */
-/* Large Title — 52px / 600 */
+/* ──────────────────────────────────────────────────────────
+   SECTION TITLE
+   ────────────────────────────────────────────────────────── */
+/* Large Title — 52px / 600 / -0.025em */
 .landing-section-title {
   font-size: 52px;
   font-weight: 600;
   line-height: 1.08;
   letter-spacing: -0.025em;
   color: var(--label-primary);
-  margin-bottom: 60px;
+  margin-bottom: 56px;
 }
 
 .landing-section-title--narrow {
   max-width: 540px;
-  margin-bottom: 52px;
+  margin-bottom: 48px;
 }
 
-/* ── Features section ────────────────────────────────────── */
+/* ──────────────────────────────────────────────────────────
+   FEATURES SECTION
+   ────────────────────────────────────────────────────────── */
 .landing-features {
   background: var(--surface-secondary);
 }
 
+/* 2×2 grid */
 .landing-feature-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
 }
 
+/* Card — design-system.md §8.5 "Feature / large" variant */
 .landing-feature-card {
   background: var(--surface-card);
-  border-radius: 20px;
+  border-radius: var(--radius-xl);   /* 22px */
   padding: 36px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-raised);
   border: 1px solid var(--separator);
-  transition: transform 200ms ease, box-shadow 200ms ease;
+  transition: transform var(--ease-standard), box-shadow var(--ease-standard);
 }
 
 .landing-feature-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 8px 28px rgba(0, 0, 0, 0.08);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-elevated);
 }
 
-/* Icon container — colored gradient per feature */
+/* Icon container — 56px with gradient background, white icon */
 .landing-feature-icon {
   width: 56px;
   height: 56px;
@@ -239,24 +235,14 @@
   justify-content: center;
   color: #ffffff;
   margin-bottom: 20px;
+  flex-shrink: 0;
 }
 
-/* Feature-specific icon gradient colors */
-.landing-feature-icon--blue {
-  background: linear-gradient(145deg, #0071e3, #0052cc);
-}
-
-.landing-feature-icon--purple {
-  background: linear-gradient(145deg, #af52de, #7c3aed);
-}
-
-.landing-feature-icon--orange {
-  background: linear-gradient(145deg, #ff9500, #e07800);
-}
-
-.landing-feature-icon--green {
-  background: linear-gradient(145deg, #34c759, #1da647);
-}
+/* Per-feature gradient colors — uses tokens */
+.landing-feature-icon--blue   { background: var(--gradient-icon-blue); }
+.landing-feature-icon--purple { background: var(--gradient-icon-purple); }
+.landing-feature-icon--orange { background: var(--gradient-icon-orange); }
+.landing-feature-icon--green  { background: var(--gradient-icon-green); }
 
 /* Title 3 — 21px / 600 */
 .landing-feature-title {
@@ -268,7 +254,7 @@
   margin-bottom: 10px;
 }
 
-/* Callout — 15px / 400 */
+/* Callout — 15px / 400 / 1.60 line-height */
 .landing-feature-desc {
   font-size: 15px;
   font-weight: 400;
@@ -276,15 +262,18 @@
   color: var(--label-secondary);
 }
 
-/* ── AI highlight section ────────────────────────────────── */
+/* ──────────────────────────────────────────────────────────
+   AI HIGHLIGHT SECTION
+   ────────────────────────────────────────────────────────── */
 .landing-ai {
   background: var(--surface-primary);
 }
 
+/* Two-column: feature list left, chat panel right */
 .landing-ai-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 80px;
+  gap: 72px;
   align-items: start;
 }
 
@@ -300,13 +289,14 @@
   gap: 18px;
 }
 
+/* Icon container — subtle blue tint, accent icon color */
 .landing-ai-icon {
   width: 46px;
   height: 46px;
   flex-shrink: 0;
   border-radius: 14px;
-  background: linear-gradient(145deg, rgba(0,113,227,0.12), rgba(0,113,227,0.06));
-  border: 1px solid rgba(0, 113, 227, 0.15);
+  background: var(--fill-tertiary);
+  border: 1px solid var(--separator);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -330,32 +320,33 @@
   color: var(--label-secondary);
 }
 
-/* Visual panel on the right of AI section */
+/* ── AI chat demo panel ───────────────────────────────────── */
 .landing-ai-panel {
   background: var(--surface-secondary);
-  border-radius: 24px;
-  padding: 32px;
+  border-radius: var(--radius-xl);  /* 22px */
+  padding: 28px;
   border: 1px solid var(--separator);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
+/* Section label inside panel */
 .landing-ai-panel-title {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--label-tertiary);
   margin-bottom: 4px;
 }
 
-/* Chat bubble style to visualize AI search */
+/* Chat bubbles — user (right) and AI (left) */
 .landing-ai-bubble {
-  padding: 12px 16px;
-  border-radius: 14px;
+  padding: 11px 15px;
   font-size: 14px;
   line-height: 1.50;
+  max-width: 88%;
 }
 
 .landing-ai-bubble--user {
@@ -363,7 +354,7 @@
   color: #ffffff;
   align-self: flex-end;
   border-radius: 18px 18px 4px 18px;
-  max-width: 85%;
+  margin-left: auto;
 }
 
 .landing-ai-bubble--ai {
@@ -371,10 +362,10 @@
   color: var(--label-primary);
   border: 1px solid var(--separator);
   border-radius: 18px 18px 18px 4px;
-  max-width: 85%;
+  align-self: flex-start;
 }
 
-.landing-ai-bubble--ai .landing-ai-bubble-label {
+.landing-ai-bubble-label {
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -383,50 +374,55 @@
   margin-bottom: 4px;
 }
 
-/* ── Final CTA section ───────────────────────────────────── */
+/* ──────────────────────────────────────────────────────────
+   FINAL CTA SECTION
+   Dark gradient card — design-system.md §9.3
+   ────────────────────────────────────────────────────────── */
 .landing-cta {
   background: var(--surface-primary);
   padding-top: 0;
-  padding-bottom: 0;
+  padding-inline: var(--page-gutter);
+  padding-bottom: var(--section-pad-desktop);
 }
 
-/* Dark gradient card that holds the CTA content */
+/* The dark card */
 .landing-cta-card {
-  background: linear-gradient(145deg, #1d1d1f 0%, #2c2c2e 100%);
-  border-radius: 28px;
-  padding: 80px 40px;
+  background: var(--gradient-cta-dark);
+  border-radius: var(--radius-2xl);  /* 28px */
+  padding: 88px 40px;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
+  max-width: var(--content-std);  /* 980px */
   margin: 0 auto;
-  max-width: 980px;
   position: relative;
   overflow: hidden;
 }
 
-/* Subtle accent glow inside the CTA card */
+/* Subtle accent glow inside the card */
 .landing-cta-card::before {
   content: '';
   position: absolute;
-  top: -100px;
+  top: -80px;
   left: 50%;
   transform: translateX(-50%);
   width: 600px;
   height: 400px;
   background: radial-gradient(
     ellipse at 50% 30%,
-    rgba(0, 113, 227, 0.20) 0%,
+    rgba(41, 151, 255, 0.18) 0%,
     transparent 60%
   );
   pointer-events: none;
 }
 
+/* Large Title — 52px / 700, white text on dark bg */
 .landing-cta-title {
   font-size: 52px;
   font-weight: 700;
   line-height: 1.06;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.028em;
   color: #f5f5f7;
   margin-bottom: 16px;
   position: relative;
@@ -437,13 +433,13 @@
   font-size: 17px;
   font-weight: 400;
   line-height: 1.47;
-  color: rgba(255, 255, 255, 0.60);
+  color: rgba(245, 245, 247, 0.60);
   margin-bottom: 40px;
   position: relative;
   z-index: 1;
 }
 
-/* CTA button inverted for the dark background */
+/* Inverted CTA button (white bg, dark text) for the dark card */
 .landing-btn-cta {
   display: inline-flex;
   align-items: center;
@@ -456,7 +452,7 @@
   background: #f5f5f7;
   border: 1px solid transparent;
   text-decoration: none;
-  transition: background 200ms ease, transform 200ms ease;
+  transition: background var(--ease-standard), transform var(--ease-standard);
   position: relative;
   z-index: 1;
 }
@@ -469,10 +465,12 @@
   transform: scale(0.97);
 }
 
-/* ── Responsive — tablet (≤1068px) ──────────────────────── */
+/* ──────────────────────────────────────────────────────────
+   RESPONSIVE — Tablet (≤1068px)
+   ────────────────────────────────────────────────────────── */
 @media (max-width: 1068px) {
   .landing-section {
-    padding: 80px 24px;
+    padding-block: var(--section-pad-tablet);  /* 80px */
   }
 
   .landing-hero {
@@ -480,12 +478,11 @@
   }
 
   .landing-hero-title {
-    font-size: 60px;
+    font-size: 52px;
   }
 
   .landing-section-title {
     font-size: 44px;
-    margin-bottom: 48px;
   }
 
   .landing-cta-title {
@@ -497,14 +494,18 @@
   }
 }
 
-/* ── Responsive — mobile (≤768px) ───────────────────────── */
+/* ──────────────────────────────────────────────────────────
+   RESPONSIVE — Mobile (≤768px)
+   ────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .landing-section {
-    padding: 60px 20px;
+    padding-block: var(--section-pad-mobile);   /* 60px */
+    padding-inline: var(--page-gutter-mobile);  /* 20px */
   }
 
   .landing-hero {
     padding-top: 64px;
+    padding-inline: var(--page-gutter-mobile);
   }
 
   .landing-hero-title {
@@ -514,21 +515,32 @@
 
   .landing-hero-sub {
     font-size: 17px;
+    margin-bottom: 40px;
   }
 
   .landing-hero-actions {
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
-    margin-bottom: 52px;
+    margin-bottom: 48px;
     max-width: 320px;
     margin-left: auto;
     margin-right: auto;
   }
 
+  .landing-btn-primary,
+  .landing-btn-ghost {
+    justify-content: center;
+    font-size: 15px;
+  }
+
   .landing-section-title {
     font-size: 34px;
     margin-bottom: 36px;
+  }
+
+  .landing-section-title--narrow {
+    max-width: 100%;
   }
 
   .landing-feature-grid {
@@ -539,13 +551,19 @@
     padding: 28px;
   }
 
+  /* On mobile, stack AI section — hide the chat panel */
   .landing-ai-grid {
     grid-template-columns: 1fr;
     gap: 40px;
   }
 
   .landing-ai-panel {
-    display: none; /* hide the visual panel on mobile */
+    display: none;
+  }
+
+  .landing-cta {
+    padding-bottom: var(--section-pad-mobile);
+    padding-inline: var(--page-gutter-mobile);
   }
 
   .landing-cta-card {
@@ -556,13 +574,11 @@
   .landing-cta-title {
     font-size: 36px;
   }
-
-  .landing-section-title--narrow {
-    max-width: 100%;
-  }
 }
 
-/* ── Responsive — small mobile (≤480px) ─────────────────── */
+/* ──────────────────────────────────────────────────────────
+   RESPONSIVE — Small mobile (≤480px)
+   ────────────────────────────────────────────────────────── */
 @media (max-width: 480px) {
   .landing-hero-title {
     font-size: 38px;
