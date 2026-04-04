@@ -130,6 +130,7 @@ a:hover { text-decoration: underline; }
 .app-layout {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh; /* iOS Chrome/Safari: dvh excludes browser chrome */
 }
 
 /* ── 4. Sidebar ── */
@@ -140,6 +141,7 @@ a:hover { text-decoration: underline; }
   position: fixed;
   top: 0; left: 0;
   height: 100vh;
+  height: 100dvh; /* iOS Chrome/Safari: 100vh includes address bar, dvh is actual visible height */
   overflow-y: auto;
   z-index: 1000;
   transition: transform var(--transition);
@@ -592,7 +594,6 @@ input:focus, textarea:focus, select:focus {
   overflow: hidden;
   box-shadow: var(--shadow-lg);
 }
-.image-modal img { width: 100%; height: 100%; object-fit: contain; }
 .image-modal-close {
   position: absolute;
   top: 16px; right: 16px;
@@ -775,6 +776,7 @@ input:focus, textarea:focus, select:focus {
   .actions .btn { flex: 1; justify-content: center; }
   .searchbar { flex-direction: column; align-items: stretch; }
   .searchbar input { min-width: auto; }
+  .searchbar .btn { width: 100%; justify-content: center; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
 

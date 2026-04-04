@@ -403,12 +403,19 @@ function renderCommentSection(post) {
 }
 
 // ── Video Player ───────────────────────────────────────────────
+// Generate Cloudinary poster thumbnail from video URL (so_0 = first frame)
+function getVideoThumbnail(videoUrl) {
+    return videoUrl
+        .replace('/video/upload/', '/video/upload/so_0/')
+        .replace(/\.(mp4|mov|avi|webm)(\?.*)?$/i, '.jpg');
+}
+
 function renderVideoList(videos) {
     if (!videos || videos.length === 0) return '';
     return `<div class="video-list">${
         videos.map(url => `
             <div class="video-wrap">
-                <video controls preload="metadata" playsinline>
+                <video controls preload="metadata" playsinline poster="${getVideoThumbnail(url)}">
                     <source src="${url}" />
                 </video>
             </div>`).join('')
