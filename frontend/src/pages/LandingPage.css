@@ -97,33 +97,219 @@
   z-index: 1;
 }
 
-/* ── Hero screenshot ─────────────────────────────────────── */
+/* ── Hero visual wrapper ─────────────────────────────────── */
 .landing-hero-img-wrap {
-  max-width: 980px;
+  max-width: 680px;
   margin: 0 auto;
   position: relative;
   z-index: 1;
+  /* Fade the bottom into the next section */
+  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
 }
 
-/* Gradient fade so the screenshot bleeds into the next section */
-.landing-hero-img-wrap::after {
-  content: '';
+/* ── Hero mockup — CSS app window, adapts to dark/light ──── */
+.hero-mockup {
+  position: relative;
+  padding: 32px 28px 48px;  /* room around card for floating badges */
+}
+
+/* Radial glow behind the card */
+.hero-mockup-glow {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 120px;
-  background: linear-gradient(to bottom, transparent, var(--surface-primary));
+  inset: 0;
+  background: radial-gradient(
+    ellipse 80% 60% at 50% 55%,
+    color-mix(in srgb, var(--accent) 16%, transparent) 0%,
+    transparent 70%
+  );
   pointer-events: none;
-  z-index: 2;
+  z-index: 0;
 }
 
-.landing-hero-img {
-  width: 100%;
-  height: auto;
-  border-radius: 22px 22px 0 0;
-  box-shadow: var(--shadow-hero-img);
-  display: block;
+/* App window card */
+.hero-mockup-card {
+  position: relative;
+  z-index: 1;
+  background: var(--surface-card);
+  border: 1px solid var(--separator);
+  border-radius: 18px;
+  /* Layered shadow for depth */
+  box-shadow:
+    0 0 0 1px var(--separator),
+    0 24px 56px -8px rgba(0, 0, 0, 0.18),
+    0 8px 20px -4px rgba(0, 0, 0, 0.10);
+  overflow: hidden;
+}
+
+/* macOS traffic lights */
+.hero-chrome {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--separator);
+  background: var(--surface-secondary);
+}
+
+.hero-chrome-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.hero-chrome-dot--red    { background: #ff5f57; }
+.hero-chrome-dot--yellow { background: #febc2e; }
+.hero-chrome-dot--green  { background: #28c840; }
+
+/* Fake page top bar */
+.hero-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 20px;
+  border-bottom: 1px solid var(--separator);
+  background: var(--surface-card);
+}
+
+.hero-topbar-back {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+.hero-topbar-chevron {
+  font-size: 20px;
+  line-height: 1;
+  margin-top: -1px;
+}
+
+.hero-topbar-save {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--accent);
+  padding: 4px 14px;
+  border-radius: 980px;
+  letter-spacing: -0.01em;
+}
+
+/* Entry content */
+.hero-entry {
+  padding: 24px 28px 22px;
+}
+
+.hero-entry-date {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.hero-entry-title {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--label-primary);
+  margin-bottom: 14px;
+}
+
+.hero-entry-sep {
+  height: 1px;
+  background: var(--separator);
+  margin-bottom: 14px;
+}
+
+.hero-entry-body {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--label-secondary);
+  margin-bottom: 18px;
+}
+
+/* Fake photo strip — gradient blocks simulate photos */
+.hero-entry-photos {
+  display: flex;
+  gap: 8px;
+}
+
+.hero-entry-photo {
+  width: 80px;
+  height: 60px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.hero-entry-photo--a { background: var(--gradient-icon-orange); }
+.hero-entry-photo--b { background: var(--gradient-icon-blue);   }
+.hero-entry-photo--c { background: var(--gradient-icon-purple); }
+
+/* ── Floating badges ─────────────────────────────────────── */
+.hero-float {
+  position: absolute;
+  background: var(--surface-card);
+  border: 1px solid var(--separator);
+  border-radius: 980px;
+  padding: 8px 14px 8px 11px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--label-primary);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  box-shadow: var(--shadow-elevated);
+  z-index: 3;
+  white-space: nowrap;
+  /* Subtle entrance animation */
+  animation: hero-float-in 600ms var(--ease-spring) both;
+}
+
+@keyframes hero-float-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.94); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+/* AI Recap — top right, floats above the card */
+.hero-float--ai {
+  top: 16px;
+  right: 0;
+  animation-delay: 200ms;
+}
+
+/* Entry saved — bottom right */
+.hero-float--saved {
+  bottom: 20px;
+  right: 0;
+  animation-delay: 400ms;
+}
+
+/* Pulsing accent dot in AI badge */
+.hero-float-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  animation: hero-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes hero-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.35; transform: scale(0.85); }
+}
+
+/* Green check in saved toast */
+.hero-float-check {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--system-green);
 }
 
 /* ──────────────────────────────────────────────────────────
@@ -549,6 +735,19 @@
 
   .landing-feature-card {
     padding: 28px;
+  }
+
+  /* Hero mockup — tighter padding and hide floating badges on mobile */
+  .hero-mockup {
+    padding: 16px 12px 32px;
+  }
+
+  .hero-float {
+    display: none;
+  }
+
+  .hero-entry-photos {
+    display: none;
   }
 
   /* On mobile, stack AI section — hide the chat panel */

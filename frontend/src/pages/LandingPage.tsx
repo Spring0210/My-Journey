@@ -1,6 +1,5 @@
 import { NavLink } from 'react-router-dom'
 import Icon from '@/components/ui/Icon'
-import heroImg from '@/assets/hero.png'
 import './LandingPage.css'
 
 // ─────────────────────────────────────────────────────────
@@ -57,6 +56,67 @@ const aiFeatures = [
   },
 ] as const
 
+// ── Hero mockup — CSS-based app preview, adapts to dark/light mode ──────────
+// Renders a fake journal entry window with floating badges.
+// No images — all colors use var(--*) tokens.
+function HeroMockup() {
+  return (
+    <div className="hero-mockup">
+      {/* Soft accent glow behind the card */}
+      <div className="hero-mockup-glow" aria-hidden="true" />
+
+      {/* Main app window card */}
+      <div className="hero-mockup-card">
+
+        {/* macOS window chrome */}
+        <div className="hero-chrome">
+          <span className="hero-chrome-dot hero-chrome-dot--red"   />
+          <span className="hero-chrome-dot hero-chrome-dot--yellow"/>
+          <span className="hero-chrome-dot hero-chrome-dot--green" />
+        </div>
+
+        {/* Fake page top bar */}
+        <div className="hero-topbar">
+          <div className="hero-topbar-back">
+            <span className="hero-topbar-chevron">‹</span>
+            Journal
+          </div>
+          <span className="hero-topbar-save">Save</span>
+        </div>
+
+        {/* Journal entry body */}
+        <div className="hero-entry">
+          <p className="hero-entry-date">Wednesday, April 3, 2025</p>
+          <p className="hero-entry-title">Morning Light</p>
+          <div className="hero-entry-sep" />
+          <p className="hero-entry-body">
+            Had the most peaceful morning today. Coffee by the window, soft
+            light coming through the curtains. Took a long walk after and
+            found the most beautiful little park...
+          </p>
+          <div className="hero-entry-photos">
+            <div className="hero-entry-photo hero-entry-photo--a" />
+            <div className="hero-entry-photo hero-entry-photo--b" />
+            <div className="hero-entry-photo hero-entry-photo--c" />
+          </div>
+        </div>
+      </div>
+
+      {/* Floating badge — top right: AI recap */}
+      <div className="hero-float hero-float--ai">
+        <span className="hero-float-dot" />
+        AI Recap ready
+      </div>
+
+      {/* Floating toast — bottom right: saved */}
+      <div className="hero-float hero-float--saved">
+        <span className="hero-float-check">✓</span>
+        Entry saved
+      </div>
+    </div>
+  )
+}
+
 export default function LandingPage() {
   return (
     <div>
@@ -82,7 +142,7 @@ export default function LandingPage() {
           </div>
         </div>
         <div className="landing-hero-img-wrap">
-          <img src={heroImg} alt="MyJourney app screenshot" className="landing-hero-img" />
+          <HeroMockup />
         </div>
       </section>
 
