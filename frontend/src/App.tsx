@@ -75,7 +75,6 @@ function AppRoutes() {
         <Route path="/spaces/:id"    element={<SpaceDetailPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/profile"       element={<ProfilePage />} />
-        <Route path="/search"        element={<ComingSoon name="Smart Search" />} />
       </Route>
 
       {/* Fallback */}
