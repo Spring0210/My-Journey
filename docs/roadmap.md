@@ -116,11 +116,24 @@
 - [ ] Migrate from vanilla HTML/CSS/JS to React (Vite) + TypeScript + Tailwind CSS v4
 - [ ] Build output served from Spring Boot `static/` (single-service deployment, no Docker changes)
 
-### Scope
-- [ ] Rewrite all pages as React components (login, journal, spaces, space detail, profile)
-- [ ] TypeScript types for all API responses and shared data models
-- [ ] Global state management (React Context or Zustand)
-- [ ] Component library built on Tailwind — consistent design system
+### Design System
+- [ ] Apple HIG-inspired design language — SF Pro font stack, 8pt grid, system blue #007AFF
+- [ ] Light / dark mode — follows system preference by default, manual toggle in UI
+- [ ] Tailwind CSS v4 design tokens for colors, spacing, radius, shadow
+
+### Pages
+- [ ] Landing page — product intro for unauthenticated visitors, CTA to sign up / log in
+- [ ] Auth pages — Login, Register, Forgot Password, OAuth2 callback
+- [ ] Journal pages — list, detail, create/edit, calendar view
+- [ ] Spaces pages — list, space detail, posts, comments, reactions
+- [ ] Other pages — Dashboard, Notifications, Profile
+- [ ] Privacy Policy (`/privacy`)
+- [ ] Terms of Service (`/terms`)
+- [ ] Footer on all pages with links to Privacy and Terms
+
+### Architecture
+- [ ] TypeScript types for all API responses and shared data models (`src/types/api.ts`)
+- [ ] Global auth state via React Context (`userId`, `username`, `avatar`, `token`)
+- [ ] Typed API wrapper layer (`src/api/`) — no raw `fetch` in components
 - [ ] Google OAuth frontend (completes Phase 5 OAuth work)
-- [ ] PWA support (Web App Manifest + Service Worker — installable on mobile/desktop)
-- [ ] UI visual refresh — modern, clean aesthetic
+- [ ] PWA support — Web App Manifest + Service Worker (installable on mobile/desktop)
