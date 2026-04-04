@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyJourney — Design Preview</title>
+  <style>
+    /* ─── Reset ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    img { display: block; max-width: 100%; }
+    button { cursor: pointer; border: none; background: none; font: inherit; }
+    a { text-decoration: none; }
+
+    /* ─── Design Tokens ─────────────────────────────────── */
+    :root {
+      /* Surfaces */
+      --surface-primary:   #ffffff;
+      --surface-secondary: #f5f5f7;
+      --surface-tertiary:  #e8e8ed;
+      --surface-card:      #ffffff;
+
+      /* Text */
+      --label-primary:   #1d1d1f;
+      --label-secondary: rgba(0,0,0,0.56);
+      --label-tertiary:  rgba(0,0,0,0.36);
+      --label-link:      #0071e3;
+
+      /* Accent */
+      --accent:       #0071e3;
+      --accent-hover: #0077ed;
+      --accent-dark:  #2997ff;
+
+      /* System colors */
+      --green:  #34c759;
+      --red:    #ff3b30;
+      --orange: #ff9500;
+
+      /* Separator */
+      --separator: rgba(0,0,0,0.10);
+
+      /* Nav */
+      --nav-bg: rgba(255,255,255,0.82);
+
+      /* Card shadow */
+      --card-shadow: 0 2px 16px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04);
+
+      /* Border radius */
+      --radius-sm:     8px;
+      --radius-md:     12px;
+      --radius-lg:     18px;
+      --radius-xl:     22px;
+      --radius-pill:   980px;
+
+      /* Font */
+      --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+
+      /* Transition */
+      --ease: 200ms ease;
+    }
+
+    [data-theme="dark"] {
+      --surface-primary:   #000000;
+      --surface-secondary: #1c1c1e;
+      --surface-tertiary:  #2c2c2e;
+      --surface-card:      #1c1c1e;
+      --label-primary:     #f5f5f7;
+      --label-secondary:   rgba(255,255,255,0.56);
+      --label-tertiary:    rgba(255,255,255,0.36);
+      --label-link:        #2997ff;
+      --accent:            #2997ff;
+      --accent-hover:      #0a84ff;
+      --separator:         rgba(255,255,255,0.12);
+      --nav-bg:            rgba(28,28,30,0.82);
+      --card-shadow:       0 2px 16px rgba(0,0,0,0.40), 0 1px 3px rgba(0,0,0,0.20);
+    }
+
+    /* ─── Base ───────────────────────────────────────────── */
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      background: var(--surface-primary);
+      color: var(--label-primary);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      transition: background var(--ease), color var(--ease);
+    }
+
+    /* ─── Nav ────────────────────────────────────────────── */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: 52px;
+      background: var(--nav-bg);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 1px solid var(--separator);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+    }
+    .nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+    .nav-logo {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--label-primary);
+      letter-spacing: -0.02em;
+    }
+    .nav-logo span { color: var(--accent); }
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+      flex: 1;
+    }
+    .nav-links a {
+      font-size: 14px;
+      color: var(--label-primary);
+      opacity: 0.85;
+      transition: opacity var(--ease);
+    }
+    .nav-links a:hover { opacity: 1; }
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .btn-theme {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--surface-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: background var(--ease);
+      border: 1px solid var(--separator);
+    }
+    .btn-theme:hover { background: var(--surface-tertiary); }
+    .btn-primary {
+      padding: 8px 18px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: var(--radius-pill);
+      font-size: 14px;
+      font-weight: 400;
+      transition: background var(--ease);
+    }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-ghost {
+      padding: 8px 18px;
+      background: var(--surface-secondary);
+      color: var(--label-primary);
+      border-radius: var(--radius-pill);
+      font-size: 14px;
+      font-weight: 400;
+      transition: background var(--ease);
+      border: 1px solid var(--separator);
+    }
+    .btn-ghost:hover { background: var(--surface-tertiary); }
+
+    /* ─── Hero ───────────────────────────────────────────── */
+    .hero {
+      text-align: center;
+      padding: 100px 24px 80px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .hero-eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+    .hero-title {
+      font-size: clamp(40px, 6vw, 64px);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -0.025em;
+      color: var(--label-primary);
+      margin-bottom: 20px;
+    }
+    .hero-title span {
+      /* Gradient text like Apple uses for some hero headings */
+      background: linear-gradient(135deg, var(--accent) 0%, #5856d6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: 19px;
+      color: var(--label-secondary);
+      line-height: 1.5;
+      margin-bottom: 36px;
+      max-width: 540px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .hero-cta {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-hero {
+      padding: 14px 28px;
+      font-size: 17px;
+      font-weight: 400;
+      border-radius: var(--radius-pill);
+      transition: background var(--ease), transform 120ms ease;
+    }
+    .btn-hero:active { transform: scale(0.97); }
+    .btn-hero-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-hero-primary:hover { background: var(--accent-hover); }
+    .btn-hero-secondary {
+      background: var(--surface-secondary);
+      color: var(--label-primary);
+      border: 1px solid var(--separator);
+    }
+    .btn-hero-secondary:hover { background: var(--surface-tertiary); }
+
+    /* ─── Feature Strip ──────────────────────────────────── */
+    .features {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px 100px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .feature-card {
+      background: var(--surface-secondary);
+      border-radius: var(--radius-xl);
+      padding: 36px 32px;
+      transition: transform 200ms ease;
+    }
+    .feature-card:hover { transform: translateY(-2px); }
+    .feature-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: var(--radius-md);
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    .feature-title {
+      font-size: 19px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--label-primary);
+      margin-bottom: 8px;
+    }
+    .feature-desc {
+      font-size: 15px;
+      color: var(--label-secondary);
+      line-height: 1.5;
+    }
+
+    /* ─── Divider ────────────────────────────────────────── */
+    .divider {
+      height: 1px;
+      background: var(--separator);
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* ─── App Section (Journal List Preview) ─────────────── */
+    .app-section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 80px 24px;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: var(--surface-secondary);
+      border-radius: var(--radius-xl);
+      padding: 20px 12px;
+      position: sticky;
+      top: 72px;
+    }
+    .sidebar-header {
+      padding: 4px 12px 12px;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--label-primary);
+    }
+    .sidebar-nav { list-style: none; }
+    .sidebar-nav li {
+      border-radius: var(--radius-md);
+      margin-bottom: 2px;
+    }
+    .sidebar-nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      font-size: 15px;
+      color: var(--label-primary);
+      border-radius: var(--radius-md);
+      transition: background var(--ease);
+    }
+    .sidebar-nav a:hover { background: var(--surface-tertiary); }
+    .sidebar-nav .active a {
+      background: var(--accent);
+      color: #fff;
+    }
+    .sidebar-icon { font-size: 17px; width: 22px; text-align: center; }
+    .sidebar-badge {
+      margin-left: auto;
+      background: var(--red);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: var(--radius-pill);
+    }
+    .sidebar-section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--label-tertiary);
+      padding: 12px 12px 6px;
+    }
+
+    /* Main content */
+    .main-content {}
+    .content-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .content-title {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--label-primary);
+    }
+    .search-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface-secondary);
+      border: 1px solid var(--separator);
+      border-radius: var(--radius-pill);
+      padding: 8px 14px;
+      font-size: 14px;
+      color: var(--label-secondary);
+      width: 200px;
+    }
+
+    /* Journal cards */
+    .journal-grid {
+      display: grid;
+      gap: 14px;
+    }
+    .journal-card {
+      background: var(--surface-card);
+      border: 1px solid var(--separator);
+      border-radius: var(--radius-lg);
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: var(--card-shadow);
+      cursor: pointer;
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+    .journal-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06);
+    }
+    [data-theme="dark"] .journal-card:hover {
+      box-shadow: 0 4px 24px rgba(0,0,0,0.50);
+    }
+    .journal-card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .journal-date {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--label-tertiary);
+      letter-spacing: 0.02em;
+    }
+    .journal-mood {
+      font-size: 13px;
+      padding: 2px 10px;
+      border-radius: var(--radius-pill);
+      font-weight: 500;
+    }
+    .mood-happy  { background: rgba(52,199,89,0.12);  color: #34c759; }
+    .mood-calm   { background: rgba(0,113,227,0.10);  color: var(--accent); }
+    .mood-tired  { background: rgba(255,149,0,0.12);  color: #ff9500; }
+    .journal-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--label-primary);
+      letter-spacing: -0.01em;
+    }
+    .journal-excerpt {
+      font-size: 14px;
+      color: var(--label-secondary);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .journal-card-footer {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .journal-img-thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-sm);
+      object-fit: cover;
+      background: var(--surface-tertiary);
+      flex-shrink: 0;
+    }
+    .journal-img-thumb-placeholder {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--surface-tertiary) 0%, var(--separator) 100%);
+      flex-shrink: 0;
+    }
+    .journal-read-more {
+      margin-left: auto;
+      font-size: 13px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* ─── Footer ─────────────────────────────────────────── */
+    .footer {
+      border-top: 1px solid var(--separator);
+      padding: 40px 24px;
+      background: var(--surface-secondary);
+    }
+    .footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-copy {
+      font-size: 13px;
+      color: var(--label-tertiary);
+    }
+    .footer-links {
+      display: flex;
+      gap: 20px;
+      list-style: none;
+    }
+    .footer-links a {
+      font-size: 13px;
+      color: var(--label-secondary);
+      transition: color var(--ease);
+    }
+    .footer-links a:hover { color: var(--label-primary); }
+
+    /* ─── Floating New Entry Button ──────────────────────── */
+    .fab {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(0,113,227,0.40);
+      transition: transform 180ms ease, box-shadow 180ms ease;
+      z-index: 50;
+    }
+    .fab:hover {
+      transform: scale(1.06);
+      box-shadow: 0 6px 24px rgba(0,113,227,0.50);
+    }
+    .fab:active { transform: scale(0.95); }
+
+    /* ─── Section Label ──────────────────────────────────── */
+    .section-label {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--label-tertiary);
+      margin-bottom: 60px;
+      padding-top: 20px;
+      border-top: 1px solid var(--separator);
+    }
+
+    /* ─── Responsive ─────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .features { grid-template-columns: 1fr 1fr; }
+      .app-section { grid-template-columns: 1fr; }
+      .sidebar { position: static; }
+    }
+    @media (max-width: 600px) {
+      .features { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+      .hero { padding: 60px 20px 50px; }
+      .hero-sub { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <span class="nav-logo">My<span>Journey</span></span>
+      <ul class="nav-links">
+        <li><a href="#">Journal</a></li>
+        <li><a href="#">Spaces</a></li>
+        <li><a href="#">Calendar</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button class="btn-theme" id="themeToggle" title="Toggle theme">
+          <span id="themeIcon">☀️</span>
+        </button>
+        <a href="#" class="btn-ghost">Sign in</a>
+        <a href="#" class="btn-primary">Get started</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero (Landing Page) -->
+  <section class="hero">
+    <p class="hero-eyebrow">Your personal space</p>
+    <h1 class="hero-title">Write your story,<br><span>every single day.</span></h1>
+    <p class="hero-sub">
+      MyJourney is a private journal and shared space for the moments that matter — beautiful, fast, and always in sync.
+    </p>
+    <div class="hero-cta">
+      <a href="#" class="btn-hero btn-hero-primary">Start for free</a>
+      <a href="#" class="btn-hero btn-hero-secondary">Learn more</a>
+    </div>
+  </section>
+
+  <!-- Feature Cards -->
+  <div class="features">
+    <div class="feature-card">
+      <div class="feature-icon">📓</div>
+      <h3 class="feature-title">Daily Journaling</h3>
+      <p class="feature-desc">Write with photos, videos, and mood tags. Your entries are private, encrypted, and always yours.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🤝</div>
+      <h3 class="feature-title">Shared Spaces</h3>
+      <p class="feature-desc">Create private spaces with family or friends. Share moments, react, and stay connected.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">✨</div>
+      <h3 class="feature-title">AI Insights</h3>
+      <p class="feature-desc">Monthly recaps, writing prompts, and smart search — powered by Claude AI, private by design.</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <p class="section-label">App Preview</p>
+
+  <!-- App UI Preview (Journal Page) -->
+  <div class="app-section">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">MyJourney</div>
+      <nav>
+        <p class="sidebar-section-label">Personal</p>
+        <ul class="sidebar-nav">
+          <li class="active">
+            <a href="#">
+              <span class="sidebar-icon">📓</span>
+              Journal
+            </a>
+          </li>
+          <li>
+            <a href="#">
+              <span class="sidebar-icon">📅</span>
+              Calendar
+            </a>
+          </li>
+          <li>
+            <a href="#">
+              <span class="sidebar-icon">🔍</span>
+              Smart Search
+            </a>
+          </li>
+        </ul>
+        <p class="sidebar-section-label">Social</p>
+        <ul class="sidebar-nav">
+          <li>
+            <a href="#">
+              <span class="sidebar-icon">🤝</span>
+              Spaces
+            </a>
+          </li>
+          <li>
+            <a href="#">
+              <span class="sidebar-icon">🔔</span>
+              Notifications
+              <span class="sidebar-badge">3</span>
+            </a>
+          </li>
+        </ul>
+        <p class="sidebar-section-label">Account</p>
+        <ul class="sidebar-nav">
+          <li>
+            <a href="#">
+              <span class="sidebar-icon">👤</span>
+              Profile
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Journal List -->
+    <main class="main-content">
+      <div class="content-header">
+        <h2 class="content-title">Journal</h2>
+        <div class="search-bar">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+            <circle cx="8.5" cy="8.5" r="6.5" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M13.5 13.5L18 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          Search entries…
+        </div>
+      </div>
+
+      <div class="journal-grid">
+
+        <div class="journal-card">
+          <div class="journal-card-meta">
+            <span class="journal-date">FRIDAY, APR 4, 2025</span>
+            <span class="journal-mood mood-happy">Happy</span>
+          </div>
+          <h3 class="journal-title">First cherry blossoms of the year</h3>
+          <p class="journal-excerpt">Walked through the park this morning before work. The sakura are finally out — they came late this year but it was worth the wait. Everything felt lighter somehow.</p>
+          <div class="journal-card-footer">
+            <div class="journal-img-thumb-placeholder"></div>
+            <div class="journal-img-thumb-placeholder" style="opacity:0.6"></div>
+            <span class="journal-read-more">Read more ›</span>
+          </div>
+        </div>
+
+        <div class="journal-card">
+          <div class="journal-card-meta">
+            <span class="journal-date">WEDNESDAY, APR 2, 2025</span>
+            <span class="journal-mood mood-calm">Calm</span>
+          </div>
+          <h3 class="journal-title">Late night thoughts on building</h3>
+          <p class="journal-excerpt">Been working on the app for a few weeks now. There's something satisfying about seeing it slowly come together — each piece clicking into place. Reminded myself why I started.</p>
+          <div class="journal-card-footer">
+            <span class="journal-read-more">Read more ›</span>
+          </div>
+        </div>
+
+        <div class="journal-card">
+          <div class="journal-card-meta">
+            <span class="journal-date">SUNDAY, MAR 30, 2025</span>
+            <span class="journal-mood mood-tired">Tired</span>
+          </div>
+          <h3 class="journal-title">Long weekend, good company</h3>
+          <p class="journal-excerpt">Spent the whole day with everyone. Didn't open the laptop once. Sometimes the best days are the ones where nothing gets "done".</p>
+          <div class="journal-card-footer">
+            <div class="journal-img-thumb-placeholder"></div>
+            <span class="journal-read-more">Read more ›</span>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <span class="footer-copy">Copyright &copy; 2025 Spring. All rights reserved.</span>
+      <ul class="footer-links">
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Service</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <!-- Floating Action Button -->
+  <button class="fab" title="New entry">+</button>
+
+  <script>
+    // Theme toggle
+    const root = document.documentElement;
+    const btn  = document.getElementById('themeToggle');
+    const icon = document.getElementById('themeIcon');
+
+    // Respect system preference on load
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (prefersDark) {
+      root.setAttribute('data-theme', 'dark');
+      icon.textContent = '🌙';
+    }
+
+    btn.addEventListener('click', () => {
+      const isDark = root.getAttribute('data-theme') === 'dark';
+      root.setAttribute('data-theme', isDark ? 'light' : 'dark');
+      icon.textContent = isDark ? '☀️' : '🌙';
+    });
+  </script>
+</body>
+</html>

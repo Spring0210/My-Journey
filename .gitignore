@@ -34,3 +34,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Frontend ###
+frontend/node_modules/
+frontend/dist/
+
+# Built React assets are generated at build time; do not commit them.
+# The Dockerfile runs `npm run build` before `mvn package`.
+src/main/resources/static/assets/
+src/main/resources/static/index.html
