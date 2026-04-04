@@ -41,8 +41,15 @@ export default function CalendarPage() {
 
   return (
     <div className="cal-page">
+
+      {/* Sticky top bar — hidden on mobile */}
+      <header className="cal-topbar">
+        <div className="cal-topbar-inner">
+          <h1 className="cal-topbar-title">Calendar</h1>
+        </div>
+      </header>
+
       <div className="cal-inner">
-        <h1 className="cal-title">Calendar</h1>
         <div className="cal-wrap">
           <FullCalendar
             plugins={[dayGridPlugin, listPlugin, interactionPlugin]}

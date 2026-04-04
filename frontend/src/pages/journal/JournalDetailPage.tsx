@@ -21,7 +21,7 @@ function formatDisplayDate(dateStr: string): string {
 
 export default function JournalDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const isNew = id === 'new'
+  const isNew = !id   // /journal/new has no :id param, so id is undefined when creating
   const { userId } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -128,8 +128,8 @@ export default function JournalDetailPage() {
         setSaveStatus('Saved')
         setTimeout(() => setSaveStatus(''), 2500)
       }
-    } catch {
-      alert('Save failed. Please try again.')
+    } catch (e) {
+      alert(`Save failed: ${e instanceof Error ? e.message : 'Please try again.'}`)
     } finally {
       setSaving(false)
     }

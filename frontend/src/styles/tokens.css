@@ -371,9 +371,9 @@ a {
   to   { transform: translateX(0);     opacity: 1; }
 }
 
-/* Sidebar close button — only visible on mobile */
-@media (min-width: 769px) {
-  .sidebar-close-btn {
+/* Desktop sidebar wrapper — hidden on mobile (drawer handles it instead) */
+@media (max-width: 768px) {
+  .sidebar-desktop-wrapper {
     display: none !important;
   }
 }

@@ -1,0 +1,373 @@
+/* ─────────────────────────────────────────────────────────
+   Spaces List page
+   All values reference tokens from tokens.css.
+   ───────────────────────────────────────────────────────── */
+
+/* ── Page shell ──────────────────────────────────────────── */
+/* No horizontal padding here — top bar needs full width */
+.slist-page {
+  min-height: 100%;
+  background: var(--page-bg);
+  padding-bottom: 60px;
+}
+
+.slist-inner {
+  max-width: var(--content-std);
+  margin: 0 auto;
+  padding: 28px 24px 0;
+}
+
+/* ── Desktop sticky top bar ──────────────────────────────── */
+.slist-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  height: 60px;
+  background: var(--nav-bg);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--separator);
+  margin-bottom: 24px;
+}
+
+/* Inner row: constrained to content width, matching .slist-inner */
+.slist-topbar-inner {
+  max-width: var(--content-std);
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.slist-topbar-title {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--label-primary);
+  flex-shrink: 0;
+}
+
+.slist-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Shared button — ghost and primary variants ───────────── */
+.slist-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--label-primary);
+  background: var(--surface-card);
+  border: 1px solid var(--separator);
+  cursor: pointer;
+  transition: background var(--ease-micro), transform var(--ease-micro);
+  white-space: nowrap;
+}
+
+.slist-btn:hover  { background: var(--surface-tertiary); }
+.slist-btn:active { transform: scale(0.97); }
+.slist-btn:disabled { opacity: 0.50; cursor: not-allowed; }
+
+.slist-btn--primary {
+  color: #ffffff;
+  background: var(--accent);
+  border-color: transparent;
+  box-shadow: var(--shadow-btn-accent);
+}
+
+.slist-btn--primary:hover { background: var(--accent-hover); }
+
+/* ── Mobile action row (Create + Join) ───────────────────── */
+/* Hidden on desktop; visible on mobile */
+.slist-mobile-actions {
+  display: none;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.slist-mobile-new {
+  flex: 1;
+  height: 48px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: var(--radius-xl);
+}
+
+/* Transparent border keeps height equal to the primary button */
+.slist-mobile-join {
+  height: 48px;
+  font-size: 15px;
+  padding: 0 20px;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--separator-strong);
+}
+
+/* ── Space grid ──────────────────────────────────────────── */
+.slist-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+/* ── Space card ──────────────────────────────────────────── */
+/* border required for dark-mode visibility — see design-system.md */
+.slist-card {
+  background: var(--surface-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--separator);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform var(--ease-standard), box-shadow var(--ease-standard);
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  /* Reset browser button defaults */
+  font-family: var(--font-sans);
+  padding: 0;
+}
+
+.slist-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-elevated);
+}
+
+.slist-card:active { transform: scale(0.98); }
+
+/* Cover — gradient or cover image */
+.slist-card-cover {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* Big initial letter on gradient fallback */
+.slist-card-initial {
+  font-size: 44px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.90);
+  letter-spacing: -0.02em;
+  user-select: none;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.20);
+}
+
+/* "Owner" pill badge on top-right corner of cover */
+.slist-card-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 3px 8px;
+  background: rgba(0, 0, 0, 0.45);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Text area below cover */
+.slist-card-body {
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.slist-card-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--label-primary);
+  line-height: 1.30;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.slist-card-desc {
+  font-size: 13px;
+  color: var(--label-secondary);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.slist-card-owner {
+  font-size: 12px;
+  color: var(--label-tertiary);
+  margin-top: 2px;
+}
+
+/* ── Empty state ─────────────────────────────────────────── */
+.slist-empty {
+  text-align: center;
+  padding: 60px 0;
+  color: var(--label-tertiary);
+  font-size: 15px;
+}
+
+/* ── Modal overlay ───────────────────────────────────────── */
+.slist-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.slist-modal {
+  background: var(--surface-card);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--separator);
+  width: 100%;
+  max-width: 460px;
+  box-shadow: var(--shadow-floating);
+  animation: slist-modal-in 250ms var(--ease-spring);
+}
+
+@keyframes slist-modal-in {
+  from { opacity: 0; transform: scale(0.94) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+.slist-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 24px 0;
+}
+
+.slist-modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--label-primary);
+}
+
+.slist-modal-close {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  background: var(--surface-secondary);
+  border: 1px solid var(--separator);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--label-secondary);
+  cursor: pointer;
+  transition: background var(--ease-micro);
+}
+
+.slist-modal-close:hover { background: var(--surface-tertiary); }
+
+.slist-modal-body {
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.slist-modal-footer {
+  padding: 16px 24px 22px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid var(--separator);
+}
+
+/* ── Modal form elements ─────────────────────────────────── */
+.slist-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--label-secondary);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.slist-required {
+  color: var(--system-red);
+  margin-left: 2px;
+}
+
+.slist-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--label-primary);
+  background: var(--surface-secondary);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color var(--ease-micro);
+}
+
+.slist-input:focus { border-color: var(--accent); }
+.slist-input::placeholder { color: var(--label-tertiary); }
+
+/* textarea variant */
+.slist-textarea {
+  height: auto;
+  padding: 10px 12px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.slist-error {
+  font-size: 13px;
+  color: var(--system-red);
+  margin-top: 8px;
+}
+
+/* ── Responsive — tablet (≤1068px) ──────────────────────── */
+@media (max-width: 1068px) {
+  .slist-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── Responsive — mobile (≤768px) ───────────────────────── */
+@media (max-width: 768px) {
+  /* AppLayout provides its own mobile top bar */
+  .slist-topbar { display: none; }
+
+  .slist-inner {
+    padding: 20px 16px 0;
+  }
+
+  .slist-mobile-actions {
+    display: flex;
+  }
+
+  .slist-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .slist-modal {
+    max-width: 100%;
+  }
+}

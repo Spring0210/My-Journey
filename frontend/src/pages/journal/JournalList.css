@@ -3,44 +3,66 @@
    All values reference tokens from tokens.css.
    ───────────────────────────────────────────────────────── */
 
-/* ── Page shell ──────────────────────────────────────���───── */
+/* ── Desktop/mobile bar visibility ───────────────────────── */
+.jlist-desktop-bar { display: block; }
+.jlist-mobile-bar  { display: none; }
+
+/* ── Page shell ──────────────────────────────────────────── */
+/* No horizontal padding here — top bar needs full width */
 .jlist-page {
   min-height: 100%;
-  /* --page-bg: #f5f5f7 light / #000000 dark — ensures card contrast in both modes */
   background: var(--page-bg);
-  padding: 32px 24px 60px;
+  padding-bottom: 60px;
 }
 
 .jlist-inner {
   max-width: var(--content-std);
   margin: 0 auto;
+  padding: 28px 24px 0;   /* horizontal padding lives here, not on .jlist-page */
 }
 
-/* ── Page header ─────────────────────────────────────────── */
-.jlist-header {
-  display: flex;
+/* ── Desktop sticky top bar ──────────────────────────────── */
+.jlist-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;             /* visible on desktop by default */
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
+  height: 60px;
+  background: var(--nav-bg);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--separator);
   margin-bottom: 24px;
 }
 
-/* Title 2 — 32px / 600 */
-.jlist-title {
-  font-size: 32px;
-  font-weight: 600;
-  line-height: 1.10;
-  letter-spacing: -0.015em;
-  color: var(--label-primary);
+/* Inner row: constrained to content width, matching .jlist-inner */
+.jlist-topbar-inner {
+  max-width: var(--content-std);
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
-.jlist-header-actions {
+/* Title 3 — 20px / 600, fits the bar height */
+.jlist-topbar-title {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--label-primary);
+  flex-shrink: 0;
+}
+
+.jlist-topbar-actions {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
 }
+
 
 /* ── Search toolbar ──────────────────────────────────────── */
 .jlist-toolbar {
@@ -118,6 +140,11 @@
   margin-bottom: 12px;
   font-size: 13px;
   color: var(--label-tertiary);
+}
+
+/* Search / Clear wrapper — inline on desktop, side-by-side row on mobile */
+.jlist-toolbar-btns {
+  display: contents; /* transparent on desktop — children join parent flex flow */
 }
 
 /* ── Toolbar buttons ─────────────────────────────────────── */
@@ -419,6 +446,251 @@
   border-radius: var(--radius-md);
 }
 
+/* ── Mobile search bar components ───────────────────────── */
+
+/* Full-width prominent New Entry CTA — top of mobile layout */
+.jlist-mobile-new-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 50px;
+  border-radius: var(--radius-xl);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--accent);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-btn-accent);
+  transition: background var(--ease-micro), transform var(--ease-micro);
+}
+
+.jlist-mobile-new-btn:hover  { background: var(--accent-hover); }
+.jlist-mobile-new-btn:active { transform: scale(0.98); }
+
+/* Keyword search input inside the collapsible search panel */
+/* font-size: 16px prevents iOS Safari from zooming in on focus */
+.jlist-mobile-input {
+  display: block;
+  width: 100%;
+  height: 42px;
+  padding: 0 16px;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  color: var(--label-primary);
+  background: var(--surface-secondary);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-sm);
+  outline: none;
+  margin-bottom: 8px;
+  transition: border-color var(--ease-micro);
+}
+
+.jlist-mobile-input:focus {
+  border-color: var(--accent);
+}
+
+.jlist-mobile-input::placeholder {
+  color: var(--label-tertiary);
+}
+
+/* Date input + Search + Clear inside the search panel */
+.jlist-search-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.jlist-date-input {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  font-size: 14px;
+  border-radius: var(--radius-sm);
+}
+
+/* Primary Search button */
+.jlist-search-btn {
+  height: 40px;
+  padding: 0 18px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  background: var(--accent);
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-btn-accent);
+  transition: background var(--ease-micro);
+}
+
+.jlist-search-btn:hover {
+  background: var(--accent-hover);
+}
+
+/* Ghost Clear button */
+.jlist-clear-btn {
+  height: 40px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--label-secondary);
+  background: transparent;
+  border: 1px solid var(--separator);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--ease-micro);
+}
+
+.jlist-clear-btn:hover {
+  background: var(--surface-tertiary);
+}
+
+/* ── Quick action grid (4 icon+label buttons) ────────────── */
+/* Inspired by iOS Contacts quick actions and WeChat shortcut grid */
+.jlist-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+/* Base quick action button */
+.jlist-qa {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 4px 10px;
+  background: var(--surface-card);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--ease-micro), transform var(--ease-micro);
+}
+
+.jlist-qa:hover  { background: var(--surface-tertiary); }
+.jlist-qa:active { transform: scale(0.95); }
+
+/* Colored icon badge */
+.jlist-qa-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--ease-micro), color var(--ease-micro);
+}
+
+/* Label below icon */
+.jlist-qa-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--label-secondary);
+  text-align: center;
+  line-height: 1.2;
+  transition: color var(--ease-micro);
+}
+
+/* Per-action color tints */
+.jlist-qa--search .jlist-qa-icon {
+  background: color-mix(in srgb, var(--system-blue) 14%, var(--surface-secondary));
+  color: var(--system-blue);
+}
+.jlist-qa--recap .jlist-qa-icon {
+  background: color-mix(in srgb, var(--system-orange) 14%, var(--surface-secondary));
+  color: var(--system-orange);
+}
+.jlist-qa--prompts .jlist-qa-icon {
+  background: color-mix(in srgb, var(--system-teal) 14%, var(--surface-secondary));
+  color: var(--system-teal);
+}
+.jlist-qa--ai .jlist-qa-icon {
+  background: color-mix(in srgb, var(--system-purple) 14%, var(--surface-secondary));
+  color: var(--system-purple);
+}
+
+/* Active state: filled icon + accent label (panel is open) */
+.jlist-qa--active .jlist-qa-icon {
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface-secondary));
+  color: var(--accent);
+}
+.jlist-qa--active .jlist-qa-label {
+  color: var(--accent);
+}
+
+/* Collapsible AI + date filter panel */
+.jlist-mobile-filters {
+  background: var(--surface-card);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  animation: panel-in 180ms var(--ease-standard);
+}
+
+@keyframes panel-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* A row inside the filter panel */
+.jlist-filter-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.jlist-filter-row .jlist-ai-input {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  font-size: 15px;
+}
+
+/* Compact buttons inside the filter panel */
+.jlist-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--label-primary);
+  background: var(--surface-secondary);
+  border: 1px solid var(--separator);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background var(--ease-micro);
+}
+
+.jlist-filter-btn:hover {
+  background: var(--surface-tertiary);
+}
+
+.jlist-filter-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* ── Responsive — tablet (≤1068px) ──────────────────────── */
 @media (max-width: 1068px) {
   .jlist-grid {
@@ -428,31 +700,21 @@
 
 /* ── Responsive — mobile (≤768px) ───────────────────────── */
 @media (max-width: 768px) {
+  /* Switch bar visibility */
+  .jlist-topbar      { display: none; }    /* AppLayout provides its own mobile top bar */
+  .jlist-desktop-bar { display: none; }
+  .jlist-mobile-bar  { display: block; }
+
   .jlist-page {
-    padding: 20px 16px 48px;
+    padding-bottom: 48px;
   }
 
-  .jlist-title {
-    font-size: 26px;
+  .jlist-inner {
+    padding: 20px 16px 0;
   }
 
   .jlist-grid {
     grid-template-columns: 1fr;
-  }
-
-  .jlist-toolbar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .jlist-input--keyword,
-  .jlist-input--date {
-    max-width: 100%;
-    width: 100%;
-  }
-
-  .jlist-ai-row {
-    flex-wrap: wrap;
   }
 
   .jlist-modal {

@@ -42,48 +42,78 @@ export interface PageResponse<T> {
   content: T[]
   totalPages: number
   totalElements: number
-  number: number       // current page (0-indexed)
-  size: number
-  last: boolean
+  currentPage: number  // 0-indexed, matches backend PageResponse record field
 }
 
 // ── Spaces ───────────────────────────────────────────────
 
-export interface Space {
+// Minimal response from create / update / join / cover-upload operations
+export interface SpaceResponse {
   id: number
   name: string
   description: string | null
-  coverImageUrl: string | null
+  inviteCode: string
+  coverImage: string | null
+}
+
+// Card in the "my spaces" list — includes current user's role
+export interface SpaceSummaryResponse {
+  id: number
+  name: string
+  description: string | null
+  coverImage: string | null
+  inviteCode: string
+  role: 'OWNER' | 'MEMBER'
+  ownerUsername: string
+}
+
+export interface MemberInfo {
+  userId: number
+  username: string
+  avatar: string | null
+  role: 'OWNER' | 'MEMBER'
+  joinedAt: string
+}
+
+// Full detail page response — includes member list
+export interface SpaceDetailResponse {
+  id: number
+  name: string
+  description: string | null
+  coverImage: string | null
   inviteCode: string
   ownerUsername: string
-  memberCount: number
+  members: MemberInfo[]
+}
+
+// Emoji reaction summary for a single post
+export interface ReactionSummary {
+  counts: Record<string, number>   // emoji → count (only emojis with ≥1 reaction)
+  myReaction: string | null
+}
+
+export interface CommentResponse {
+  id: number
+  content: string
+  authorId: number
+  authorUsername: string
+  authorAvatar: string | null
   createdAt: string
 }
 
-export interface SpacePost {
+// Full post — includes embedded reactions and comments
+export interface PostResponse {
   id: number
-  spaceId: number
-  content: string
-  imageUrls: string[]
-  videoUrls: string[]
+  content: string | null
+  images: string[]
+  videos: string[]
+  authorId: number
   authorUsername: string
-  authorAvatarUrl: string | null
-  reactionCount: number
-  commentCount: number
-  userReaction: string | null
+  authorAvatar: string | null
   createdAt: string
   updatedAt: string
-}
-
-export interface PostResponse extends SpacePost {}
-
-export interface SpacePostComment {
-  id: number
-  postId: number
-  content: string
-  authorUsername: string
-  authorAvatarUrl: string | null
-  createdAt: string
+  reactions: ReactionSummary
+  comments: CommentResponse[]
 }
 
 // ── Notifications ─────────────────────────────────────────

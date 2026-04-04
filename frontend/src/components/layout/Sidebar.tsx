@@ -73,15 +73,11 @@ export default function Sidebar({ isOpen, onClose, notificationCount = 0 }: Side
 
   const sidebarContent = (
     <aside ref={sidebarRef} style={styles.sidebar}>
-      {/* Brand + close button (mobile) */}
+      {/* Brand */}
       <div style={styles.header}>
         <span style={styles.brand}>
           My<span style={{ color: 'var(--accent)' }}>Journey</span>
         </span>
-        {/* sidebar-close-btn is display:none on desktop via tokens.css */}
-        <button className="sidebar-close-btn" style={styles.closeBtn} onClick={onClose} aria-label="Close menu">
-          <Icon name="close" size={20} />
-        </button>
       </div>
 
       {/* Navigation */}
@@ -148,8 +144,8 @@ export default function Sidebar({ isOpen, onClose, notificationCount = 0 }: Side
   // Mobile: render as overlay drawer; desktop: render inline
   return (
     <>
-      {/* Desktop sidebar */}
-      <div style={styles.desktopWrapper}>
+      {/* Desktop sidebar — hidden on mobile via .sidebar-desktop-wrapper CSS rule */}
+      <div className="sidebar-desktop-wrapper" style={styles.desktopWrapper}>
         {sidebarContent}
       </div>
 
@@ -217,7 +213,6 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     background: 'var(--surface-secondary)',
-    borderRight: '1px solid var(--separator)',
     padding: '12px 8px',
     overflowY: 'auto',
   },
@@ -232,17 +227,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     letterSpacing: '-0.02em',
     color: 'var(--label-primary)',
-  },
-  closeBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    color: 'var(--label-secondary)',
-    cursor: 'pointer',
-    // Only visible on mobile — hidden via desktopWrapper logic
   },
   nav: {
     flex: 1,
