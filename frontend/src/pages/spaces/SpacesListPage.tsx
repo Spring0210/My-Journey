@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { getMySpaces, createSpace, joinSpace } from '@/api/spaces'
 import type { SpaceSummaryResponse } from '@/types/api'
 import Icon from '@/components/ui/Icon'
+import PageTopBar from '@/components/ui/PageTopBar'
 import './Spaces.css'
 
 // ─────────────────────────────────────────────────────────
@@ -88,22 +89,21 @@ export default function SpacesListPage() {
   return (
     <div className="slist-page">
 
-      {/* Desktop sticky top bar */}
-      <header className="slist-topbar">
-        <div className="slist-topbar-inner">
-          <h1 className="slist-topbar-title">Spaces</h1>
-          <div className="slist-topbar-actions">
-            <button className="slist-btn" onClick={() => setShowJoin(true)}>
+      <PageTopBar
+        title="Spaces"
+        actions={
+          <>
+            <button className="slist-btn slist-btn--topbar" onClick={() => setShowJoin(true)}>
               <Icon name="link" size={15} />
-              Join Space
+              <span className="slist-btn-label">Join Space</span>
             </button>
-            <button className="slist-btn slist-btn--primary" onClick={() => setShowCreate(true)}>
+            <button className="slist-btn slist-btn--primary slist-btn--topbar" onClick={() => setShowCreate(true)}>
               <Icon name="plus" size={15} />
-              Create Space
+              <span className="slist-btn-label">Create Space</span>
             </button>
-          </div>
-        </div>
-      </header>
+          </>
+        }
+      />
 
       <div className="slist-inner">
 

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
-import Icon from '@/components/ui/Icon'
 import { apiRequest } from '@/api/client'
+import { AppLayoutContext } from '@/context/AppLayoutContext'
 
 // ─────────────────────────────────────────────────────────
 // AppLayout — shell for all authenticated pages.
@@ -37,51 +37,35 @@ export default function AppLayout() {
   }, [])
 
   return (
-    <div style={styles.shell}>
-      {/* Sidebar — hidden on mobile unless sidebarOpen */}
-      {!isMobile && (
-        <Sidebar
-          isOpen={false}
-          onClose={() => {}}
-          notificationCount={notifCount}
-        />
-      )}
-
-      {/* Mobile drawer overlay */}
-      {isMobile && (
-        <Sidebar
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          notificationCount={notifCount}
-        />
-      )}
-
-      {/* Main content area */}
-      <div style={styles.main}>
-        {/* Mobile top bar with hamburger */}
-        {isMobile && (
-          <div style={styles.mobileTopBar}>
-            <button
-              style={styles.hamburger}
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Open menu"
-            >
-              <Icon name="menu" size={20} />
-            </button>
-            <span style={styles.mobileBrand}>
-              My<span style={{ color: 'var(--accent)' }}>Journey</span>
-            </span>
-            {/* Spacer to keep brand centered */}
-            <div style={{ width: 36 }} />
-          </div>
+    // Provide openSidebar to all pages so PageTopBar can trigger the mobile drawer
+    <AppLayoutContext.Provider value={{ openSidebar: () => setSidebarOpen(true) }}>
+      <div style={styles.shell}>
+        {/* Desktop sidebar — always visible */}
+        {!isMobile && (
+          <Sidebar
+            isOpen={false}
+            onClose={() => {}}
+            notificationCount={notifCount}
+          />
         )}
 
-        {/* Page content — each page renders via <Outlet /> */}
-        <main style={styles.content}>
-          <Outlet />
-        </main>
+        {/* Mobile drawer overlay */}
+        {isMobile && (
+          <Sidebar
+            isOpen={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+            notificationCount={notifCount}
+          />
+        )}
+
+        {/* Main content area — PageTopBar inside each page handles the top bar */}
+        <div style={styles.main}>
+          <main style={styles.content}>
+            <Outlet />
+          </main>
+        </div>
       </div>
-    </div>
+    </AppLayoutContext.Provider>
   )
 }
 
@@ -98,41 +82,10 @@ const styles: Record<string, React.CSSProperties> = {
     minWidth: 0, // prevent flex overflow
     overflowX: 'hidden',
   },
-  mobileTopBar: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    height: 52,
-    padding: '0 16px',
-    background: 'var(--nav-bg)',
-    backdropFilter: 'saturate(180%) blur(20px)',
-    WebkitBackdropFilter: 'saturate(180%) blur(20px)',
-    borderBottom: '1px solid var(--separator)',
-    position: 'sticky',
-    top: 0,
-    zIndex: 50,
-  },
-  hamburger: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    color: 'var(--label-primary)',
-    cursor: 'pointer',
-  },
-  mobileBrand: {
-    fontSize: 17,
-    fontWeight: 700,
-    letterSpacing: '-0.02em',
-    color: 'var(--label-primary)',
-  },
   content: {
-    // No padding or maxWidth here — each page component controls its own
-    // padding, background color, and content width.
+    // Each page controls its own padding, background, and content width.
     flex: 1,
-    minWidth: 0,  // prevent flex overflow on narrow screens
+    minWidth: 0,
     overflowX: 'hidden',
   },
 }

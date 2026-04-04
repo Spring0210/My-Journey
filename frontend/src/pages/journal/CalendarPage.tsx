@@ -9,6 +9,7 @@ import type { DateClickArg } from '@fullcalendar/interaction'
 import { useAuth } from '@/context/AuthContext'
 import { getCalendarEntries } from '@/api/journal'
 import type { CalendarEvent } from '@/types/api'
+import PageTopBar from '@/components/ui/PageTopBar'
 import './Calendar.css'
 
 // ─────────────────────────────────────────────────────────
@@ -42,12 +43,7 @@ export default function CalendarPage() {
   return (
     <div className="cal-page">
 
-      {/* Sticky top bar — hidden on mobile */}
-      <header className="cal-topbar">
-        <div className="cal-topbar-inner">
-          <h1 className="cal-topbar-title">Calendar</h1>
-        </div>
-      </header>
+      <PageTopBar title="Calendar" />
 
       <div className="cal-inner">
         <div className="cal-wrap">

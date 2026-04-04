@@ -9,6 +9,7 @@ import {
 import type { SpaceDetailResponse, PostResponse, MemberInfo } from '@/types/api'
 import { useAuth } from '@/context/AuthContext'
 import Icon from '@/components/ui/Icon'
+import PageTopBar from '@/components/ui/PageTopBar'
 import './SpaceDetail.css'
 
 // ─────────────────────────────────────────────────────────
@@ -408,26 +409,19 @@ export default function SpaceDetailPage() {
   return (
     <div className="sdetail-page">
 
-      {/* ── Desktop sticky top bar ─────────────────────── */}
-      <header className="sdetail-topbar">
-        <div className="sdetail-topbar-inner">
-          <div className="sdetail-topbar-left">
-            <button className="sdetail-back-btn" onClick={() => navigate('/spaces')}>
-              <Icon name="arrow-left" size={16} />
-              Spaces
+      <PageTopBar
+        title={space.name}
+        backTo="/spaces"
+        backLabel="Spaces"
+        actions={
+          isOwner ? (
+            <button className="sdetail-btn sdetail-btn--topbar" onClick={openEditSpace}>
+              <Icon name="settings" size={15} />
+              <span className="sdetail-btn-label">Edit Space</span>
             </button>
-            <h1 className="sdetail-topbar-title">{space.name}</h1>
-          </div>
-          <div className="sdetail-topbar-right">
-            {isOwner && (
-              <button className="sdetail-btn" onClick={openEditSpace}>
-                <Icon name="settings" size={15} />
-                Edit Space
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
+          ) : undefined
+        }
+      />
 
       {/* ── Main layout: feed + sidebar ───────────────── */}
       <div className="sdetail-inner">

@@ -20,40 +20,11 @@
   font-size: 15px;
 }
 
-/* ── Desktop sticky top bar ──────────────────────────────── */
-.dash-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  height: 60px;
-  background: var(--nav-bg);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid var(--separator);
-  margin-bottom: 40px;
-}
-
-.dash-topbar-inner {
-  max-width: var(--content-narrow);
-  width: 100%;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-
-.dash-topbar-title {
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: -0.015em;
-  color: var(--label-primary);
-}
-
 /* ── Inner content — narrow centered column ──────────────── */
 .dash-inner {
   max-width: var(--content-narrow);
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 32px 24px 0;
   display: flex;
   flex-direction: column;
   gap: 28px;
@@ -375,8 +346,6 @@
 
 /* ── Responsive — mobile (≤768px) ───────────────────────── */
 @media (max-width: 768px) {
-  .dash-topbar { display: none; }
-
   .dash-inner {
     padding: 20px 16px 0;
     gap: 24px;

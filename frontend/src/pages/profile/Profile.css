@@ -10,41 +10,12 @@
   padding-bottom: 60px;
 }
 
-/* ── Desktop sticky top bar ──────────────────────────────── */
-.prof-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  height: 60px;
-  background: var(--nav-bg);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid var(--separator);
-  margin-bottom: 24px;
-}
-
-.prof-topbar-inner {
-  max-width: var(--content-auth);   /* narrow, settings pages don't need wide layout */
-  width: 100%;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-
-.prof-topbar-title {
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: -0.015em;
-  color: var(--label-primary);
-}
-
 /* ── Inner content area ──────────────────────────────────── */
 /* Single centered narrow column — like iOS Settings */
 .prof-inner {
   max-width: var(--content-auth);
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 24px 24px 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -375,9 +346,6 @@
 
 /* ── Responsive — mobile (≤768px) ───────────────────────── */
 @media (max-width: 768px) {
-  /* AppLayout provides its own mobile top bar */
-  .prof-topbar { display: none; }
-
   .prof-inner {
     padding: 16px 12px;
   }

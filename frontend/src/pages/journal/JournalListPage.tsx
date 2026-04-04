@@ -6,6 +6,7 @@ import {
 } from '@/api/journal'
 import type { JournalEntry } from '@/types/api'
 import Icon from '@/components/ui/Icon'
+import PageTopBar from '@/components/ui/PageTopBar'
 import './JournalList.css'
 
 // ─────────────────────────────────────────────────────────
@@ -173,26 +174,25 @@ export default function JournalListPage() {
   return (
     <div className="jlist-page">
 
-      {/* ── Desktop: sticky top bar (hidden on mobile) ─── */}
-      <header className="jlist-topbar">
-        <div className="jlist-topbar-inner">
-          <h1 className="jlist-topbar-title">My Journal</h1>
-          <div className="jlist-topbar-actions">
-            <button className="jlist-btn" onClick={() => { setShowRecap(true); setRecapText('') }}>
+      <PageTopBar
+        title="My Journal"
+        actions={
+          <>
+            <button className="jlist-btn jlist-btn--topbar" onClick={() => { setShowRecap(true); setRecapText('') }}>
               <Icon name="ai" size={16} />
-              Monthly Recap
+              <span className="jlist-btn-label">Monthly Recap</span>
             </button>
-            <button className="jlist-btn" onClick={openPrompts}>
+            <button className="jlist-btn jlist-btn--topbar" onClick={openPrompts}>
               <Icon name="journal" size={16} />
-              Writing Prompts
+              <span className="jlist-btn-label">Writing Prompts</span>
             </button>
-            <NavLink to="/journal/new" className="jlist-btn jlist-btn--primary">
+            <NavLink to="/journal/new" className="jlist-btn jlist-btn--primary jlist-btn--topbar">
               <Icon name="plus" size={16} />
               New entry
             </NavLink>
-          </div>
-        </div>
-      </header>
+          </>
+        }
+      />
 
       <div className="jlist-inner">
 

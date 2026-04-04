@@ -17,47 +17,6 @@
   padding: 28px 24px 0;
 }
 
-/* ── Desktop sticky top bar ──────────────────────────────── */
-.slist-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  height: 60px;
-  background: var(--nav-bg);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid var(--separator);
-  margin-bottom: 24px;
-}
-
-/* Inner row: constrained to content width, matching .slist-inner */
-.slist-topbar-inner {
-  max-width: var(--content-std);
-  width: 100%;
-  margin: 0 auto;
-  padding: 0 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.slist-topbar-title {
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: -0.015em;
-  color: var(--label-primary);
-  flex-shrink: 0;
-}
-
-.slist-topbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 /* ── Shared button — ghost and primary variants ───────────── */
 .slist-btn {
   display: inline-flex;
@@ -90,6 +49,18 @@
 }
 
 .slist-btn--primary:hover { background: var(--accent-hover); }
+
+/* Compact topbar variant */
+.slist-btn--topbar {
+  height: 32px;
+  font-size: 13px;
+  padding: 0 12px;
+}
+
+/* Hide label text on very small screens */
+@media (max-width: 480px) {
+  .slist-btn-label { display: none; }
+}
 
 /* ── Mobile action row (Create + Join) ───────────────────── */
 /* Hidden on desktop; visible on mobile */
@@ -352,9 +323,6 @@
 
 /* ── Responsive — mobile (≤768px) ───────────────────────── */
 @media (max-width: 768px) {
-  /* AppLayout provides its own mobile top bar */
-  .slist-topbar { display: none; }
-
   .slist-inner {
     padding: 20px 16px 0;
   }

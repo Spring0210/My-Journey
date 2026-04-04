@@ -21,49 +21,6 @@
   padding: 28px 24px 0;   /* horizontal padding lives here, not on .jlist-page */
 }
 
-/* ── Desktop sticky top bar ──────────────────────────────── */
-.jlist-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  display: flex;             /* visible on desktop by default */
-  align-items: center;
-  height: 60px;
-  background: var(--nav-bg);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid var(--separator);
-  margin-bottom: 24px;
-}
-
-/* Inner row: constrained to content width, matching .jlist-inner */
-.jlist-topbar-inner {
-  max-width: var(--content-std);
-  width: 100%;
-  margin: 0 auto;
-  padding: 0 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-/* Title 3 — 20px / 600, fits the bar height */
-.jlist-topbar-title {
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: -0.015em;
-  color: var(--label-primary);
-  flex-shrink: 0;
-}
-
-.jlist-topbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-
 /* ── Search toolbar ──────────────────────────────────────── */
 .jlist-toolbar {
   display: flex;
@@ -191,6 +148,19 @@
 
 .jlist-btn--primary:hover {
   background: var(--accent-hover);
+}
+
+/* Topbar variant — slightly smaller to fit 52px bar */
+.jlist-btn--topbar {
+  height: 32px;
+  font-size: 13px;
+  padding: 0 12px;
+}
+
+/* Hide secondary topbar buttons (Recap, Prompts) on mobile — too crowded */
+@media (max-width: 768px) {
+  .jlist-btn-label { display: none; }
+  .jlist-btn--topbar:not(.jlist-btn--primary) { display: none; }
 }
 
 /* ── Entry grid ──────────────────────────────────────────── */
@@ -701,7 +671,6 @@
 /* ── Responsive — mobile (≤768px) ───────────────────────── */
 @media (max-width: 768px) {
   /* Switch bar visibility */
-  .jlist-topbar      { display: none; }    /* AppLayout provides its own mobile top bar */
   .jlist-desktop-bar { display: none; }
   .jlist-mobile-bar  { display: block; }
 

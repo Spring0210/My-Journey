@@ -4,6 +4,7 @@ import { updateProfile, sendChangePasswordCode, changePassword } from '@/api/use
 import { apiRequest } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
 import Icon from '@/components/ui/Icon'
+import PageTopBar from '@/components/ui/PageTopBar'
 import './Profile.css'
 
 // ─────────────────────────────────────────────────────────
@@ -139,12 +140,7 @@ export default function ProfilePage() {
   return (
     <div className="prof-page">
 
-      {/* ── Desktop sticky top bar ─────────────────────── */}
-      <header className="prof-topbar">
-        <div className="prof-topbar-inner">
-          <h1 className="prof-topbar-title">Profile</h1>
-        </div>
-      </header>
+      <PageTopBar title="Profile" />
 
       <div className="prof-inner">
 

@@ -8,6 +8,7 @@ import {
 } from '@/api/notifications'
 import type { Notification } from '@/types/api'
 import Icon from '@/components/ui/Icon'
+import PageTopBar from '@/components/ui/PageTopBar'
 import './Notifications.css'
 
 // ─────────────────────────────────────────────────────────
@@ -96,31 +97,28 @@ export default function NotificationsPage() {
   return (
     <div className="notif-page">
 
-      {/* ── Desktop sticky top bar ─────────────────────── */}
-      <header className="notif-topbar">
-        <div className="notif-topbar-inner">
-          <h1 className="notif-topbar-title">
-            Notifications
+      <PageTopBar
+        title="Notifications"
+        actions={
+          <>
             {unreadCount > 0 && (
               <span className="notif-topbar-badge">{unreadCount}</span>
             )}
-          </h1>
-          <div className="notif-topbar-actions">
             {unreadCount > 0 && (
-              <button className="notif-btn" onClick={handleMarkAllRead}>
+              <button className="notif-btn notif-btn--topbar" onClick={handleMarkAllRead}>
                 <Icon name="check" size={14} />
-                Mark all read
+                <span className="notif-btn-label">Mark all read</span>
               </button>
             )}
             {notifs.length > 0 && (
-              <button className="notif-btn" onClick={handleDeleteAll}>
+              <button className="notif-btn notif-btn--topbar" onClick={handleDeleteAll}>
                 <Icon name="trash" size={14} />
-                Clear all
+                <span className="notif-btn-label">Clear all</span>
               </button>
             )}
-          </div>
-        </div>
-      </header>
+          </>
+        }
+      />
 
       <div className="notif-inner">
 

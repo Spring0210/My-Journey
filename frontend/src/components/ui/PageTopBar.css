@@ -1,0 +1,122 @@
+/* ─────────────────────────────────────────────────────────
+   PageTopBar — shared sticky navigation bar used by all
+   authenticated pages. Always visible on both mobile and
+   desktop. Frosted glass, 52px height.
+   ───────────────────────────────────────────────────────── */
+
+.page-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  height: 52px;
+  background: var(--nav-bg);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--separator);
+}
+
+/* Inner row — full width, consistent 8px side padding */
+.page-topbar-inner {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 0 8px;
+  gap: 4px;
+}
+
+/* ── Left: hamburger or back button ──────────────────────── */
+.page-topbar-left {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Icon button shared style */
+.page-topbar-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  color: var(--label-primary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background var(--ease-micro);
+}
+
+.page-topbar-icon-btn:hover  { background: var(--fill-quaternary); }
+.page-topbar-icon-btn:active { background: var(--fill-tertiary); }
+
+/* Hamburger shown only on mobile; hidden on desktop (sidebar is always visible) */
+.page-topbar-hamburger {
+  display: flex; /* visible on mobile */
+}
+
+/* Back button: visible on all sizes if backTo is set */
+.page-topbar-back {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 6px 0 2px;
+  height: 36px;
+  border-radius: 8px;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--accent);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity var(--ease-micro);
+}
+
+.page-topbar-back:hover  { opacity: 0.75; }
+.page-topbar-back:active { opacity: 0.55; }
+
+/* Back label — hide on very small screens to save space */
+.page-topbar-back-label {
+  display: inline;
+}
+
+/* ── Title ───────────────────────────────────────────────── */
+.page-topbar-title {
+  flex: 1;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--label-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 4px;
+}
+
+/* ── Right: action buttons ───────────────────────────────── */
+.page-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (min-width: 769px) {
+  /* Desktop: sidebar always visible, hamburger not needed */
+  .page-topbar-hamburger {
+    display: none;
+  }
+}
+
+@media (max-width: 390px) {
+  /* Very narrow phones: hide back label, keep icon only */
+  .page-topbar-back-label {
+    display: none;
+  }
+}

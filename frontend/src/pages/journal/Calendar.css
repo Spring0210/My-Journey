@@ -11,43 +11,11 @@
   padding-bottom: 60px;
 }
 
-/* ── Sticky top bar ──────────────────────────────────────── */
-.cal-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  height: 60px;
-  background: var(--nav-bg);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid var(--separator);
-  margin-bottom: 24px;
-}
-
-.cal-topbar-inner {
-  max-width: var(--content-std);
-  width: 100%;
-  margin: 0 auto;
-  padding: 0 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.cal-topbar-title {
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: -0.015em;
-  color: var(--label-primary);
-}
-
 /* Content area — horizontal padding lives here */
 .cal-inner {
   max-width: var(--content-std);
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 24px 24px 0;
 }
 
 /* ── FullCalendar card wrapper ───────────────────────────── */
@@ -210,10 +178,6 @@
 
 /* ── Responsive — mobile (≤768px) ───────────────────────── */
 @media (max-width: 768px) {
-  .cal-topbar {
-    display: none;   /* AppLayout provides mobile top bar */
-  }
-
   .cal-page {
     padding-bottom: 48px;
   }

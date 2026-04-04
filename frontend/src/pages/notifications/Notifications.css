@@ -10,43 +10,7 @@
   padding-bottom: 60px;
 }
 
-/* ── Desktop sticky top bar ──────────────────────────────── */
-.notif-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  height: 60px;
-  background: var(--nav-bg);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid var(--separator);
-  margin-bottom: 24px;
-}
-
-.notif-topbar-inner {
-  max-width: var(--content-narrow);  /* notifications are narrow — like iOS */
-  width: 100%;
-  margin: 0 auto;
-  padding: 0 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.notif-topbar-title {
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: -0.015em;
-  color: var(--label-primary);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Unread count badge next to the title */
+/* Unread count badge shown inside PageTopBar actions */
 .notif-topbar-badge {
   display: inline-flex;
   align-items: center;
@@ -61,17 +25,11 @@
   background: var(--system-red);
 }
 
-.notif-topbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 /* ── Inner content area ──────────────────────────────────── */
 .notif-inner {
   max-width: var(--content-narrow);
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 24px 24px 0;
 }
 
 /* ── Shared button ───────────────────────────────────────── */
@@ -96,6 +54,18 @@
 
 .notif-btn:hover  { background: var(--surface-tertiary); }
 .notif-btn:active { transform: scale(0.97); }
+
+/* Compact variant inside PageTopBar */
+.notif-btn--topbar {
+  height: 30px;
+  font-size: 12px;
+  padding: 0 10px;
+}
+
+/* Hide action labels on mobile to save space */
+@media (max-width: 480px) {
+  .notif-btn-label { display: none; }
+}
 
 /* Ghost variant — no background */
 .notif-btn--ghost {
@@ -302,8 +272,6 @@
 /* ── Responsive — mobile (≤768px) ───────────────────────── */
 @media (max-width: 768px) {
   /* AppLayout provides its own mobile top bar */
-  .notif-topbar { display: none; }
-
   .notif-inner {
     padding: 16px 12px 0;
   }

@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
-import { NavLink, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { getEntry, createEntry, editEntry, deleteEntry, deleteImage } from '@/api/journal'
 import type { JournalEntry } from '@/types/api'
 import Icon from '@/components/ui/Icon'
+import PageTopBar from '@/components/ui/PageTopBar'
 import './JournalDetail.css'
 
 // ─────────────────────────────────────────────────────────
@@ -152,6 +153,7 @@ export default function JournalDetailPage() {
   if (loadError) {
     return (
       <div className="jdetail-page">
+        <PageTopBar title="Entry" backTo="/journal" />
         <div className="jdetail-inner">
           <p style={{ color: 'var(--label-secondary)', fontSize: 15 }}>{loadError}</p>
         </div>
@@ -161,15 +163,14 @@ export default function JournalDetailPage() {
 
   return (
     <div className="jdetail-page">
-      <div className="jdetail-inner">
 
-        {/* Header */}
-        <div className="jdetail-header">
-          <NavLink to="/journal" className="jdetail-back">
-            <Icon name="arrow-left" size={16} />
-            Journal
-          </NavLink>
-          <div className="jdetail-header-actions">
+      {/* Sticky top bar with back button and save/options actions */}
+      <PageTopBar
+        title={isNew ? 'New Entry' : (title || 'Entry')}
+        backTo="/journal"
+        backLabel="Journal"
+        actions={
+          <div className="jdetail-topbar-actions">
             {saveStatus && <span className="jdetail-save-status">{saveStatus}</span>}
             {!isNew && (
               <div className="jdetail-menu-wrap" ref={menuRef}>
@@ -201,14 +202,17 @@ export default function JournalDetailPage() {
               </div>
             )}
             <button
-              className="jdetail-btn jdetail-btn--primary"
+              className="jdetail-btn jdetail-btn--primary jdetail-btn--topbar"
               onClick={handleSave}
               disabled={saving}
             >
-              {saving ? 'Saving...' : isNew ? 'Create entry' : 'Save changes'}
+              {saving ? 'Saving...' : isNew ? 'Create entry' : 'Save'}
             </button>
           </div>
-        </div>
+        }
+      />
+
+      <div className="jdetail-inner">
 
         {/* Writing card */}
         <div className="jdetail-card">

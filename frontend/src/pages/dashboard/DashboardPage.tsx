@@ -4,6 +4,7 @@ import { getEntries } from '@/api/journal'
 import { useAuth } from '@/context/AuthContext'
 import type { JournalEntry } from '@/types/api'
 import Icon from '@/components/ui/Icon'
+import PageTopBar from '@/components/ui/PageTopBar'
 import './Dashboard.css'
 
 // ─────────────────────────────────────────────────────────
@@ -53,12 +54,7 @@ export default function DashboardPage() {
   return (
     <div className="dash-page">
 
-      {/* ── Desktop sticky top bar ─────────────────────── */}
-      <header className="dash-topbar">
-        <div className="dash-topbar-inner">
-          <h1 className="dash-topbar-title">Dashboard</h1>
-        </div>
-      </header>
+      <PageTopBar title="Dashboard" />
 
       <div className="dash-inner">
         {loading ? (

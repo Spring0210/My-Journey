@@ -19,74 +19,6 @@
   font-size: 15px;
 }
 
-/* ── Desktop sticky top bar ──────────────────────────────── */
-.sdetail-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  height: 60px;
-  background: var(--nav-bg);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid var(--separator);
-  margin-bottom: 24px;
-}
-
-.sdetail-topbar-inner {
-  max-width: var(--content-wide);
-  width: 100%;
-  margin: 0 auto;
-  padding: 0 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.sdetail-topbar-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-
-.sdetail-topbar-right {
-  flex-shrink: 0;
-}
-
-/* Back button — text with arrow icon */
-.sdetail-back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  height: 32px;
-  padding: 0 10px 0 6px;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-sans);
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--accent);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background var(--ease-micro);
-}
-
-.sdetail-back-btn:hover { background: var(--fill-tertiary); }
-
-.sdetail-topbar-title {
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: -0.015em;
-  color: var(--label-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 /* ── Shared button variants ──────────────────────────────── */
 .sdetail-btn {
   display: inline-flex;
@@ -110,6 +42,18 @@
 .sdetail-btn:hover  { background: var(--surface-tertiary); }
 .sdetail-btn:active { transform: scale(0.97); }
 .sdetail-btn:disabled { opacity: 0.50; cursor: not-allowed; }
+
+/* Compact topbar variant */
+.sdetail-btn--topbar {
+  height: 30px;
+  font-size: 12px;
+  padding: 0 10px;
+}
+
+/* Hide label on very small screens */
+@media (max-width: 480px) {
+  .sdetail-btn-label { display: none; }
+}
 
 /* Accent (primary) variant */
 .sdetail-btn--accent {
@@ -144,7 +88,7 @@
 .sdetail-inner {
   max-width: var(--content-wide);
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 24px 24px 0;
 }
 
 /* Two-column body: feed (flex:1) + sidebar (fixed width) */
@@ -756,7 +700,7 @@
   gap: 12px;
   /* Sticky within the two-column body */
   position: sticky;
-  top: 84px; /* 60px topbar + 24px gap */
+  top: 76px; /* 52px topbar + 24px gap */
   max-height: calc(100vh - 108px);
   overflow-y: auto;
   scrollbar-width: none;
@@ -1200,9 +1144,6 @@
 
 /* ── Responsive — mobile (≤768px) ───────────────────────── */
 @media (max-width: 768px) {
-  /* AppLayout provides its own mobile top bar */
-  .sdetail-topbar { display: none; }
-
   .sdetail-inner {
     padding: 0 12px;
   }

@@ -7,40 +7,17 @@
 .jdetail-page {
   min-height: 100%;
   background: var(--page-bg);
-  padding: 24px 24px 60px;
+  padding-bottom: 60px;
 }
 
 .jdetail-inner {
   max-width: var(--content-narrow);  /* 692px — writing-optimized narrow column */
   margin: 0 auto;
+  padding: 24px 24px 0;
 }
 
-/* ── Header bar ──────────────────────────────────────────── */
-.jdetail-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-  gap: 12px;
-}
-
-/* Back chevron link */
-.jdetail-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--accent);
-  text-decoration: none;
-  transition: opacity var(--ease-micro);
-}
-
-.jdetail-back:hover {
-  opacity: 0.80;
-}
-
-.jdetail-header-actions {
+/* Actions row inside PageTopBar (save status + options menu + save button) */
+.jdetail-topbar-actions {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -96,6 +73,13 @@
 
 .jdetail-btn--primary:hover {
   background: var(--accent-hover);
+}
+
+/* Topbar variant — compact height to fit 52px bar */
+.jdetail-btn--topbar {
+  height: 32px;
+  font-size: 13px;
+  padding: 0 12px;
 }
 
 /* Destructive variant — Delete entry */
