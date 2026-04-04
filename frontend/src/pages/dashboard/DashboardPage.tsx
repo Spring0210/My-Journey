@@ -133,6 +133,13 @@ export default function DashboardPage() {
                           <p className="dash-entry-row-excerpt">{entry.content}</p>
                         )}
                       </div>
+                      {entry.imagePathList[0] && (
+                        <img
+                          src={entry.imagePathList[0]}
+                          alt=""
+                          className="dash-entry-row-thumb"
+                        />
+                      )}
                       <Icon name="chevron-right" size={15} className="dash-entry-row-arrow" />
                     </button>
                   ))}

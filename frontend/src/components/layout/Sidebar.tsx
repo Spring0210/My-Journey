@@ -75,9 +75,12 @@ export default function Sidebar({ isOpen, onClose, notificationCount = 0 }: Side
     <aside ref={sidebarRef} style={styles.sidebar}>
       {/* Brand */}
       <div style={styles.header}>
-        <span style={styles.brand}>
+        <button
+          style={{ ...styles.brand, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          onClick={() => { navigate('/dashboard'); onClose() }}
+        >
           My<span style={{ color: 'var(--accent)' }}>Journey</span>
-        </span>
+        </button>
       </div>
 
       {/* Navigation */}

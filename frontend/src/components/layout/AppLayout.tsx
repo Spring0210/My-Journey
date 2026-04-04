@@ -77,15 +77,16 @@ const styles: Record<string, React.CSSProperties> = {
   },
   main: {
     flex: 1,
+    height: '100vh',        // constrain height so sticky works within this scroll container
     display: 'flex',
     flexDirection: 'column',
-    minWidth: 0, // prevent flex overflow
+    minWidth: 0,            // prevent flex overflow
     overflowX: 'hidden',
+    overflowY: 'auto',      // explicit scroll container — required for position:sticky in pages
   },
   content: {
     // Each page controls its own padding, background, and content width.
     flex: 1,
     minWidth: 0,
-    overflowX: 'hidden',
   },
 }

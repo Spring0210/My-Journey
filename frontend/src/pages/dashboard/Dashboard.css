@@ -294,6 +294,15 @@
   text-overflow: ellipsis;
 }
 
+/* First image thumbnail — square, rounded */
+.dash-entry-row-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
 /* Chevron arrow */
 .dash-entry-row-arrow {
   color: var(--label-quaternary);
