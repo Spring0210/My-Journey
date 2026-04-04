@@ -143,7 +143,7 @@
 - [x] Module 2 — Global components (AppLayout, PublicLayout, AuthLayout, Sidebar, NavBar, Footer, Icon)
 - [x] Module 3 — Landing page
 - [x] Module 4 — Auth pages (Login, Register, Forgot Password, OAuth2 callback)
-- [ ] Module 5 — Journal pages (list, detail, create/edit, calendar)
+- [x] Module 5 — Journal pages (list, detail, create/edit, calendar)
 - [ ] Module 6 — Spaces pages (list, detail, posts, comments, reactions)
 - [ ] Module 7 — Other pages (Profile, Notifications, Dashboard)
 - [ ] Module 8 — Legal pages (Privacy Policy, Terms of Service)
