@@ -84,8 +84,13 @@
   outline-offset: 2px;
 }
 
-/* Column header row (Mon–Sun) — explicit background to prevent white bleed in dark mode */
-.cal-wrap .fc .fc-col-header-cell {
+/* Column header row (Mon–Sun) — cover all FullCalendar containers to prevent white
+   bleed in dark mode (fc-scrollgrid-section-header > td wraps a scroller div) */
+.cal-wrap .fc .fc-col-header-cell,
+.cal-wrap .fc .fc-scrollgrid-section-header > td,
+.cal-wrap .fc .fc-scrollgrid-section-header > th,
+.cal-wrap .fc .fc-scrollgrid-section-header .fc-scroller-harness,
+.cal-wrap .fc .fc-scrollgrid-section-header .fc-scroller {
   background: var(--surface-secondary);
 }
 

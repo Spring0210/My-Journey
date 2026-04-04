@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────
-   Profile page
+   Profile page — iOS Settings-inspired grouped list layout.
    All values reference tokens from tokens.css.
    ───────────────────────────────────────────────────────── */
 
@@ -10,105 +10,269 @@
   padding-bottom: 60px;
 }
 
-/* ── Inner content area ──────────────────────────────────── */
-/* Single centered narrow column — like iOS Settings */
+/* Narrow centered column */
 .prof-inner {
   max-width: var(--content-auth);
   margin: 0 auto;
-  padding: 24px 24px 0;
+  padding: 24px 20px 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
 }
 
-/* ── Settings card ───────────────────────────────────────── */
-/* border required for dark-mode visibility */
-.prof-card {
+/* ── Hero card ───────────────────────────────────────────── */
+/* Prominent avatar + username — visual anchor of the page */
+.prof-hero {
   background: var(--surface-card);
   border: 1px solid var(--separator);
-  border-radius: var(--radius-lg);
-  padding: 24px;
+  border-radius: var(--radius-xl);
+  padding: 32px 24px 28px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  align-items: center;
+  gap: 10px;
 }
 
-/* Section heading inside a card */
-.prof-card-title {
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--label-primary);
-}
-
-/* Helper text below a card title */
-.prof-card-sub {
-  font-size: 14px;
-  color: var(--label-tertiary);
-  line-height: 1.50;
-  margin-top: -8px;   /* tighten the gap after the title */
-}
-
-/* Danger card: no visual difference except the button color */
-.prof-card--danger .prof-card-title {
-  color: var(--label-secondary);
-}
-
-/* ── Avatar picker ───────────────────────────────────────── */
-.prof-avatar-wrap {
-  display: flex;
-  justify-content: center;
-}
-
-/* Large circular avatar */
-.prof-avatar {
+/* Avatar circle — clickable to change photo */
+.prof-hero-avatar {
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: 96px;
+  height: 96px;
   border-radius: var(--radius-full);
-  background: var(--fill-secondary);
-  overflow: hidden;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
-.prof-avatar img {
-  width: 100%;
-  height: 100%;
+.prof-hero-avatar img {
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radius-full);
   object-fit: cover;
+  display: block;
 }
 
-/* Fallback initial letter */
-.prof-avatar-initial {
+/* Gradient placeholder with initial letter */
+.prof-hero-avatar-initial {
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radius-full);
+  background: var(--gradient-icon-blue);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  height: 100%;
-  font-size: 32px;
+  font-size: 40px;
   font-weight: 700;
-  color: var(--label-secondary);
+  color: rgba(255, 255, 255, 0.90);
   user-select: none;
 }
 
-/* Translucent overlay with camera icon — appears on hover */
-.prof-avatar-overlay {
+/* Camera badge — always visible bottom-right */
+.prof-hero-avatar-badge {
   position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.38);
+  bottom: 2px;
+  right: 2px;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-full);
+  background: var(--surface-card);
+  border: 2px solid var(--surface-card);
+  box-shadow: var(--shadow-raised);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  color: var(--label-secondary);
+  pointer-events: none;  /* parent handles click */
+}
+
+.prof-hero-username {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--label-primary);
+  margin-top: 2px;
+}
+
+/* Inline save feedback in hero */
+.prof-hero-feedback {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.prof-hero-feedback--ok  { color: var(--system-green); }
+.prof-hero-feedback--err { color: var(--system-red);   }
+
+/* ── Section container ───────────────────────────────────── */
+.prof-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Small all-caps section label (like iOS Settings) */
+.prof-section-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--label-tertiary);
+  padding: 0 4px;
+}
+
+/* ── Grouped rows card ───────────────────────────────────── */
+/* border required for dark-mode visibility */
+.prof-rows-card {
+  background: var(--surface-card);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* ── Single row ──────────────────────────────────────────── */
+.prof-row {
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  padding: 0 16px;
+  gap: 12px;
+  border-bottom: 1px solid var(--separator);
+}
+
+.prof-row:last-child {
+  border-bottom: none;
+}
+
+/* Fixed-width label column */
+.prof-row-label {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--label-primary);
+  flex-shrink: 0;
+  width: 96px;
+}
+
+/* Value — secondary text, truncated */
+.prof-row-value {
+  flex: 1;
+  font-size: 15px;
+  color: var(--label-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Small icon button — edit / chevron */
+.prof-row-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: transparent;
   border: none;
+  color: var(--label-tertiary);
   cursor: pointer;
-  opacity: 0;
-  transition: opacity var(--ease-micro);
+  flex-shrink: 0;
+  transition: background var(--ease-micro), color var(--ease-micro);
 }
 
-.prof-avatar:hover .prof-avatar-overlay {
-  opacity: 1;
+.prof-row-icon-btn:hover {
+  background: var(--fill-quaternary);
+  color: var(--label-secondary);
 }
 
-/* ── Form fields ─────────────────────────────────────────── */
+/* ── Username edit state ─────────────────────────────────── */
+/* Row grows and wraps when in edit mode */
+.prof-row--editing {
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  align-items: center;
+  gap: 8px;
+}
+
+.prof-row-edit-input {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  padding: 0 12px;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--label-primary);
+  background: var(--surface-secondary);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color var(--ease-micro);
+}
+
+.prof-row-edit-input:focus {
+  border-color: var(--accent);
+}
+
+.prof-row-edit-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* ── Expandable row (Change Password) ────────────────────── */
+.prof-row--expandable {
+  cursor: pointer;
+  transition: background var(--ease-micro);
+  /* label fills full width — no fixed 96px column */
+}
+
+.prof-row--expandable:hover {
+  background: var(--fill-quaternary);
+}
+
+.prof-row--expandable:active {
+  background: var(--fill-tertiary);
+}
+
+/* Chevron rotates when row is open */
+.prof-row-chevron {
+  color: var(--fill-primary);
+  flex-shrink: 0;
+  transition: transform var(--ease-standard);
+}
+
+.prof-row--open .prof-row-chevron {
+  transform: rotate(90deg);
+}
+
+/* ── Password expand area ────────────────────────────────── */
+.prof-pw-expand {
+  padding: 16px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-top: 1px solid var(--separator);
+}
+
+/* Hint text */
+.prof-pw-hint {
+  font-size: 13px;
+  color: var(--label-tertiary);
+  line-height: 1.50;
+}
+
+/* Code hint after sending */
+.prof-code-hint {
+  font-size: 13px;
+  color: var(--label-tertiary);
+  line-height: 1.50;
+}
+
+.prof-pw-idle-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ── Form fields inside expand ───────────────────────────── */
 .prof-field {
   display: flex;
   flex-direction: column;
@@ -126,8 +290,7 @@
   height: 42px;
   padding: 0 14px;
   font-family: var(--font-sans);
-  /* 16px prevents iOS Safari zoom-on-focus */
-  font-size: 16px;
+  font-size: 16px;  /* 16px prevents iOS Safari zoom-on-focus */
   color: var(--label-primary);
   background: var(--surface-secondary);
   border: 1px solid var(--separator);
@@ -139,7 +302,7 @@
 .prof-input:focus { border-color: var(--accent); }
 .prof-input::placeholder { color: var(--label-tertiary); }
 
-/* Verification code: centered, letter-spacing, monospace feel */
+/* Centered monospace-feel code input */
 .prof-input--code {
   text-align: center;
   letter-spacing: 0.20em;
@@ -147,90 +310,7 @@
   font-weight: 600;
 }
 
-/* ── Save row ────────────────────────────────────────────── */
-.prof-save-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* Inline success indicator */
-.prof-save-ok {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--system-green);
-}
-
-.prof-save-err {
-  font-size: 13px;
-  color: var(--system-red);
-}
-
-/* ── Shared button variants ──────────────────────────────── */
-.prof-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  height: 42px;
-  padding: 0 20px;
-  border-radius: var(--radius-pill);
-  font-family: var(--font-sans);
-  font-size: 15px;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background var(--ease-micro), transform var(--ease-micro);
-  border: 1px solid transparent;
-}
-
-.prof-btn:active { transform: scale(0.97); }
-
-.prof-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-/* Primary — accent fill */
-.prof-btn--primary {
-  color: #ffffff;
-  background: var(--accent);
-  box-shadow: var(--shadow-btn-accent);
-}
-.prof-btn--primary:not(:disabled):hover { background: var(--accent-hover); }
-
-/* Secondary — ghost with border */
-.prof-btn--secondary {
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 8%, var(--surface-card));
-  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
-}
-.prof-btn--secondary:not(:disabled):hover {
-  background: color-mix(in srgb, var(--accent) 14%, var(--surface-card));
-}
-
-/* Ghost — subtle outline */
-.prof-btn--ghost {
-  color: var(--label-secondary);
-  background: transparent;
-  border-color: var(--separator);
-}
-.prof-btn--ghost:not(:disabled):hover { background: var(--surface-secondary); }
-
-/* Danger — red destructive action */
-.prof-btn--danger {
-  color: var(--system-red);
-  background: color-mix(in srgb, var(--system-red) 8%, var(--surface-card));
-  border-color: color-mix(in srgb, var(--system-red) 25%, transparent);
-}
-.prof-btn--danger:not(:disabled):hover {
-  background: color-mix(in srgb, var(--system-red) 14%, var(--surface-card));
-}
-
-/* ── Password field with show/hide toggle ────────────────── */
+/* Password field with show/hide toggle */
 .prof-pw-wrap {
   position: relative;
 }
@@ -255,12 +335,12 @@
 
 .prof-pw-toggle:hover { color: var(--label-secondary); }
 
-/* ── Password strength bar ───────────────────────────────── */
+/* Password strength bar */
 .prof-pw-strength {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .prof-pw-bar {
@@ -274,15 +354,15 @@
 .prof-pw-bar-fill {
   height: 100%;
   border-radius: var(--radius-pill);
-  transition: width 250ms ease, background 250ms ease;
   background: var(--fill-primary);
+  transition: width 250ms ease, background 250ms ease;
 }
 
 .prof-pw-bar--weak   .prof-pw-bar-fill { background: var(--system-red);    }
 .prof-pw-bar--fair   .prof-pw-bar-fill { background: var(--system-orange);  }
 .prof-pw-bar--strong .prof-pw-bar-fill { background: var(--system-green);   }
 
-.prof-pw-label {
+.prof-pw-strength-label {
   font-size: 12px;
   font-weight: 500;
   width: 40px;
@@ -290,22 +370,15 @@
   flex-shrink: 0;
 }
 
-.prof-pw-bar--weak   + .prof-pw-label { color: var(--system-red);    }
-.prof-pw-bar--fair   + .prof-pw-label { color: var(--system-orange);  }
-.prof-pw-bar--strong + .prof-pw-label { color: var(--system-green);   }
+.prof-pw-bar--weak   ~ .prof-pw-strength-label { color: var(--system-red);    }
+.prof-pw-bar--fair   ~ .prof-pw-strength-label { color: var(--system-orange);  }
+.prof-pw-bar--strong ~ .prof-pw-strength-label { color: var(--system-green);   }
 
-/* ── Change password actions row ─────────────────────────── */
+/* Actions row inside password expand */
 .prof-pw-actions {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
-}
-
-/* Code hint after sending */
-.prof-code-hint {
-  font-size: 13px;
-  color: var(--label-tertiary);
-  line-height: 1.50;
 }
 
 /* Resend code link-style button */
@@ -321,16 +394,10 @@
   transition: opacity var(--ease-micro);
 }
 
-.prof-resend-btn:hover   { opacity: 0.75; }
+.prof-resend-btn:hover    { opacity: 0.75; }
 .prof-resend-btn:disabled { opacity: 0.40; cursor: not-allowed; }
 
-/* ── Error text ──────────────────────────────────────────── */
-.prof-error {
-  font-size: 13px;
-  color: var(--system-red);
-}
-
-/* ── Password changed success banner ─────────────────────── */
+/* Success banner */
 .prof-pw-success {
   display: flex;
   align-items: center;
@@ -344,31 +411,108 @@
   color: var(--system-green);
 }
 
+/* Error text */
+.prof-error {
+  font-size: 13px;
+  color: var(--system-red);
+}
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.prof-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  transition: background var(--ease-micro), transform var(--ease-micro);
+}
+
+.prof-btn:active  { transform: scale(0.97); }
+.prof-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Primary — accent fill */
+.prof-btn--primary {
+  color: #ffffff;
+  background: var(--accent);
+  box-shadow: var(--shadow-btn-accent);
+}
+.prof-btn--primary:not(:disabled):hover { background: var(--accent-hover); }
+
+/* Ghost — subtle outline */
+.prof-btn--ghost {
+  color: var(--label-secondary);
+  background: transparent;
+  border-color: var(--separator);
+}
+.prof-btn--ghost:not(:disabled):hover { background: var(--surface-secondary); }
+
+/* Small variant — used inside rows */
+.prof-btn--sm {
+  height: 32px;
+  font-size: 13px;
+  padding: 0 12px;
+}
+
+/* ── Sign out button ─────────────────────────────────────── */
+/* Standalone — not inside a card, lives at the bottom */
+.prof-signout-btn {
+  width: 100%;
+  height: 48px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--system-red);
+  background: color-mix(in srgb, var(--system-red) 8%, var(--surface-card));
+  border: 1px solid color-mix(in srgb, var(--system-red) 20%, transparent);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-sans);
+  transition: background var(--ease-micro), transform var(--ease-micro);
+}
+
+.prof-signout-btn:hover  { background: color-mix(in srgb, var(--system-red) 14%, var(--surface-card)); }
+.prof-signout-btn:active { transform: scale(0.98); }
+
 /* ── Responsive — mobile (≤768px) ───────────────────────── */
 @media (max-width: 768px) {
   .prof-inner {
-    padding: 16px 12px;
+    padding: 16px 16px 0;
+    gap: 20px;
   }
 
-  .prof-card {
-    padding: 20px 16px;
+  .prof-hero {
+    padding: 28px 20px 24px;
   }
 
-  /* Buttons go full width on mobile */
-  .prof-btn {
-    width: 100%;
-  }
-
-  .prof-save-row {
+  /* Edit actions stack below the input on narrow screens */
+  .prof-row--editing {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
   }
 
+  .prof-row-edit-actions {
+    justify-content: flex-end;
+  }
+
+  .prof-pw-idle-actions,
   .prof-pw-actions {
     flex-direction: column-reverse;
   }
 
+  .prof-pw-idle-actions .prof-btn,
   .prof-pw-actions .prof-btn {
     width: 100%;
+    height: 44px;
   }
 }
