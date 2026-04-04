@@ -113,13 +113,13 @@
 ## Phase 6 — Frontend Migration
 
 ### Stack
-- [ ] Migrate from vanilla HTML/CSS/JS to React (Vite) + TypeScript + Tailwind CSS v4
-- [ ] Build output served from Spring Boot `static/` (single-service deployment, no Docker changes)
+- [x] Migrate from vanilla HTML/CSS/JS to React (Vite) + TypeScript + Tailwind CSS v4
+- [x] Build output served from Spring Boot `static/` (single-service deployment, no Docker changes)
 
 ### Design System
-- [ ] Apple HIG-inspired design language — SF Pro font stack, 8pt grid, system blue #007AFF
-- [ ] Light / dark mode — follows system preference by default, manual toggle in UI
-- [ ] Tailwind CSS v4 design tokens for colors, spacing, radius, shadow
+- [x] Apple HIG-inspired design language — SF Pro font stack, 8pt grid, system blue #007AFF
+- [x] Light / dark mode — follows system preference by default, manual toggle in UI
+- [x] Tailwind CSS v4 design tokens for colors, spacing, radius, shadow
 
 ### Pages
 - [ ] Landing page — product intro for unauthenticated visitors, CTA to sign up / log in
@@ -129,11 +129,21 @@
 - [ ] Other pages — Dashboard, Notifications, Profile
 - [ ] Privacy Policy (`/privacy`)
 - [ ] Terms of Service (`/terms`)
-- [ ] Footer on all pages with links to Privacy and Terms
+- [x] Footer on all pages with links to Privacy and Terms
 
 ### Architecture
-- [ ] TypeScript types for all API responses and shared data models (`src/types/api.ts`)
-- [ ] Global auth state via React Context (`userId`, `username`, `avatar`, `token`)
-- [ ] Typed API wrapper layer (`src/api/`) — no raw `fetch` in components
+- [x] TypeScript types for all API responses and shared data models (`src/types/api.ts`)
+- [x] Global auth state via React Context (`userId`, `username`, `avatar`, `token`)
+- [x] Typed API wrapper layer (`src/api/`) — no raw `fetch` in components
 - [ ] Google OAuth frontend (completes Phase 5 OAuth work)
 - [ ] PWA support — Web App Manifest + Service Worker (installable on mobile/desktop)
+
+### Module Progress
+- [x] Module 1 — Project scaffold (Vite + React + TypeScript + Tailwind v4, SpaController, Dockerfile)
+- [x] Module 2 — Global components (AppLayout, PublicLayout, AuthLayout, Sidebar, NavBar, Footer, Icon)
+- [ ] Module 3 — Landing page
+- [ ] Module 4 — Auth pages (Login, Register, Forgot Password, OAuth2 callback)
+- [ ] Module 5 — Journal pages (list, detail, create/edit, calendar)
+- [ ] Module 6 — Spaces pages (list, detail, posts, comments, reactions)
+- [ ] Module 7 — Other pages (Profile, Notifications, Dashboard)
+- [ ] Module 8 — Legal pages (Privacy Policy, Terms of Service)
