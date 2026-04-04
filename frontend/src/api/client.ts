@@ -70,10 +70,10 @@ export async function apiRequest<T>(
     throw new Error(text || `Request failed: ${res.status}`)
   }
 
-  // Return null for 204 No Content responses
-  if (res.status === 204) return null as T
-
-  return res.json() as Promise<T>
+  // Parse body: return null for empty/no-content responses, JSON otherwise
+  const text = await res.text()
+  if (!text.trim()) return null as T
+  return JSON.parse(text) as T
 }
 
 // Fetch wrapper for multipart/form-data uploads (images, videos)
@@ -111,6 +111,7 @@ export async function apiRequestWithFile<T>(
     throw new Error(text || `Request failed: ${res.status}`)
   }
 
-  if (res.status === 204) return null as T
-  return res.json() as Promise<T>
+  const text2 = await res.text()
+  if (!text2.trim()) return null as T
+  return JSON.parse(text2) as T
 }

@@ -114,6 +114,14 @@ export interface SearchResponse {
   query: string
 }
 
+// ── Calendar ──────────────────────────────────────────────
+
+export interface CalendarEvent {
+  id: number
+  title: string
+  start: string  // ISO date string "YYYY-MM-DD"
+}
+
 // ── Generic API error ─────────────────────────────────────
 
 export interface ApiError {

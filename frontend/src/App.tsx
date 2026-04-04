@@ -9,6 +9,9 @@ import LoginPage          from '@/pages/auth/LoginPage'
 import RegisterPage       from '@/pages/auth/RegisterPage'
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage'
 import OAuth2CallbackPage from '@/pages/auth/OAuth2CallbackPage'
+import JournalListPage   from '@/pages/journal/JournalListPage'
+import JournalDetailPage from '@/pages/journal/JournalDetailPage'
+import CalendarPage      from '@/pages/journal/CalendarPage'
 
 // Placeholder — replaced page by page during migration
 function ComingSoon({ name }: { name: string }) {
@@ -60,9 +63,10 @@ function AppRoutes() {
 
       {/* ── App pages (Sidebar layout, require auth) ──────── */}
       <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
-        <Route path="/journal"       element={<ComingSoon name="Journal" />} />
-        <Route path="/journal/:id"   element={<ComingSoon name="Journal Detail" />} />
-        <Route path="/calendar"      element={<ComingSoon name="Calendar" />} />
+        <Route path="/journal"       element={<JournalListPage />} />
+        <Route path="/journal/new"   element={<JournalDetailPage />} />
+        <Route path="/journal/:id"   element={<JournalDetailPage />} />
+        <Route path="/calendar"      element={<CalendarPage />} />
         <Route path="/spaces"        element={<ComingSoon name="Spaces" />} />
         <Route path="/spaces/:id"    element={<ComingSoon name="Space Detail" />} />
         <Route path="/notifications" element={<ComingSoon name="Notifications" />} />
