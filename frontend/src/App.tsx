@@ -1,6 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
 import { ThemeProvider } from '@/context/ThemeContext'
+import AppLayout    from '@/components/layout/AppLayout'
+import PublicLayout from '@/components/layout/PublicLayout'
+import AuthLayout   from '@/components/layout/AuthLayout'
 
 // Placeholder — replaced page by page during migration
 function ComingSoon({ name }: { name: string }) {
@@ -9,10 +12,9 @@ function ComingSoon({ name }: { name: string }) {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: '60vh',
-      fontFamily: 'var(--font-sans)',
+      minHeight: '40vh',
       color: 'var(--label-secondary)',
-      fontSize: '15px',
+      fontSize: 15,
     }}>
       {name} — coming soon
     </div>
@@ -34,25 +36,34 @@ function RedirectIfAuth({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   return (
     <Routes>
-      {/* Public */}
-      <Route path="/"        element={<ComingSoon name="Landing" />} />
-      <Route path="/privacy" element={<ComingSoon name="Privacy Policy" />} />
-      <Route path="/terms"   element={<ComingSoon name="Terms of Service" />} />
+      {/* ── Public pages (NavBar + Footer) ───────────────── */}
+      <Route element={<PublicLayout />}>
+        <Route path="/"        element={<ComingSoon name="Landing" />} />
+        <Route path="/privacy" element={<ComingSoon name="Privacy Policy" />} />
+        <Route path="/terms"   element={<ComingSoon name="Terms of Service" />} />
+      </Route>
 
-      {/* Auth */}
-      <Route path="/login"           element={<RedirectIfAuth><ComingSoon name="Login" /></RedirectIfAuth>} />
-      <Route path="/register"        element={<RedirectIfAuth><ComingSoon name="Register" /></RedirectIfAuth>} />
-      <Route path="/forgot-password" element={<RedirectIfAuth><ComingSoon name="Forgot Password" /></RedirectIfAuth>} />
+      {/* ── Auth pages (centered card, no sidebar) ────────── */}
+      <Route element={<RedirectIfAuth><AuthLayout /></RedirectIfAuth>}>
+        <Route path="/login"           element={<ComingSoon name="Login" />} />
+        <Route path="/register"        element={<ComingSoon name="Register" />} />
+        <Route path="/forgot-password" element={<ComingSoon name="Forgot Password" />} />
+      </Route>
+
+      {/* OAuth2 callback — no layout, handles redirect itself */}
       <Route path="/oauth2/callback" element={<ComingSoon name="OAuth2 Callback" />} />
 
-      {/* App — require auth */}
-      <Route path="/journal"       element={<RequireAuth><ComingSoon name="Journal" /></RequireAuth>} />
-      <Route path="/journal/:id"   element={<RequireAuth><ComingSoon name="Journal Detail" /></RequireAuth>} />
-      <Route path="/calendar"      element={<RequireAuth><ComingSoon name="Calendar" /></RequireAuth>} />
-      <Route path="/spaces"        element={<RequireAuth><ComingSoon name="Spaces" /></RequireAuth>} />
-      <Route path="/spaces/:id"    element={<RequireAuth><ComingSoon name="Space Detail" /></RequireAuth>} />
-      <Route path="/notifications" element={<RequireAuth><ComingSoon name="Notifications" /></RequireAuth>} />
-      <Route path="/profile"       element={<RequireAuth><ComingSoon name="Profile" /></RequireAuth>} />
+      {/* ── App pages (Sidebar layout, require auth) ──────── */}
+      <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
+        <Route path="/journal"       element={<ComingSoon name="Journal" />} />
+        <Route path="/journal/:id"   element={<ComingSoon name="Journal Detail" />} />
+        <Route path="/calendar"      element={<ComingSoon name="Calendar" />} />
+        <Route path="/spaces"        element={<ComingSoon name="Spaces" />} />
+        <Route path="/spaces/:id"    element={<ComingSoon name="Space Detail" />} />
+        <Route path="/notifications" element={<ComingSoon name="Notifications" />} />
+        <Route path="/profile"       element={<ComingSoon name="Profile" />} />
+        <Route path="/search"        element={<ComingSoon name="Smart Search" />} />
+      </Route>
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
