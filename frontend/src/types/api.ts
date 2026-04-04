@@ -27,6 +27,12 @@ export interface User {
   createdAt: string
 }
 
+// Returned after PUT /api/profile/{userId}
+export interface ProfileResponse {
+  username: string
+  avatar: string | null
+}
+
 // ── Journal ──────────────────────────────────────────────
 
 export interface JournalEntry {

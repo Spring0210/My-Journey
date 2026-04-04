@@ -15,6 +15,7 @@ import CalendarPage      from '@/pages/journal/CalendarPage'
 import SpacesListPage      from '@/pages/spaces/SpacesListPage'
 import SpaceDetailPage     from '@/pages/spaces/SpaceDetailPage'
 import NotificationsPage   from '@/pages/notifications/NotificationsPage'
+import ProfilePage         from '@/pages/profile/ProfilePage'
 
 // Placeholder — replaced page by page during migration
 function ComingSoon({ name }: { name: string }) {
@@ -73,7 +74,7 @@ function AppRoutes() {
         <Route path="/spaces"        element={<SpacesListPage />} />
         <Route path="/spaces/:id"    element={<SpaceDetailPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
-        <Route path="/profile"       element={<ComingSoon name="Profile" />} />
+        <Route path="/profile"       element={<ProfilePage />} />
         <Route path="/search"        element={<ComingSoon name="Smart Search" />} />
       </Route>
 
