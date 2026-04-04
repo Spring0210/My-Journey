@@ -78,7 +78,8 @@ export default function Sidebar({ isOpen, onClose, notificationCount = 0 }: Side
         <span style={styles.brand}>
           My<span style={{ color: 'var(--accent)' }}>Journey</span>
         </span>
-        <button style={styles.closeBtn} onClick={onClose} aria-label="Close menu">
+        {/* sidebar-close-btn is display:none on desktop via tokens.css */}
+        <button className="sidebar-close-btn" style={styles.closeBtn} onClick={onClose} aria-label="Close menu">
           <Icon name="close" size={20} />
         </button>
       </div>
@@ -397,7 +398,7 @@ const styles: Record<string, React.CSSProperties> = {
     inset: 0,
     zIndex: 200,
     background: 'rgba(0,0,0,0.40)',
-    display: 'none', // controlled via CSS media query below
+    // No display:none — visibility is controlled by conditional {isOpen && ...} rendering
   },
   mobileDrawer: {
     position: 'absolute' as const,
@@ -405,5 +406,8 @@ const styles: Record<string, React.CSSProperties> = {
     left: 0,
     bottom: 0,
     width: 280,
+    background: 'var(--surface-secondary)',
+    boxShadow: 'var(--shadow-floating)',
+    animation: 'drawer-in 250ms cubic-bezier(0.34, 1.56, 0.64, 1)',
   },
 }

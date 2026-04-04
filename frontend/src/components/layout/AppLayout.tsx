@@ -129,12 +129,10 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--label-primary)',
   },
   content: {
+    // No padding or maxWidth here — each page component controls its own
+    // padding, background color, and content width.
     flex: 1,
-    padding: '32px 32px 48px',
-    maxWidth: 1100,
-    width: '100%',
-    margin: '0 auto',
-    // Tighter padding on mobile — overridden in component-level CSS
-    boxSizing: 'border-box',
+    minWidth: 0,  // prevent flex overflow on narrow screens
+    overflowX: 'hidden',
   },
 }

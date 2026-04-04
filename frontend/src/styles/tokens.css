@@ -365,16 +365,16 @@ a {
   box-shadow: var(--shadow-raised);
 }
 
-/* Mobile sidebar overlay */
-@media (max-width: 768px) {
-  .sidebar-mobile-overlay {
-    display: block !important;
-  }
+/* Mobile sidebar drawer — slide in from left */
+@keyframes drawer-in {
+  from { transform: translateX(-100%); opacity: 0.6; }
+  to   { transform: translateX(0);     opacity: 1; }
 }
 
-/* Sidebar close button — desktop only */
+/* Sidebar close button — only visible on mobile */
 @media (min-width: 769px) {
   .sidebar-close-btn {
     display: none !important;
   }
 }
+
