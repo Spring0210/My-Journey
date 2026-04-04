@@ -1,6 +1,6 @@
 /* ─────────────────────────────────────────────────────────
-   Dashboard page
-   Layout: content-wide (1100px), two-column (main + sidebar).
+   Dashboard page — minimal single-column layout.
+   Max-width: content-narrow (692px), centered.
    All values reference tokens from tokens.css.
    ───────────────────────────────────────────────────────── */
 
@@ -8,7 +8,7 @@
 .dash-page {
   min-height: 100%;
   background: var(--page-bg);
-  padding-bottom: 60px;
+  padding-bottom: 80px;
 }
 
 .dash-loading {
@@ -32,11 +32,11 @@
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--separator);
-  margin-bottom: 24px;
+  margin-bottom: 40px;
 }
 
 .dash-topbar-inner {
-  max-width: var(--content-wide);
+  max-width: var(--content-narrow);
   width: 100%;
   margin: 0 auto;
   padding: 0 24px;
@@ -49,100 +49,69 @@
   color: var(--label-primary);
 }
 
-/* ── Content area ────────────────────────────────────────── */
+/* ── Inner content — narrow centered column ──────────────── */
 .dash-inner {
-  max-width: var(--content-wide);
+  max-width: var(--content-narrow);
   margin: 0 auto;
   padding: 0 24px;
-}
-
-/* Two-column layout: main (flex:1) + sidebar (300px) */
-.dash-body {
-  display: flex;
-  align-items: flex-start;
-  gap: 24px;
-}
-
-/* ── Main column ─────────────────────────────────────────── */
-.dash-main {
-  flex: 1;
-  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 28px;
 }
 
 /* ── Greeting ────────────────────────────────────────────── */
 .dash-greeting {
-  padding: 4px 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-/* Title 1 weight — prominent but not overpowering */
-.dash-greeting-text {
-  font-size: 26px;
-  font-weight: 600;
+/* Title 1 — 28px / 400 (iOS app scale) */
+.dash-greeting-line {
+  font-size: 28px;
+  font-weight: 400;
   letter-spacing: -0.02em;
   color: var(--label-primary);
   line-height: 1.20;
 }
 
 .dash-greeting-name {
+  font-weight: 600;
   color: var(--accent);
 }
 
+/* Caption — today's date */
 .dash-greeting-date {
-  font-size: 14px;
-  font-weight: 400;
+  font-size: 15px;
   color: var(--label-tertiary);
-  margin-top: 4px;
 }
 
-/* ── Today's entry card ──────────────────────────────────── */
-/* Shared base */
-.dash-today-card {
-  display: flex;
+/* ── Today card — shared base ────────────────────────────── */
+.dash-today {
   width: 100%;
   border-radius: var(--radius-xl);
   border: 1px solid var(--separator);
-  text-align: left;
   font-family: var(--font-sans);
-  overflow: hidden;
+  text-align: left;
   transition: transform var(--ease-standard), box-shadow var(--ease-standard);
 }
 
-.dash-today-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-elevated);
-}
-
-.dash-today-card:active { transform: scale(0.99); }
-
-/* CTA variant — gradient background, calls to write */
-.dash-today-card--cta {
-  background: linear-gradient(135deg,
-    color-mix(in srgb, var(--accent) 90%, #000) 0%,
-    color-mix(in srgb, var(--system-indigo) 80%, #000) 100%
-  );
-  padding: 24px 28px;
+/* ── Today: CTA variant (nothing written yet) ────────────── */
+.dash-today--cta {
+  display: flex;
   align-items: center;
   gap: 20px;
+  padding: 24px 28px;
+  /* Subtle blue-to-indigo gradient — inviting, not loud */
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 88%, #000000) 0%,
+    color-mix(in srgb, var(--system-indigo) 80%, #000000) 100%
+  );
   cursor: default;
 }
 
-/* Glowing icon circle */
-.dash-today-cta-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.18);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-  flex-shrink: 0;
-}
-
-.dash-today-cta-text {
+.dash-today-cta-left {
   flex: 1;
   min-width: 0;
 }
@@ -156,14 +125,14 @@
 
 .dash-today-cta-sub {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.70);
   line-height: 1.45;
 }
 
-/* "Start writing" button inside the gradient card */
+/* "Start writing" pill button on gradient card */
 .dash-today-cta-btn {
   flex-shrink: 0;
-  height: 38px;
+  height: 36px;
   padding: 0 18px;
   border-radius: var(--radius-pill);
   font-family: var(--font-sans);
@@ -177,27 +146,58 @@
   transition: opacity var(--ease-micro), transform var(--ease-micro);
 }
 
-.dash-today-cta-btn:hover  { opacity: 0.90; }
+.dash-today-cta-btn:hover  { opacity: 0.88; }
 .dash-today-cta-btn:active { transform: scale(0.97); }
 
-/* Written variant — entry preview card */
-.dash-today-card--written {
-  background: var(--surface-card);
-  padding: 20px 24px;
+/* ── Today: written variant (entry exists) ───────────────── */
+.dash-today--written {
+  display: flex;
   flex-direction: column;
   gap: 8px;
+  padding: 20px 24px;
+  background: var(--surface-card);
   cursor: pointer;
 }
 
-.dash-today-written-header {
+.dash-today--written:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-raised);
+}
+
+.dash-today--written:active { transform: scale(0.99); }
+
+/* Top row: check icon + "Today's entry" label + date */
+.dash-today-written-meta {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.dash-today-written-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--system-green) 15%, transparent);
+  color: var(--system-green);
+  flex-shrink: 0;
+}
+
+.dash-today-written-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--system-green);
 }
 
-.dash-today-written-header .dash-eyebrow {
-  color: var(--system-green);
+/* Spacer pushes the date to the right */
+.dash-today-written-date {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--label-tertiary);
 }
 
 .dash-today-written-title {
@@ -217,31 +217,34 @@
   overflow: hidden;
 }
 
-/* ── Eyebrow label (design system §3.4 / §9.4) ───────────── */
-/* 12px / 600 / UPPERCASE / accent / 0.08em tracking */
-.dash-eyebrow {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--accent);
+/* ── Recent entries section ──────────────────────────────── */
+.dash-recent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-/* ── Section header row ──────────────────────────────────── */
-.dash-section-header {
+.dash-recent-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+}
+
+/* "Recent" label — Subhead style */
+.dash-recent-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--label-secondary);
+  letter-spacing: -0.005em;
 }
 
 /* "View all →" text link */
-.dash-section-more {
+.dash-recent-all {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: 14px;
   color: var(--accent);
   background: transparent;
   border: none;
@@ -250,142 +253,80 @@
   transition: opacity var(--ease-micro);
 }
 
-.dash-section-more:hover { opacity: 0.75; }
+.dash-recent-all:hover { opacity: 0.75; }
 
-/* ── Recent entries list ─────────────────────────────────── */
-.dash-entries-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-/* Compact entry row card */
-/* border required for dark-mode contrast */
-.dash-entry-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
+/* Entries grouped in one card — iOS grouped table style */
+/* border required for dark-mode visibility */
+.dash-entry-list {
   background: var(--surface-card);
   border: 1px solid var(--separator);
   border-radius: var(--radius-lg);
-  padding: 16px 18px;
+  overflow: hidden;
+}
+
+/* Single entry row */
+.dash-entry-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 20px;
+  background: transparent;
+  border: none;
   cursor: pointer;
   text-align: left;
   font-family: var(--font-sans);
-  transition: transform var(--ease-standard), box-shadow var(--ease-standard);
-  width: 100%;
+  transition: background var(--ease-micro);
 }
 
-.dash-entry-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-raised);
+.dash-entry-row:hover { background: var(--fill-quaternary); }
+.dash-entry-row:active { background: var(--fill-tertiary); }
+
+/* Separator between rows (not after last) */
+.dash-entry-row--border {
+  border-bottom: 1px solid var(--separator);
 }
 
-.dash-entry-card:active { transform: scale(0.99); }
-
-.dash-entry-card-inner {
+.dash-entry-row-inner {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 
-/* Eyebrow date — accent color, uppercase */
-.dash-entry-date {
-  font-size: 11px;
+/* Date — Caption / eyebrow style */
+.dash-entry-row-date {
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--accent);
+  text-transform: uppercase;
 }
 
-/* Headline */
-.dash-entry-title {
+/* Title — Subhead */
+.dash-entry-row-title {
   font-size: 15px;
-  font-weight: 600;
-  color: var(--label-primary);
-  line-height: 1.30;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Callout excerpt */
-.dash-entry-excerpt {
-  font-size: 13px;
-  color: var(--label-secondary);
-  line-height: 1.45;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Thumbnail */
-.dash-entry-thumb {
-  width: 60px;
-  height: 60px;
-  border-radius: var(--radius-sm);
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-/* ── Spaces row ──────────────────────────────────────────── */
-.dash-spaces-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-}
-
-/* Compact space card */
-.dash-space-card {
-  display: flex;
-  flex-direction: column;
-  background: var(--surface-card);
-  border: 1px solid var(--separator);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  cursor: pointer;
-  transition: transform var(--ease-standard), box-shadow var(--ease-standard);
-  font-family: var(--font-sans);
-  padding: 0;
-  text-align: left;
-}
-
-.dash-space-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-raised);
-}
-
-.dash-space-card:active { transform: scale(0.98); }
-
-/* Space cover: gradient or image */
-.dash-space-cover {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.dash-space-initial {
-  font-size: 28px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.90);
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.20);
-  user-select: none;
-}
-
-.dash-space-name {
-  font-size: 13px;
   font-weight: 500;
   color: var(--label-primary);
-  padding: 10px 12px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Excerpt — Footnote */
+.dash-entry-row-excerpt {
+  font-size: 13px;
+  color: var(--label-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Chevron arrow */
+.dash-entry-row-arrow {
+  color: var(--label-quaternary);
+  flex-shrink: 0;
 }
 
 /* ── Empty state ─────────────────────────────────────────── */
@@ -393,370 +334,61 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   text-align: center;
-  padding: 52px 0;
-  gap: 10px;
+  padding: 48px 0;
+  gap: 8px;
 }
 
 .dash-empty-title {
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 600;
-  color: var(--label-primary);
+  color: var(--label-secondary);
 }
 
 .dash-empty-sub {
-  font-size: 15px;
+  font-size: 14px;
   color: var(--label-tertiary);
-  max-width: 320px;
-  line-height: 1.55;
+  line-height: 1.5;
+  margin-bottom: 8px;
 }
 
-.dash-empty-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 8px;
-}
-
-/* ── Shared button ───────────────────────────────────────── */
-.dash-btn {
+.dash-empty-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 38px;
-  padding: 0 18px;
+  height: 40px;
+  padding: 0 20px;
   border-radius: var(--radius-pill);
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background var(--ease-micro), transform var(--ease-micro);
-}
-
-.dash-btn:active { transform: scale(0.97); }
-
-.dash-btn--primary {
   color: #ffffff;
   background: var(--accent);
-  border: 1px solid transparent;
-  box-shadow: var(--shadow-btn-accent);
-}
-
-.dash-btn--primary:hover { background: var(--accent-hover); }
-
-.dash-btn--ghost {
-  color: var(--label-secondary);
-  background: var(--surface-card);
-  border: 1px solid var(--separator);
-}
-
-.dash-btn--ghost:hover { background: var(--surface-tertiary); }
-
-/* ── Sidebar column ──────────────────────────────────────── */
-.dash-sidebar {
-  width: 288px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  /* Stick within the two-column layout */
-  position: sticky;
-  top: 84px;  /* 60px topbar + 24px gap */
-  max-height: calc(100vh - 108px);
-  overflow-y: auto;
-  scrollbar-width: none;
-}
-
-.dash-sidebar::-webkit-scrollbar { display: none; }
-
-/* ── Sidebar card — standard card spec from design-system §8.5 ─ */
-.dash-card {
-  background: var(--surface-card);
-  border: 1px solid var(--separator);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.dash-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-
-.dash-card-empty {
-  font-size: 13px;
-  color: var(--label-tertiary);
-  padding: 4px 0;
-}
-
-.dash-card-more {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-family: var(--font-sans);
-  font-size: 12px;
-  color: var(--accent);
-  background: transparent;
   border: none;
   cursor: pointer;
-  padding: 8px 0 0;
-  transition: opacity var(--ease-micro);
-}
-
-.dash-card-more:hover { opacity: 0.75; }
-
-/* ── Stats row ───────────────────────────────────────────── */
-.dash-stats {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  margin-top: 4px;
-}
-
-.dash-stat {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-}
-
-.dash-stat-divider {
-  width: 1px;
-  height: 32px;
-  background: var(--separator);
-  flex-shrink: 0;
-}
-
-/* Large number */
-.dash-stat-value {
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--label-primary);
-  line-height: 1;
-}
-
-/* Streak in orange to make it feel like a reward */
-.dash-stat-value--streak {
-  color: var(--system-orange);
-}
-
-.dash-stat-label {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--label-tertiary);
-  text-align: center;
-}
-
-/* ── Unread notification badge ───────────────────────────── */
-.dash-notif-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: var(--radius-pill);
-  font-size: 10px;
-  font-weight: 700;
-  color: #ffffff;
-  background: var(--system-red);
-}
-
-/* ── Notification compact list ───────────────────────────── */
-.dash-notif-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.dash-notif-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--separator);
-  cursor: pointer;
-  transition: background var(--ease-micro);
-  border-radius: var(--radius-sm);
-  padding-inline: 4px;
-}
-
-.dash-notif-item:last-child {
-  border-bottom: none;
-}
-
-.dash-notif-item:hover {
-  background: var(--fill-quaternary);
-}
-
-/* Unread blue dot */
-.dash-notif-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: var(--radius-full);
-  background: transparent;
-  margin-top: 5px;
-  flex-shrink: 0;
-  transition: background var(--ease-micro);
-}
-
-.dash-notif-item--unread .dash-notif-dot {
-  background: var(--accent);
-}
-
-.dash-notif-body {
-  flex: 1;
-  min-width: 0;
-}
-
-.dash-notif-text {
-  font-size: 13px;
-  line-height: 1.45;
-  color: var(--label-primary);
-}
-
-.dash-notif-actor {
-  font-weight: 600;
-}
-
-.dash-notif-space {
-  font-weight: 600;
-  color: var(--accent);
-}
-
-.dash-notif-time {
-  font-size: 11px;
-  color: var(--label-tertiary);
-  margin-top: 2px;
-}
-
-/* ── Quick actions grid ──────────────────────────────────── */
-/* 2×2 grid of icon + label buttons */
-.dash-quick-actions {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-}
-
-.dash-quick-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 7px;
-  padding: 14px 8px 12px;
-  background: var(--surface-secondary);
-  border: 1px solid var(--separator);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  font-family: var(--font-sans);
+  box-shadow: var(--shadow-btn-accent);
   transition: background var(--ease-micro), transform var(--ease-micro);
 }
 
-.dash-quick-btn:hover  { background: var(--surface-tertiary); }
-.dash-quick-btn:active { transform: scale(0.95); }
-
-/* Colored icon badge — same pattern as JournalList quick actions */
-.dash-quick-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.dash-quick-icon--blue {
-  background: color-mix(in srgb, var(--system-blue) 14%, var(--surface-secondary));
-  color: var(--system-blue);
-}
-
-.dash-quick-icon--orange {
-  background: color-mix(in srgb, var(--system-orange) 14%, var(--surface-secondary));
-  color: var(--system-orange);
-}
-
-.dash-quick-icon--green {
-  background: color-mix(in srgb, var(--system-green) 14%, var(--surface-secondary));
-  color: var(--system-green);
-}
-
-.dash-quick-icon--purple {
-  background: color-mix(in srgb, var(--system-purple) 14%, var(--surface-secondary));
-  color: var(--system-purple);
-}
-
-.dash-quick-label {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--label-secondary);
-}
-
-/* ── Responsive — tablet (≤1068px) ──────────────────────── */
-@media (max-width: 1068px) {
-  .dash-spaces-row {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
+.dash-empty-btn:hover  { background: var(--accent-hover); }
+.dash-empty-btn:active { transform: scale(0.97); }
 
 /* ── Responsive — mobile (≤768px) ───────────────────────── */
 @media (max-width: 768px) {
-  /* AppLayout provides its own mobile top bar */
   .dash-topbar { display: none; }
 
   .dash-inner {
-    padding: 0 12px;
+    padding: 20px 16px 0;
+    gap: 24px;
   }
 
-  /* Stack sidebar below main content */
-  .dash-body {
-    flex-direction: column;
-  }
+  .dash-greeting-line { font-size: 24px; }
 
-  .dash-main {
-    width: 100%;
-  }
-
-  /* Sidebar: full width, not sticky */
-  .dash-sidebar {
-    width: 100%;
-    position: static;
-    max-height: none;
-    overflow-y: visible;
-  }
-
-  /* Stack CTA vertically on narrow screens */
-  .dash-today-card--cta {
+  /* Stack CTA card vertically on narrow screens */
+  .dash-today--cta {
     flex-direction: column;
     align-items: flex-start;
-    gap: 16px;
+    gap: 14px;
     padding: 20px;
-  }
-
-  .dash-today-cta-btn {
-    align-self: flex-start;
-  }
-
-  .dash-spaces-row {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .dash-empty-actions {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .dash-empty-actions .dash-btn {
-    width: 100%;
-    justify-content: center;
   }
 }
