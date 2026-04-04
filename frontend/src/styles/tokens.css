@@ -131,6 +131,11 @@
   --section-pad-sm:      40px;
   --page-gutter:         24px;
   --page-gutter-mobile:  20px;
+
+  /* App page background — light gray in light mode, pure black in dark mode.
+     Use this for all app page shells (journal, spaces, calendar, etc.)
+     so that surface-card (#fff / #1c1c1e) always contrasts against the bg. */
+  --page-bg: #f5f5f7;
 }
 
 
@@ -198,6 +203,9 @@
   --shadow-floating: 0 8px 32px rgba(0, 0, 0, 0.60), 0 2px 8px rgba(0, 0, 0, 0.30);
   --shadow-hero-img: 0 24px 80px rgba(0, 0, 0, 0.50), 0 4px 20px rgba(0, 0, 0, 0.30);
   --shadow-btn-accent: 0 2px 12px rgba(41, 151, 255, 0.30);
+
+  /* App page background — pure black in dark so cards (#1c1c1e) are visible */
+  --page-bg: #000000;
 
   /* ── Gradients (dark mode variants) ────────────────────── */
   --gradient-hero-glow: radial-gradient(

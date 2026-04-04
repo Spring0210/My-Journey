@@ -1,26 +1,29 @@
 /* ─────────────────────────────────────────────────────────
-   Auth pages — shared card styles
-   Used by LoginPage, RegisterPage, ForgotPasswordPage
+   Auth pages — Login, Register, Forgot Password
+   All values reference tokens from tokens.css.
    ───────────────────────────────────────────────────────── */
 
-/* ── Card container ──────────────────────────────────────── */
+/* ── Auth page shell ─────────────────────────────────────── */
+/* AuthLayout provides the centered flex container */
+
+/* ── Card ────────────────────────────────────────────────── */
 .auth-card {
   width: 100%;
-  max-width: 400px;
+  max-width: var(--content-auth);   /* 400px */
   background: var(--surface-card);
-  border-radius: 18px;
+  border-radius: var(--radius-lg);  /* 18px */
+  border: 1px solid var(--separator);
   padding: 40px;
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-raised);
 }
 
 /* ── Header ──────────────────────────────────────────────── */
-
-/* Title 2 — 32px / 600 */
+/* Title 1 — 28px / 600 */
 .auth-title {
   font-size: 28px;
   font-weight: 600;
   line-height: 1.10;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   color: var(--label-primary);
   margin-bottom: 6px;
 }
@@ -55,7 +58,7 @@
   color: var(--label-primary);
 }
 
-/* Input — 44px min height for tap target */
+/* Input — 44px minimum height (Apple HIG tap target requirement) */
 .auth-input {
   width: 100%;
   height: 44px;
@@ -65,10 +68,10 @@
   font-weight: 400;
   color: var(--label-primary);
   background: var(--surface-primary);
-  border: 1px solid var(--separator);
-  border-radius: 8px;
+  border: 1px solid var(--separator-strong);
+  border-radius: var(--radius-sm);  /* 8px */
   outline: none;
-  transition: border-color 150ms ease;
+  transition: border-color var(--ease-micro);
   box-sizing: border-box;
 }
 
@@ -81,10 +84,10 @@
 }
 
 .auth-input--error {
-  border-color: var(--color-red);
+  border-color: var(--system-red);
 }
 
-/* Password field with show/hide button */
+/* Password field with show/hide toggle */
 .auth-input-wrap {
   position: relative;
   display: flex;
@@ -108,14 +111,14 @@
   background: none;
   border: none;
   padding: 0;
-  transition: color 150ms ease;
+  transition: color var(--ease-micro);
 }
 
 .auth-input-icon-btn:hover {
   color: var(--label-secondary);
 }
 
-/* Forgot password link — right-aligned under password field */
+/* Forgot password link */
 .auth-forgot {
   align-self: flex-end;
   font-size: 13px;
@@ -123,34 +126,34 @@
   color: var(--accent);
   text-decoration: none;
   margin-top: 2px;
-  transition: opacity 150ms ease;
+  transition: opacity var(--ease-micro);
 }
 
 .auth-forgot:hover {
-  opacity: 0.8;
+  opacity: 0.80;
 }
 
-/* Field-level error message */
+/* Field-level error */
 .auth-field-error {
   font-size: 13px;
   font-weight: 400;
-  color: var(--color-red);
+  color: var(--system-red);
   line-height: 1.30;
 }
 
-/* Global error banner (e.g. wrong credentials) */
+/* Global error banner */
 .auth-error-banner {
   padding: 10px 14px;
-  background: color-mix(in srgb, var(--color-red) 10%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-red) 30%, transparent);
-  border-radius: 8px;
+  background: color-mix(in srgb, var(--system-red) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--system-red) 28%, transparent);
+  border-radius: var(--radius-sm);
   font-size: 14px;
   font-weight: 400;
-  color: var(--color-red);
+  color: var(--system-red);
   line-height: 1.40;
 }
 
-/* ── Primary submit button — full-width ─────────────────── */
+/* ── Primary submit button — full-width pill ────────────── */
 .auth-btn-primary {
   display: flex;
   align-items: center;
@@ -168,7 +171,9 @@
   border: 1px solid transparent;
   cursor: pointer;
   text-decoration: none;
-  transition: background 200ms ease, transform 200ms ease, opacity 200ms ease;
+  transition: background var(--ease-standard), transform var(--ease-standard),
+              opacity var(--ease-standard);
+  box-shadow: var(--shadow-btn-accent);
 }
 
 .auth-btn-primary:hover:not(:disabled) {
@@ -180,8 +185,9 @@
 }
 
 .auth-btn-primary:disabled {
-  opacity: 0.55;
+  opacity: 0.50;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 /* ── "or" divider ────────────────────────────────────────── */
@@ -207,7 +213,7 @@
   white-space: nowrap;
 }
 
-/* ── Google sign-in button — full-width ghost ───────────── */
+/* ── Google sign-in button ───────────────────────────────── */
 .auth-btn-google {
   display: flex;
   align-items: center;
@@ -225,7 +231,7 @@
   border: 1px solid var(--separator);
   cursor: pointer;
   text-decoration: none;
-  transition: background 200ms ease, transform 200ms ease;
+  transition: background var(--ease-standard), transform var(--ease-standard);
 }
 
 .auth-btn-google:hover {
@@ -236,7 +242,7 @@
   transform: scale(0.97);
 }
 
-/* ── Bottom link text ────────────────────────────────────── */
+/* ── Bottom link ─────────────────────────────────────────── */
 .auth-bottom {
   margin-top: 24px;
   text-align: center;
@@ -248,11 +254,11 @@
 .auth-bottom-link {
   color: var(--accent);
   text-decoration: none;
-  transition: opacity 150ms ease;
+  transition: opacity var(--ease-micro);
 }
 
 .auth-bottom-link:hover {
-  opacity: 0.8;
+  opacity: 0.80;
 }
 
 /* ── Resend cooldown button ──────────────────────────────── */
@@ -265,7 +271,7 @@
   border: none;
   padding: 0;
   cursor: pointer;
-  transition: opacity 150ms ease;
+  transition: opacity var(--ease-micro);
 }
 
 .auth-btn-resend:disabled {
@@ -286,7 +292,7 @@
 @media (max-width: 480px) {
   .auth-card {
     padding: 28px 20px;
-    border-radius: 12px;
+    border-radius: var(--radius-md);
   }
 
   .auth-title {

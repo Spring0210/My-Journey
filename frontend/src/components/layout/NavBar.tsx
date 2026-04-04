@@ -112,6 +112,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 400,
     color: '#ffffff',
     background: 'var(--accent)',
+    border: '1px solid transparent',
     textDecoration: 'none',
     transition: 'background 150ms ease',
   },

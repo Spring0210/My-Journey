@@ -51,6 +51,11 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     background: 'var(--surface-secondary)',
+    // Subtle radial glow at the top — same pattern as the landing page hero
+    backgroundImage: 'var(--gradient-hero-glow)',
+    backgroundRepeat: 'no-repeat',
+    backgroundSize: '100% 60%',
+    backgroundPosition: 'center top',
   },
   header: {
     display: 'flex',

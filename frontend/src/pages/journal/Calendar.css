@@ -1,36 +1,41 @@
 /* ─────────────────────────────────────────────────────────
    Calendar page — FullCalendar theme overrides
+   All values reference tokens from tokens.css.
    ───────────────────────────────────────────────────────── */
 
 /* ── Page shell ──────────────────────────────────────────── */
 .cal-page {
   min-height: 100%;
-  background: var(--surface-secondary);
+  background: var(--page-bg);
   padding: 32px 24px 60px;
 }
 
 .cal-inner {
-  max-width: 980px;
+  max-width: var(--content-std);
   margin: 0 auto;
 }
 
+/* Title 2 — 32px / 600 */
 .cal-title {
   font-size: 32px;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   color: var(--label-primary);
   margin-bottom: 24px;
 }
 
-/* ── FullCalendar token overrides ────────────────────────── */
+/* ── FullCalendar card wrapper ───────────────────────────── */
 .cal-wrap {
   background: var(--surface-card);
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--separator);
   padding: 20px;
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-raised);
 }
 
-/* Remove default fc border */
+/* ── FullCalendar overrides ─���────────────────────────────── */
+
+/* Base font */
 .cal-wrap .fc {
   font-family: var(--font-sans);
   font-size: 14px;
@@ -44,13 +49,14 @@
   gap: 8px;
 }
 
+/* Calendar title (month name) — Title 3 */
 .cal-wrap .fc .fc-toolbar-title {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--label-primary);
 }
 
-/* Buttons */
+/* Navigation buttons (prev / next / today / views) */
 .cal-wrap .fc .fc-button {
   background: var(--surface-secondary);
   border: 1px solid var(--separator);
@@ -58,16 +64,17 @@
   font-family: var(--font-sans);
   font-size: 13px;
   padding: 5px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   box-shadow: none;
   text-transform: none;
-  transition: background 150ms ease;
+  transition: background var(--ease-micro);
 }
 
 .cal-wrap .fc .fc-button:hover {
   background: var(--surface-tertiary);
 }
 
+/* Active / pressed button state */
 .cal-wrap .fc .fc-button-active,
 .cal-wrap .fc .fc-button-primary:not(:disabled):active,
 .cal-wrap .fc .fc-button-primary:not(:disabled).fc-button-active {
@@ -83,7 +90,7 @@
   outline-offset: 2px;
 }
 
-/* Day grid */
+/* Day column headers (Mon, Tue…) */
 .cal-wrap .fc .fc-col-header-cell-cushion {
   font-weight: 600;
   font-size: 12px;
@@ -94,6 +101,7 @@
   padding: 8px 0;
 }
 
+/* Day number in each cell */
 .cal-wrap .fc .fc-daygrid-day-number {
   font-size: 13px;
   font-weight: 400;
@@ -102,14 +110,16 @@
   padding: 4px 8px;
 }
 
+/* Today — accent background for the day cell */
 .cal-wrap .fc .fc-daygrid-day.fc-day-today {
   background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
+/* Today day number — accent circle */
 .cal-wrap .fc .fc-day-today .fc-daygrid-day-number {
   background: var(--accent);
   color: #ffffff;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   width: 26px;
   height: 26px;
   display: flex;
@@ -119,11 +129,11 @@
   margin: 4px;
 }
 
-/* Events */
+/* Event pills */
 .cal-wrap .fc .fc-event {
   background: var(--accent);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   font-size: 12px;
   padding: 1px 5px;
   cursor: pointer;
@@ -139,7 +149,7 @@
   text-overflow: ellipsis;
 }
 
-/* Borders */
+/* Grid borders */
 .cal-wrap .fc td,
 .cal-wrap .fc th {
   border-color: var(--separator);
@@ -147,15 +157,16 @@
 
 .cal-wrap .fc .fc-scrollgrid {
   border-color: var(--separator);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
-.cal-wrap .fc .fc-scrollgrid-sync-table {
-  border-collapse: separate;
+/* Day cells are clickable */
+.cal-wrap .fc .fc-daygrid-day {
+  cursor: pointer;
 }
 
-/* List view */
+/* ── List view ───────────────────────────────────────────── */
 .cal-wrap .fc .fc-list-event:hover td {
   background: var(--surface-secondary);
 }
@@ -169,11 +180,6 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--label-secondary);
-}
-
-/* Clickable day cells */
-.cal-wrap .fc .fc-daygrid-day {
-  cursor: pointer;
 }
 
 /* ── Responsive — mobile (≤768px) ───────────────────────── */

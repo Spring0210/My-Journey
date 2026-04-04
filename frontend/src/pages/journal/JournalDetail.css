@@ -1,20 +1,21 @@
 /* ─────────────────────────────────────────────────────────
-   Journal Detail / Create page styles
+   Journal Detail / Create page
+   All values reference tokens from tokens.css.
    ───────────────────────────────────────────────────────── */
 
 /* ── Page shell ──────────────────────────────────────────── */
 .jdetail-page {
   min-height: 100%;
-  background: var(--surface-secondary);
+  background: var(--page-bg);
   padding: 24px 24px 60px;
 }
 
 .jdetail-inner {
-  max-width: 692px;
+  max-width: var(--content-narrow);  /* 692px — writing-optimized narrow column */
   margin: 0 auto;
 }
 
-/* ── Page header ─────────────────────────────────────────── */
+/* ── Header bar ──────────────────────────────────────────── */
 .jdetail-header {
   display: flex;
   align-items: center;
@@ -23,23 +24,20 @@
   gap: 12px;
 }
 
+/* Back chevron link */
 .jdetail-back {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   font-size: 14px;
   font-weight: 400;
   color: var(--accent);
   text-decoration: none;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  transition: opacity 150ms ease;
+  transition: opacity var(--ease-micro);
 }
 
 .jdetail-back:hover {
-  opacity: 0.8;
+  opacity: 0.80;
 }
 
 .jdetail-header-actions {
@@ -48,13 +46,14 @@
   gap: 8px;
 }
 
-/* Save status text */
+/* "Saved" confirmation text */
 .jdetail-save-status {
   font-size: 13px;
-  color: var(--label-tertiary);
+  color: var(--system-green);
+  font-weight: 500;
 }
 
-/* ── Action buttons ──────────────────────────────────────── */
+/* ── Header buttons ──────────────────────────────────────── */
 .jdetail-btn {
   display: inline-flex;
   align-items: center;
@@ -70,7 +69,7 @@
   background: var(--surface-card);
   border: 1px solid var(--separator);
   cursor: pointer;
-  transition: background 150ms ease, transform 150ms ease;
+  transition: background var(--ease-micro), transform var(--ease-micro);
   white-space: nowrap;
 }
 
@@ -83,31 +82,34 @@
 }
 
 .jdetail-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.50;
   cursor: not-allowed;
 }
 
+/* Primary variant — Save / Create */
 .jdetail-btn--primary {
   color: #ffffff;
   background: var(--accent);
   border-color: transparent;
+  box-shadow: var(--shadow-btn-accent);
 }
 
 .jdetail-btn--primary:hover {
   background: var(--accent-hover);
 }
 
+/* Destructive variant — Delete entry */
 .jdetail-btn--danger {
-  color: var(--color-red);
-  background: color-mix(in srgb, var(--color-red) 8%, transparent);
-  border-color: color-mix(in srgb, var(--color-red) 20%, transparent);
+  color: var(--system-red);
+  background: color-mix(in srgb, var(--system-red) 8%, transparent);
+  border-color: color-mix(in srgb, var(--system-red) 22%, transparent);
 }
 
 .jdetail-btn--danger:hover {
-  background: color-mix(in srgb, var(--color-red) 14%, transparent);
+  background: color-mix(in srgb, var(--system-red) 14%, transparent);
 }
 
-/* ── Menu (⋯ dropdown) ───────────────────────────────────── */
+/* ── More-options menu (⋯) ───────────────────────────────── */
 .jdetail-menu-wrap {
   position: relative;
 }
@@ -118,29 +120,36 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   background: var(--surface-card);
   border: 1px solid var(--separator);
   cursor: pointer;
   color: var(--label-secondary);
-  transition: background 150ms ease;
+  transition: background var(--ease-micro);
 }
 
 .jdetail-menu-trigger:hover {
   background: var(--surface-tertiary);
 }
 
+/* Dropdown */
 .jdetail-menu-dropdown {
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
   background: var(--surface-card);
   border: 1px solid var(--separator);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-elevated);
   min-width: 160px;
   z-index: 50;
   overflow: hidden;
+  animation: modal-in 180ms var(--ease-spring);
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.95) translateY(-4px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
 }
 
 .jdetail-menu-item {
@@ -157,7 +166,7 @@
   border: none;
   cursor: pointer;
   text-align: left;
-  transition: background 100ms ease;
+  transition: background var(--ease-micro);
 }
 
 .jdetail-menu-item:hover {
@@ -165,26 +174,28 @@
 }
 
 .jdetail-menu-item--danger {
-  color: var(--color-red);
+  color: var(--system-red);
 }
 
 /* ── Writing card ────────────────────────────────────────── */
+/* border required for dark mode — see design-system.md */
 .jdetail-card {
   background: var(--surface-card);
-  border-radius: 18px;
-  padding: 28px;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-lg);  /* 18px */
+  border: 1px solid var(--separator);
+  padding: 28px 32px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-raised);
 }
 
-/* Title input — large, borderless */
+/* Large title input — borderless, Apple Notes-style */
 .jdetail-title-input {
   width: 100%;
   font-family: var(--font-sans);
   font-size: 26px;
   font-weight: 600;
   line-height: 1.20;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   color: var(--label-primary);
   background: transparent;
   border: none;
@@ -199,7 +210,7 @@
   color: var(--label-tertiary);
 }
 
-/* Date row */
+/* Date row — separator below it, above content */
 .jdetail-date-row {
   display: flex;
   align-items: center;
@@ -218,19 +229,19 @@
 .jdetail-date-input {
   font-family: var(--font-sans);
   font-size: 14px;
-  color: var(--label-secondary);
+  color: var(--label-tertiary);
   background: transparent;
   border: none;
   outline: none;
   cursor: pointer;
 }
 
-/* Content textarea — borderless, auto-grows */
+/* Content textarea — borderless, grows with content */
 .jdetail-content-input {
   width: 100%;
-  min-height: 240px;
+  min-height: 260px;
   font-family: var(--font-sans);
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 400;
   line-height: 1.65;
   color: var(--label-primary);
@@ -240,7 +251,7 @@
   resize: none;
   padding: 0;
   display: block;
-  field-sizing: content; /* auto-grow where supported */
+  field-sizing: content;  /* auto-grow where supported */
 }
 
 .jdetail-content-input::placeholder {
@@ -250,9 +261,10 @@
 /* ── Photo section ───────────────────────────────────────── */
 .jdetail-photos-card {
   background: var(--surface-card);
-  border-radius: 18px;
-  padding: 24px 28px;
-  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--separator);
+  padding: 20px 28px 24px;
+  box-shadow: var(--shadow-raised);
 }
 
 .jdetail-photos-header {
@@ -262,18 +274,20 @@
   margin-bottom: 16px;
 }
 
+/* Subhead — 15px / 600 */
 .jdetail-photos-label {
   font-size: 15px;
   font-weight: 600;
   color: var(--label-primary);
 }
 
+/* Caption */
 .jdetail-photos-count {
   font-size: 13px;
   color: var(--label-tertiary);
 }
 
-/* Photo grid — 4 columns, square cells */
+/* Photo grid — 4 columns on desktop */
 .jdetail-photo-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -283,9 +297,10 @@
 .jdetail-photo-cell {
   position: relative;
   aspect-ratio: 1;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   background: var(--surface-secondary);
+  border: 1px solid var(--separator);
 }
 
 .jdetail-photo-cell img {
@@ -296,14 +311,14 @@
   display: block;
 }
 
-/* Delete / remove button on each cell */
+/* Delete button — appears on hover */
 .jdetail-photo-del {
   position: absolute;
   top: 4px;
   right: 4px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
   background: rgba(0, 0, 0, 0.55);
   color: #ffffff;
   border: none;
@@ -314,47 +329,49 @@
   font-size: 14px;
   line-height: 1;
   opacity: 0;
-  transition: opacity 150ms ease;
+  transition: opacity var(--ease-micro);
 }
 
 .jdetail-photo-cell:hover .jdetail-photo-del {
   opacity: 1;
 }
 
-/* Pending badge */
+/* Pending photo — accent border indicates not yet saved */
 .jdetail-photo-cell--pending::after {
   content: '';
   position: absolute;
   inset: 0;
   border: 2px solid var(--accent);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   pointer-events: none;
 }
 
-/* Add cell */
+/* Add photo cell */
 .jdetail-photo-add {
   aspect-ratio: 1;
-  border-radius: 10px;
-  border: 2px dashed var(--separator);
+  border-radius: var(--radius-sm);
+  border: 2px dashed var(--separator-strong);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   color: var(--label-tertiary);
-  transition: border-color 150ms ease, color 150ms ease;
   background: none;
+  transition: border-color var(--ease-micro), color var(--ease-micro),
+              background var(--ease-micro);
 }
 
 .jdetail-photo-add:hover {
   border-color: var(--accent);
   color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
 }
 
-/* ── Image lightbox ──────────────────────────────────────── */
+/* ── Lightbox ────────────────────────────────────────────── */
 .jdetail-lightbox {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.88);
+  background: rgba(0, 0, 0, 0.90);
   z-index: 300;
   display: flex;
   align-items: center;
@@ -365,7 +382,7 @@
 .jdetail-lightbox img {
   max-width: 100%;
   max-height: 90vh;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   object-fit: contain;
 }
 
@@ -375,19 +392,19 @@
   right: 16px;
   width: 40px;
   height: 40px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-full);
+  background: var(--fill-secondary);
   color: #ffffff;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 150ms ease;
+  transition: background var(--ease-micro);
 }
 
 .jdetail-lightbox-close:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--fill-primary);
 }
 
 /* ── Responsive — mobile (≤768px) ───────────────────────── */
@@ -402,6 +419,10 @@
 
   .jdetail-title-input {
     font-size: 22px;
+  }
+
+  .jdetail-content-input {
+    font-size: 16px;
   }
 
   .jdetail-photo-grid {
