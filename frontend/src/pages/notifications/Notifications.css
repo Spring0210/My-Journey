@@ -209,20 +209,20 @@
 }
 
 /* Delete (x) button on the far right of each row */
-/* Delete button — absolute overlay on the right, hidden until row hover */
+/* Delete button — top-right corner of the card, hidden until row hover.
+   Industry standard: iOS notification dismiss, Gmail hover actions. */
 .notif-delete-btn {
   position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 28px;
-  height: 28px;
+  top: 7px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--surface-secondary);
-  border: 1px solid var(--separator);
+  background: var(--fill-secondary);
+  border: none;
   color: var(--label-tertiary);
   cursor: pointer;
   opacity: 0;
@@ -235,8 +235,7 @@
 
 .notif-delete-btn:hover {
   color: var(--system-red);
-  background: color-mix(in srgb, var(--system-red) 10%, var(--surface-secondary));
-  border-color: color-mix(in srgb, var(--system-red) 20%, transparent);
+  background: color-mix(in srgb, var(--system-red) 12%, var(--fill-secondary));
 }
 
 /* ── Empty state ─────────────────────────────────────────── */
