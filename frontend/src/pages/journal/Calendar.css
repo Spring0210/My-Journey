@@ -176,10 +176,16 @@
 
 /* Container, scroller, and scrollgrid wrappers */
 .cal-wrap .fc .fc-list,
+.cal-wrap .fc .fc-list-sticky,
+.cal-wrap .fc .fc-listWeek-view,
+.cal-wrap .fc .fc-listMonth-view,
+.cal-wrap .fc .fc-listYear-view,
+.cal-wrap .fc .fc-listDay-view,
+.cal-wrap .fc [class*="fc-list"][class*="-view"],
 .cal-wrap .fc .fc-list-sticky-header,
 .cal-wrap .fc .fc-scroller-liquid-absolute,
 .cal-wrap .fc .fc-scrollgrid-section > td {
-  background: var(--surface-card);
+  background: var(--surface-card) !important;
 }
 
 /* Table itself */
