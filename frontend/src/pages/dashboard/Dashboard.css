@@ -73,13 +73,14 @@
   align-items: center;
   gap: 20px;
   padding: 24px 28px;
-  /* Subtle blue-to-indigo gradient — inviting, not loud */
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--accent) 88%, #000000) 0%,
-    color-mix(in srgb, var(--system-indigo) 80%, #000000) 100%
-  );
+  /* Light mode: very subtle accent tint — cohesive with other cards, not loud */
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface-card));
   cursor: default;
+}
+
+/* Dark mode: slightly stronger tint so it's visible against the dark surface */
+[data-theme="dark"] .dash-today--cta {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-card));
 }
 
 .dash-today-cta-left {
@@ -97,34 +98,35 @@
   gap: 10px;
 }
 
-/* Semi-transparent white badge for the edit icon */
+/* Accent-tinted icon badge — same soft-tint pattern used across the app */
 .dash-today-cta-icon {
   width: 36px;
   height: 36px;
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.18);
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface-card));
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  color: var(--accent);
   flex-shrink: 0;
 }
 
 .dash-today-cta-title {
   font-size: 17px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--label-primary);
 }
 
 .dash-today-cta-sub {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.70);
+  color: var(--label-secondary);
   line-height: 1.45;
   /* indent to align with title (icon width + gap) */
   padding-left: 46px;
 }
 
-/* "Start writing" pill button on gradient card */
+/* "Start writing" — standard accent primary pill button */
 .dash-today-cta-btn {
   flex-shrink: 0;
   height: 36px;
@@ -133,15 +135,16 @@
   font-family: var(--font-sans);
   font-size: 14px;
   font-weight: 600;
-  color: var(--accent);
-  background: #ffffff;
-  border: none;
+  color: #ffffff;
+  background: var(--accent);
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-btn-accent);
   cursor: pointer;
   white-space: nowrap;
-  transition: opacity var(--ease-micro), transform var(--ease-micro);
+  transition: background var(--ease-micro), transform var(--ease-micro);
 }
 
-.dash-today-cta-btn:hover  { opacity: 0.88; }
+.dash-today-cta-btn:hover  { background: var(--accent-hover); }
 .dash-today-cta-btn:active { transform: scale(0.97); }
 
 /* ── Section label — shared "Recent" / "Explore" caption ─── */
