@@ -73,13 +73,6 @@
   border-color: var(--separator);
 }
 
-/* ── Mobile action row (mark read + clear) ───────────────── */
-/* Hidden on desktop; visible only on mobile */
-.notif-mobile-actions {
-  display: none;
-  gap: 8px;
-  margin-bottom: 16px;
-}
 
 /* ── Notification list ───────────────────────────────────── */
 .notif-list {
@@ -226,8 +219,11 @@
   border: none;
   color: var(--label-quaternary);
   cursor: pointer;
-  transition: color var(--ease-micro), background var(--ease-micro);
+  opacity: 0;
+  transition: opacity var(--ease-micro), color var(--ease-micro), background var(--ease-micro);
 }
+
+.notif-row:hover .notif-delete-btn { opacity: 1; }
 
 .notif-delete-btn:hover {
   color: var(--system-red);
@@ -274,10 +270,6 @@
   /* AppLayout provides its own mobile top bar */
   .notif-inner {
     padding: 16px 12px 0;
-  }
-
-  .notif-mobile-actions {
-    display: flex;
   }
 
   .notif-list {

@@ -122,21 +122,6 @@ export default function NotificationsPage() {
 
       <div className="notif-inner">
 
-        {/* Mobile action row */}
-        {notifs.length > 0 && (
-          <div className="notif-mobile-actions">
-            {unreadCount > 0 && (
-              <button className="notif-btn" onClick={handleMarkAllRead}>
-                <Icon name="check" size={14} />
-                Mark all read
-              </button>
-            )}
-            <button className="notif-btn notif-btn--ghost" onClick={handleDeleteAll}>
-              <Icon name="trash" size={14} />
-              Clear all
-            </button>
-          </div>
-        )}
 
         {/* Notification list */}
         {loading ? (
