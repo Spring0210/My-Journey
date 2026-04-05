@@ -578,7 +578,45 @@ show a live "chat bubble" mockup:
 
 ---
 
-## 14. File Reference
+## 14. Dark / Light Mode Color Strategy
+
+### 14.1 Core Rules
+
+1. **Never hardcode `#ffffff` or `#000000` for text** — always use `--label-*` tokens which invert automatically.
+2. **Never use full gradient fills on app page cards** — gradients are for marketing/landing pages only. App pages use tinted surfaces.
+3. **Dark mode system colors are intentionally brighter** — `--accent` is `#2997ff` in dark vs `#0071e3` in light. Do not compensate by darkening them further.
+4. **All colors must come from `tokens.css`** — never write a raw hex, rgba, or color-mix value in a component CSS file that isn't already a token. If you need a new color, add a token first.
+
+### 14.2 Tinted Surface Pattern (Apple HIG)
+
+Use `--tint-accent-*` tokens for highlighted cards, CTA backgrounds, and today indicators. The tokens automatically adapt between modes.
+
+| Token | Light | Dark | Usage |
+|---|---|---|---|
+| `--tint-accent-subtle` | 6% accent on white | 12% accent on `#1c1c1e` | CTA card bg, subtle highlights |
+| `--tint-accent-moderate` | 10% accent on white | 16% accent on `#1c1c1e` | Icon badges, active states |
+| `--tint-accent-strong` | 15% accent on white | 22% accent on `#1c1c1e` | Strong highlights |
+
+**Why different percentages per mode:** White surfaces read color strongly at low %, dark surfaces absorb color and need a higher % to achieve the same perceived intensity.
+
+### 14.3 Gradient Usage Rules
+
+| Context | Rule |
+|---|---|
+| Marketing / Landing pages | Full gradients allowed — they're brand moments |
+| App page CTA cards | Use `--tint-accent-subtle` instead of gradient |
+| Icon badges | Use `color-mix(in srgb, var(--system-*) 10%, var(--surface-card))` pattern |
+| Text gradient | Only `var(--gradient-text-accent)` utility — never custom |
+
+### 14.4 Button Colors on Tinted Surfaces
+
+- On a tinted surface (`--tint-accent-*`): use standard `--accent` primary pill button with white text
+- On a gradient surface (marketing only): use white opaque button in light mode
+- Never use `rgba(255,255,255,0.12)` frosted glass in app pages — reserved for marketing overlays
+
+---
+
+## 16. File Reference
 
 | File | Purpose |
 |---|---|

@@ -112,6 +112,16 @@
   --gradient-icon-pink:   linear-gradient(145deg, #ff2d55, #d4004c);
   --gradient-icon-indigo: linear-gradient(145deg, #5856d6, #3634b8);
 
+  /* ── Tinted surface tokens ─────────────────────────────────
+     For highlighted cards and CTA backgrounds in app pages.
+     Use color-mix so they automatically adapt when --accent
+     and --surface-card change between light and dark mode.
+     Rule: light mode uses lower % (surface is white, color reads strongly);
+           dark mode uses higher % (surface is dark, needs more saturation). */
+  --tint-accent-subtle:   color-mix(in srgb, var(--accent)  6%, var(--surface-card));
+  --tint-accent-moderate: color-mix(in srgb, var(--accent) 10%, var(--surface-card));
+  --tint-accent-strong:   color-mix(in srgb, var(--accent) 15%, var(--surface-card));
+
   /* ── Motion ─────────────────────────────────────────────── */
   --ease-micro:    150ms ease;              /* hover, focus, color */
   --ease-standard: 200ms ease;             /* button, toggle, tab */
@@ -206,6 +216,11 @@
 
   /* App page background — pure black in dark so cards (#1c1c1e) are visible */
   --page-bg: #000000;
+
+  /* ── Tinted surfaces — dark mode uses stronger % ────────── */
+  --tint-accent-subtle:   color-mix(in srgb, var(--accent) 12%, var(--surface-card));
+  --tint-accent-moderate: color-mix(in srgb, var(--accent) 16%, var(--surface-card));
+  --tint-accent-strong:   color-mix(in srgb, var(--accent) 22%, var(--surface-card));
 
   /* ── Gradients (dark mode variants) ────────────────────── */
   --gradient-hero-glow: radial-gradient(

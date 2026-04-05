@@ -73,14 +73,9 @@
   align-items: center;
   gap: 20px;
   padding: 24px 28px;
-  /* Light mode: very subtle accent tint — cohesive with other cards, not loud */
-  background: color-mix(in srgb, var(--accent) 6%, var(--surface-card));
+  /* Subtle accent tint — adapts automatically via token in both modes */
+  background: var(--tint-accent-subtle);
   cursor: default;
-}
-
-/* Dark mode: slightly stronger tint so it's visible against the dark surface */
-[data-theme="dark"] .dash-today--cta {
-  background: color-mix(in srgb, var(--accent) 12%, var(--surface-card));
 }
 
 .dash-today-cta-left {
@@ -103,7 +98,7 @@
   width: 36px;
   height: 36px;
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--accent) 14%, var(--surface-card));
+  background: var(--tint-accent-moderate);
   border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
   display: flex;
   align-items: center;
