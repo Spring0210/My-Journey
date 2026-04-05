@@ -302,8 +302,25 @@ export default function JournalListPage() {
 
         </div>
 
-        {/* AI match metadata — shown on both desktop and mobile */}
-        {aiMeta && <p className="jlist-ai-meta">{aiMeta}</p>}
+        {/* Active filter banner — shows on both desktop and mobile when in search mode.
+            Lets the user see what filter is active and clear it with one tap. */}
+        {isSearchMode && (
+          <div className="jlist-filter-banner">
+            <Icon name={aiMeta ? 'ai' : 'search'} size={14} />
+            <span className="jlist-filter-banner-text">
+              {aiMeta
+                ? `AI matched: ${aiQuery}`
+                : keyword || date
+                  ? [keyword, date].filter(Boolean).join(' · ')
+                  : 'Search results'
+              }
+            </span>
+            <button className="jlist-filter-banner-clear" onClick={handleClear}>
+              Clear
+              <Icon name="close" size={11} />
+            </button>
+          </div>
+        )}
 
         {/* Entry grid */}
         {loading ? (
@@ -487,8 +504,17 @@ export default function JournalListPage() {
                     className="jlist-prompt-card"
                     onClick={() => setShowPrompts(false)}
                   >
-                    <p className="jlist-prompt-text">{prompt}</p>
-                    <span className="jlist-prompt-cta">Write now</span>
+                    {/* Sequential number badge */}
+                    <span className="jlist-prompt-num">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <div className="jlist-prompt-body">
+                      <p className="jlist-prompt-text">{prompt}</p>
+                      <span className="jlist-prompt-cta">
+                        Write now
+                        <Icon name="chevron-right" size={12} />
+                      </span>
+                    </div>
                   </NavLink>
                 ))}
               </div>
@@ -509,31 +535,33 @@ export default function JournalListPage() {
             </div>
 
             <div className="jlist-recap-controls">
-              <select
-                className="jlist-select"
-                value={recapYear}
-                onChange={e => setRecapYear(Number(e.target.value))}
-              >
-                {years.map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
-              <select
-                className="jlist-select"
-                value={recapMonth}
-                onChange={e => setRecapMonth(Number(e.target.value))}
-              >
-                {Array.from({ length: 12 }, (_, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    {new Date(2000, i).toLocaleString('en-US', { month: 'long' })}
-                  </option>
-                ))}
-              </select>
+              <div className="jlist-recap-selects">
+                <select
+                  className="jlist-select"
+                  value={recapYear}
+                  onChange={e => setRecapYear(Number(e.target.value))}
+                >
+                  {years.map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+                <select
+                  className="jlist-select"
+                  value={recapMonth}
+                  onChange={e => setRecapMonth(Number(e.target.value))}
+                >
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                      {new Date(2000, i).toLocaleString('en-US', { month: 'long' })}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <button
-                className="jlist-btn jlist-btn--primary"
+                className="jlist-btn jlist-btn--primary jlist-recap-generate"
                 onClick={handleGenerateRecap}
                 disabled={recapLoading}
-                style={{ height: 36 }}
               >
-                {recapLoading ? 'Generating...' : 'Generate'}
+                <Icon name="ai" size={15} />
+                {recapLoading ? 'Generating...' : 'Generate Recap'}
               </button>
             </div>
 

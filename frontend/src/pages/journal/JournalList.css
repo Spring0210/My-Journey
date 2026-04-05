@@ -414,51 +414,143 @@
 .jlist-prompts-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
+/* Each prompt card — iOS grouped list row style */
 .jlist-prompt-card {
-  padding: 16px;
-  background: var(--surface-secondary);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--separator);
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  background: var(--surface-card);
+  border-bottom: 1px solid var(--separator);
   cursor: pointer;
   transition: background var(--ease-micro);
   text-decoration: none;
   color: inherit;
-  display: block;
+}
+
+.jlist-prompt-card:last-child {
+  border-bottom: none;
 }
 
 .jlist-prompt-card:hover {
-  background: var(--surface-tertiary);
+  background: var(--fill-quaternary);
 }
 
-/* Callout */
+.jlist-prompt-card:active {
+  background: var(--fill-tertiary);
+}
+
+/* Sequential number badge — monospace, accent tint */
+.jlist-prompt-num {
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  background: var(--tint-accent-subtle);
+  border-radius: var(--radius-sm);
+  min-width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Prompt body — text + "Write now" row */
+.jlist-prompt-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Prompt sentence */
 .jlist-prompt-text {
   font-size: 15px;
   font-weight: 400;
   line-height: 1.50;
   color: var(--label-primary);
-  margin-bottom: 6px;
 }
 
-/* Caption */
+/* "Write now →" CTA */
 .jlist-prompt-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
   font-size: 13px;
   font-weight: 500;
   color: var(--accent);
 }
 
+/* ── Active filter banner — shown when isSearchMode ─────── */
+/* Lets user see the active filter and clear it in one tap.
+   Shown on both desktop and mobile. */
+.jlist-filter-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--tint-accent-subtle);
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+  border-radius: var(--radius-md);
+  color: var(--accent);
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.jlist-filter-banner-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jlist-filter-banner-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  transition: background var(--ease-micro);
+}
+
+.jlist-filter-banner-clear:hover {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
 /* ── Monthly recap controls ──────────────────────────────── */
 .jlist-recap-controls {
   display: flex;
-  gap: 10px;
-  align-items: center;
+  flex-direction: column;
+  gap: 12px;
   margin-bottom: 16px;
-  flex-wrap: wrap;
+}
+
+/* Year + month selects side-by-side */
+.jlist-recap-selects {
+  display: flex;
+  gap: 8px;
 }
 
 .jlist-select {
+  flex: 1;
   height: 36px;
   padding: 0 10px;
   font-family: var(--font-sans);
@@ -468,6 +560,11 @@
   border: 1px solid var(--separator);
   border-radius: var(--radius-sm);
   outline: none;
+}
+
+/* Generate button */
+.jlist-recap-generate {
+  height: 36px;
 }
 
 /* Recap result */
