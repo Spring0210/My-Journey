@@ -62,30 +62,6 @@
   .slist-btn-label { display: none; }
 }
 
-/* ── Mobile action row (Create + Join) ───────────────────── */
-/* Hidden on desktop; visible on mobile */
-.slist-mobile-actions {
-  display: none;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.slist-mobile-new {
-  flex: 1;
-  height: 48px;
-  font-size: 15px;
-  font-weight: 600;
-  border-radius: var(--radius-xl);
-}
-
-/* Transparent border keeps height equal to the primary button */
-.slist-mobile-join {
-  height: 48px;
-  font-size: 15px;
-  padding: 0 20px;
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--separator-strong);
-}
 
 /* ── Space grid ──────────────────────────────────────────── */
 .slist-grid {
@@ -379,10 +355,6 @@
 @media (max-width: 768px) {
   .slist-inner {
     padding: 20px 16px 0;
-  }
-
-  .slist-mobile-actions {
-    display: flex;
   }
 
   .slist-grid {

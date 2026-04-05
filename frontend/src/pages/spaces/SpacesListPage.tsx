@@ -108,18 +108,6 @@ export default function SpacesListPage() {
 
       <div className="slist-inner">
 
-        {/* Mobile action buttons */}
-        <div className="slist-mobile-actions">
-          <button className="slist-btn slist-btn--primary slist-mobile-new" onClick={() => setShowCreate(true)}>
-            <Icon name="plus" size={16} />
-            Create Space
-          </button>
-          <button className="slist-btn slist-mobile-join" onClick={() => setShowJoin(true)}>
-            <Icon name="link" size={16} />
-            Join Space
-          </button>
-        </div>
-
         {/* Content */}
         {loading ? (
           <div className="slist-empty">Loading...</div>
