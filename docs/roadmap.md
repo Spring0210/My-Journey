@@ -122,9 +122,9 @@
 - [x] Tailwind CSS v4 design tokens for colors, spacing, radius, shadow
 
 ### Pages
-- [ ] Landing page — product intro for unauthenticated visitors, CTA to sign up / log in
-- [ ] Auth pages — Login, Register, Forgot Password, OAuth2 callback
-- [ ] Journal pages — list, detail, create/edit, calendar view
+- [x] Landing page — product intro for unauthenticated visitors, CTA to sign up / log in
+- [x] Auth pages — Login, Register, Forgot Password, OAuth2 callback
+- [x] Journal pages — list, detail, create/edit, calendar view
 - [ ] Spaces pages — list, space detail, posts, comments, reactions
 - [ ] Other pages — Dashboard, Notifications, Profile
 - [ ] Privacy Policy (`/privacy`)
@@ -147,3 +147,32 @@
 - [ ] Module 6 — Spaces pages (list, detail, posts, comments, reactions)
 - [ ] Module 7 — Other pages (Profile, Notifications, Dashboard)
 - [ ] Module 8 — Legal pages (Privacy Policy, Terms of Service)
+
+---
+
+## Deployment — CI/CD via GitHub Actions ✅ Complete
+
+> Full setup guide: `docs/deploy.md`
+
+- [x] Create `.github/workflows/deploy.yml` — build Docker image in CI, push to ghcr.io, SSH deploy to server
+- [x] Add GitHub Secrets (`SERVER_HOST`, `SERVER_USER`, `SERVER_SSH_KEY`, `GHCR_TOKEN`)
+- [x] Generate deploy SSH key and copy public key to server
+- [x] Create GitHub PAT with `read:packages` scope for server image pull
+- [x] `docker-compose.yml` uses `image: ghcr.io/spring0210/my-journey:latest`
+- [x] Auto-sync `docker-compose.yml` on each deploy via `curl` in workflow script
+
+---
+
+## Phase 7 — Production Hardening
+
+### Critical
+- [ ] **Database backups** — automated daily MySQL dump, stored off-server (DigitalOcean Spaces or S3)
+- [ ] **Database migrations (Flyway)** — replace Hibernate `auto-ddl` with versioned migration scripts; safe for production schema changes
+
+### Observability
+- [ ] **Error monitoring (Sentry)** — catch and alert on backend exceptions and frontend JS errors; free tier sufficient
+- [ ] **Uptime monitoring (UptimeRobot)** — ping every 5 min, email alert on downtime; free
+
+### Quality
+- [ ] **Automated tests** — JUnit unit + integration tests for backend services; Vitest for frontend utils
+- [ ] **CI test step** — run tests in GitHub Actions before building the Docker image

@@ -9,7 +9,7 @@ Browser
   │
   ▼
 Spring Boot (port 8080)
-  ├── Static files (HTML/CSS/JS)  →  src/main/resources/static/
+  ├── Static files (React build output)  →  src/main/resources/static/
   ├── WebSocket (/ws)             →  real-time notifications
   └── REST API (/api/**)
         ├── UserController
@@ -54,7 +54,7 @@ Client                          Server
   │◀─── { token, refreshToken } ─│  New access token + new refresh token issued
 ```
 
-Both tokens are stored in `localStorage`. The `api.js` utility automatically injects the `Authorization` header and handles silent re-auth on 401 before retrying the original request.
+Both tokens are stored in `localStorage`. The React API layer (`src/api/`) automatically injects the `Authorization` header and handles silent re-auth on 401 before retrying the original request.
 
 ## Data Model
 
@@ -120,11 +120,20 @@ Password reset codes are sent via [Resend](https://resend.com) from `noreply@myj
 
 ## Deployment
 
-Docker Compose starts two containers:
-- `db` — MySQL 8.0
-- `app` — Spring Boot JAR
+```
+GitHub Actions (CI)
+  → builds Docker image (Node frontend + Maven backend, multi-stage)
+  → pushes to ghcr.io/spring0210/my-journey:latest
+  → SSH deploys to DigitalOcean server
 
-All secrets (JWT secret, Cloudinary credentials, Resend API key) are injected as environment variables at runtime. `application.properties` is gitignored.
+DigitalOcean server
+  Nginx (443/80) → proxy_pass → localhost:8080
+  Docker Compose:
+    my-journey-mysql  — MySQL 8.0
+    my-journey-app    — Spring Boot JAR (serves API + React static files)
+```
+
+All secrets are injected as environment variables at runtime via `.env` at `/opt/my-journey/`. `application.properties` is gitignored. See `docs/deploy.md` for full CI/CD setup.
 
 ## WebSocket
 
@@ -142,4 +151,4 @@ STOMP over WebSocket at `/ws`. After login, clients subscribe to `/user/queue/no
 | Media storage | Cloudinary | Managed CDN, supports images + videos, easy Java SDK |
 | Email provider | Resend | Better deliverability than Gmail SMTP, simple API |
 | ORM | Spring Data JPA + Hibernate | Standard Spring ecosystem |
-| Calendar | FullCalendar 6 | Mature, feature-rich, easy integration |
+| Calendar | FullCalendar 6 (legacy vanilla JS pages — replaced by React in Phase 6) | Mature, feature-rich |

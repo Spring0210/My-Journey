@@ -1,201 +1,133 @@
-# My Journey - Personal Journal Application
+# MyJourney
 
-A full-stack journaling application with collaborative spaces, built with Java Spring Boot and vanilla JavaScript.
+A full-stack personal journaling app with collaborative spaces.
+Live at [myjourneycloud.com](https://myjourneycloud.com)
 
 ## Features
 
-### Authentication & Security
-- JWT-based stateless authentication (24-hour token expiration)
-- BCrypt password hashing
-- Password reset via email verification code (6-digit code, 10-minute expiration)
-- Role-based access control for spaces (Owner / Member)
-
-### Journal Management
-- Create, edit, and delete dated journal entries
-- Multiple image uploads per entry (stored on Cloudinary)
-- Add or remove individual images from existing entries
-- Search entries by keyword or date
-- Paginated entry list (10 per page)
-
-### Calendar & Navigation
-- Monthly calendar view with FullCalendar — dates with entries are highlighted
-- Click a date to view all entries for that day
-- Dashboard with stats: total entries, this month, total images, day streak
+### Journal
+- Create, edit, and delete dated entries with rich text and multiple images
+- Search entries by keyword, date, or natural language (AI)
+- Monthly calendar view — dates with entries highlighted
+- Monthly Recap — AI-generated personal reflection
+- Personalized writing prompts based on recent themes
+- Export entries as PDF
 
 ### Shared Spaces
-- Create a shared space and invite others via an 8-character invite code
-- Join any space with an invite code
-- Post content with multiple images to a shared timeline (newest first, 20 per page)
-- Space owners can edit space info, delete the space, or remove posts
-- Members can leave spaces; authors can delete their own posts
-- Image lightbox viewer with navigation
+- Create a space and invite others via an 8-character invite code
+- Post content with images and videos to a shared timeline
+- Reactions, comments, and real-time notifications via WebSocket
+- Space owner controls: edit info, remove members, delete posts
 
-### UI / UX
-- Responsive design for all screen sizes
-- Light / dark theme toggle, persisted in localStorage
-- Sidebar navigation with active page highlighting
+### Account
+- JWT authentication (24h access token + 30-day refresh token, rotated on use)
+- Google OAuth 2.0 login
+- Password reset via email (Resend)
+- Avatar upload, username change, password change
 
-## Technology Stack
+## Tech Stack
 
 ### Backend
 - **Java 21** + **Spring Boot 3.4.5**
-- **Spring Security** — JWT authentication filter
-- **Spring Data JPA** + **Hibernate** — ORM with MySQL
-- **JJWT 0.11.5** — JWT token generation and validation
-- **Cloudinary** — Cloud image storage
-- **Spring Mail** — Gmail SMTP for password reset emails
-- **Lombok** — Boilerplate reduction
-- **Maven** — Build and dependency management
+- **Spring Security** — JWT filter + OAuth2
+- **Spring Data JPA** + **Hibernate** + **MySQL 8**
+- **WebSocket** — real-time notifications
+- **Cloudinary** — image and video storage
+- **Resend** — transactional email (`noreply@myjourneycloud.com`)
+- **Anthropic Claude** — AI recap, writing prompts, smart search
+- **Bucket4j** — API rate limiting
 
 ### Frontend
-- Vanilla **HTML5 / CSS3 / JavaScript** (no frameworks)
-- **FullCalendar 6.1.8** — Calendar component
-- **Fetch API** — HTTP requests with JWT header injection
-- **localStorage** — Token, theme, and user info persistence
+- **React 18** + **TypeScript** + **Vite**
+- **Tailwind CSS v4** + Apple HIG design system
+- Light / dark mode (follows system preference)
 
 ### Infrastructure
-- **MySQL 8.0** — Relational database
-- **Docker + Docker Compose** — Containerized deployment
+- **Docker + Docker Compose** — containerized deployment
+- **GitHub Actions** — CI/CD: build image → push to ghcr.io → auto-deploy
+- **Nginx** — reverse proxy + HTTPS (Let's Encrypt)
+- **DigitalOcean** — single droplet (2 GB RAM, Ubuntu 22.04)
 
 ## Project Structure
 
 ```
 my-journey/
 ├── src/main/java/com/myjourney/
-│   ├── config/          # Security, Cloudinary, Web MVC config
-│   ├── controller/      # UserController, JournalController, SpaceController, SpacePostController
-│   ├── model/           # User, JournalEntry, Space, SpaceMember, SpacePost, PasswordResetToken
-│   ├── repository/      # JPA repositories for each entity
-│   ├── service/         # UserService, JournalService, SpaceService, SpacePostService, CloudStorageService
-│   ├── filter/          # JwtAuthenticationFilter
-│   └── util/            # JwtUtil
+│   ├── config/       # Security, Cloudinary, WebSocket config
+│   ├── controller/   # REST controllers (HTTP layer only)
+│   ├── service/      # Business logic
+│   ├── model/        # JPA entities
+│   ├── repository/   # Spring Data JPA interfaces
+│   ├── filter/       # JWT authentication filter
+│   └── util/         # JwtUtil, helper classes
 ├── src/main/resources/
-│   ├── static/
-│   │   ├── css/         # ui.css, auth.css, journals.css, spaces.css, detail.css ...
-│   │   ├── js/          # api.js, layout.js, dashboard.js, journals.js, detail.js, space.js ...
-│   │   └── *.html       # login, register, forgot-password, dashboard, journals, calendar, day, detail, spaces, space
+│   ├── static/       # React build output (served by Spring Boot)
 │   ├── application.properties
 │   └── application-docker.properties
-├── database/
-│   └── schema.sql
-├── Dockerfile
+├── frontend/         # React + TypeScript source
+│   ├── src/
+│   │   ├── components/   # Shared UI components
+│   │   ├── pages/        # Route-level components
+│   │   ├── api/          # Typed fetch wrappers
+│   │   ├── context/      # React Context (auth state)
+│   │   ├── hooks/        # Custom hooks
+│   │   ├── types/        # TypeScript interfaces
+│   │   └── styles/       # Global CSS + design tokens
+│   └── vite.config.ts
+├── docs/             # Design system, conventions, roadmap, deploy guide
+├── Dockerfile        # Multi-stage: Node (frontend) → Maven (backend) → JRE
 └── docker-compose.yml
 ```
 
-## API Endpoints
-
-### Authentication (Public)
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/register` | Register new user |
-| POST | `/api/login` | Login, returns JWT token |
-| POST | `/api/forgot-password` | Send 6-digit reset code to email |
-| POST | `/api/reset-password` | Verify code and set new password |
-
-### Journal Entries (JWT required)
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/entries/{userId}` | Create entry with optional images |
-| GET | `/api/entries/{userId}` | Get paginated entries (10/page) |
-| POST | `/api/entries/edit/{entryId}` | Update entry |
-| DELETE | `/api/entries/{entryId}` | Delete entry and its images |
-| GET | `/api/entries/search` | Search by keyword or date |
-| GET | `/api/entries/entry/{entryId}` | Get single entry |
-| GET | `/api/entries/calendar/{userId}` | Get all entries for calendar |
-| GET | `/api/entries/user/{userId}/entries/date/{entryDate}` | Get entries for a specific date |
-| POST | `/api/entries/add-images/{entryId}` | Add images to existing entry |
-| POST | `/api/entries/delete-image` | Remove a single image from entry |
-
-### Spaces (JWT required)
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/spaces` | Create space |
-| POST | `/api/spaces/join` | Join space via invite code |
-| GET | `/api/spaces` | List user's spaces |
-| GET | `/api/spaces/{spaceId}` | Get space detail with members |
-| PUT | `/api/spaces/{spaceId}` | Update space info (owner only) |
-| POST | `/api/spaces/{spaceId}/leave` | Leave space |
-| DELETE | `/api/spaces/{spaceId}` | Delete space (owner only) |
-| POST | `/api/spaces/{spaceId}/posts` | Create post with optional images |
-| GET | `/api/spaces/{spaceId}/posts` | Get paginated posts (20/page) |
-| DELETE | `/api/spaces/{spaceId}/posts/{postId}` | Delete post (author or owner) |
-
-## Getting Started
+## Local Development
 
 ### Prerequisites
-- Java 21+
-- Maven 3.6+
-- MySQL 8.0+
+- Java 21+, Maven 3.9+
+- Node.js 22+
+- MySQL 8 (or use Docker)
 
-### Local Setup
+### Run backend
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Spring0210/My-Journey.git
-   cd My-Journey
-   ```
+1. Copy `application.properties.example` and fill in secrets (Cloudinary, Resend, Anthropic, Google OAuth, JWT)
+2. `mvn spring-boot:run`
 
-2. **Create the database**
-   ```bash
-   mysql -u root -p < database/schema.sql
-   ```
+### Run frontend (dev server with hot reload)
 
-3. **Set environment variables**
-   ```bash
-   export JWT_SECRET=your_jwt_secret
-   export CLOUDINARY_CLOUD_NAME=your_cloud_name
-   export CLOUDINARY_API_KEY=your_api_key
-   export CLOUDINARY_API_SECRET=your_api_secret
-   export GMAIL_USERNAME=your_gmail_address
-   export GMAIL_APP_PASSWORD=your_gmail_app_password
-   export SPRING_DATASOURCE_PASSWORD=your_db_password
-   ```
-
-4. **Run the application**
-   ```bash
-   mvn spring-boot:run
-   ```
-
-5. **Open** `http://localhost:8080`
-
-### Docker Deployment
-
-1. **Create `.env` file**
-   ```env
-   MYSQL_ROOT_PASSWORD=yourpassword
-   JWT_SECRET=your_jwt_secret
-   CLOUDINARY_CLOUD_NAME=your_cloud_name
-   CLOUDINARY_API_KEY=your_api_key
-   CLOUDINARY_API_SECRET=your_api_secret
-   GMAIL_USERNAME=your_gmail_address
-   GMAIL_APP_PASSWORD=your_gmail_app_password
-   ```
-
-2. **Build and start**
-   ```bash
-   docker-compose up -d --build
-   ```
-
-3. **Open** `http://your-server-ip:8080`
-
-**Useful commands:**
 ```bash
-docker-compose logs -f app   # View app logs
-docker-compose down          # Stop all services
-docker-compose up -d         # Restart without rebuilding
+cd frontend
+npm install
+npm run dev        # starts at localhost:5173, proxies /api to localhost:8080
 ```
 
-## Database Schema
+### Run everything with Docker
 
-| Table | Purpose |
-|-------|---------|
-| `user` | User accounts (id, username, password, email) |
-| `journal_entry` | Journal entries with comma-separated image URLs |
-| `space` | Shared spaces with unique invite codes |
-| `space_member` | User-space membership with OWNER / MEMBER roles |
-| `space_post` | Posts in spaces with comma-separated image URLs |
-| `password_reset_token` | Temporary codes for password reset |
+```bash
+cp .env.example .env   # fill in secrets
+docker compose up --build
+```
+
+## Deployment
+
+CI/CD via GitHub Actions — push to `main` triggers an automatic build and deploy.
+
+See `docs/deploy.md` for the full setup guide.
+
+**Manual deploy (if needed):**
+```bash
+ssh root@myjourneycloud.com
+cd /opt/my-journey
+docker compose pull && docker compose up -d --remove-orphans
+```
+
+## Docs
+
+| File | Contents |
+|---|---|
+| `docs/conventions.md` | Naming, architecture, UX, and coding rules |
+| `docs/design-system.md` | Apple HIG design spec — colors, typography, components |
+| `docs/roadmap.md` | Phase-by-phase feature history and upcoming work |
+| `docs/deploy.md` | CI/CD setup, branch workflow, troubleshooting |
 
 ## License
 
-MIT License
+MIT
