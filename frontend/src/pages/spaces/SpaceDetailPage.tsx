@@ -23,13 +23,13 @@ const EMOJIS = ['❤️', '👍', '😂', '🐮', '🥲', '😭', '😮']
 
 // Same gradient palette as SpacesListPage (cycles by space id)
 const COVER_GRADIENTS = [
-  'var(--gradient-icon-blue)',
-  'var(--gradient-icon-purple)',
-  'var(--gradient-icon-orange)',
-  'var(--gradient-icon-green)',
-  'var(--gradient-icon-teal)',
-  'var(--gradient-icon-pink)',
-  'var(--gradient-icon-indigo)',
+  'linear-gradient(135deg, #0071e3 0%, #2997ff 50%, #5ac8fa 100%)',
+  'linear-gradient(135deg, #af52de 0%, #7c3aed 50%, #5856d6 100%)',
+  'linear-gradient(135deg, #ff9500 0%, #ff6b00 50%, #ff2d55 100%)',
+  'linear-gradient(135deg, #34c759 0%, #1da647 50%, #30b0c7 100%)',
+  'linear-gradient(135deg, #5856d6 0%, #af52de 50%, #ff375f 100%)',
+  'linear-gradient(135deg, #ff2d55 0%, #ff6b00 50%, #ffd60a 100%)',
+  'linear-gradient(135deg, #30b0c7 0%, #0071e3 50%, #5856d6 100%)',
 ]
 
 // Format ISO timestamp to a human-readable relative string
@@ -100,6 +100,9 @@ export default function SpaceDetailPage() {
   const [showAiPanel, setShowAiPanel] = useState(false)
 
   const [inviteCopied, setInviteCopied] = useState(false)
+
+  // Controls mobile info bottom sheet
+  const [showInfoSheet, setShowInfoSheet] = useState(false)
 
   const isOwner = space?.ownerUsername === username
 
@@ -414,12 +417,30 @@ export default function SpaceDetailPage() {
         backTo="/spaces"
         backLabel="Spaces"
         actions={
-          isOwner ? (
-            <button className="sdetail-btn sdetail-btn--topbar" onClick={openEditSpace}>
-              <Icon name="settings" size={15} />
-              <span className="sdetail-btn-label">Edit Space</span>
+          <>
+            {/* Info button — hidden on desktop, visible on mobile */}
+            <button
+              className="sdetail-btn sdetail-btn--topbar sdetail-info-toggle"
+              onClick={() => setShowInfoSheet(true)}
+              aria-label="Space info"
+            >
+              <Icon name="info" size={15} />
             </button>
-          ) : undefined
+            {/* Edit Space — owner only */}
+            {isOwner && (
+              <button className="sdetail-btn sdetail-btn--topbar" onClick={openEditSpace}>
+                <Icon name="settings" size={15} />
+                <span className="sdetail-btn-label">Edit Space</span>
+              </button>
+            )}
+            {/* Leave Space — non-owner */}
+            {!isOwner && (
+              <button className="sdetail-btn sdetail-btn--topbar" onClick={handleLeave}>
+                <Icon name="logout" size={15} />
+                <span className="sdetail-btn-label">Leave Space</span>
+              </button>
+            )}
+          </>
         }
       />
 
@@ -574,24 +595,27 @@ export default function SpaceDetailPage() {
           {/* ── Sidebar column ──────────────────────────── */}
           <aside className="sdetail-sidebar">
 
-            {/* Space info card */}
-            <div className="sdetail-sidebar-card">
-              {/* Compact cover */}
-              <div className="sdetail-sb-cover" style={coverStyle}>
+            {/* Space info card: banner + description + invite */}
+            <div className="sdetail-sidebar-card sdetail-sidebar-card--info">
+              {/* Full-width banner with name + member count overlay */}
+              <div className="sdetail-sb-banner" style={coverStyle}>
                 {!space.coverImage && (
                   <span className="sdetail-sb-initial">{space.name.charAt(0).toUpperCase()}</span>
                 )}
+                <div className="sdetail-sb-banner-overlay">
+                  <p className="sdetail-sb-banner-name">{space.name}</p>
+                  <p className="sdetail-sb-banner-count">{space.members.length} members</p>
+                </div>
               </div>
+              {/* Text info block */}
               <div className="sdetail-sb-info">
-                <p className="sdetail-sb-name">{space.name}</p>
                 {space.description && (
                   <p className="sdetail-sb-desc">{space.description}</p>
                 )}
-                <p className="sdetail-sb-meta">Owner: @{space.ownerUsername}</p>
+                <p className="sdetail-sb-owner">Owner @{space.ownerUsername}</p>
               </div>
-
-              {/* Invite code row */}
-              <div className="sdetail-invite-row">
+              {/* Invite code */}
+              <div className="sdetail-invite-row sdetail-invite-row--card">
                 <span className="sdetail-invite-code">{space.inviteCode}</span>
                 <button
                   className="sdetail-invite-copy"
@@ -604,10 +628,35 @@ export default function SpaceDetailPage() {
               </div>
             </div>
 
-            {/* AI Summary */}
+            {/* Members card: overlapping avatar stack */}
             <div className="sdetail-sidebar-card">
               <div className="sdetail-sb-section-title">
-                <Icon name="ai" size={14} />
+                <Icon name="spaces" size={13} />
+                Members · {space.members.length}
+              </div>
+              <div className="sdetail-avatar-stack">
+                {space.members.slice(0, 6).map(member => (
+                  <div
+                    key={member.userId}
+                    className="sdetail-stack-avatar"
+                    title={`@${member.username}`}
+                  >
+                    {member.avatar
+                      ? <img src={member.avatar} alt="" />
+                      : member.username.charAt(0).toUpperCase()
+                    }
+                  </div>
+                ))}
+                {space.members.length > 6 && (
+                  <div className="sdetail-stack-more">+{space.members.length - 6}</div>
+                )}
+              </div>
+            </div>
+
+            {/* AI Summary card */}
+            <div className="sdetail-sidebar-card">
+              <div className="sdetail-sb-section-title">
+                <Icon name="ai" size={13} />
                 AI Summary
               </div>
               <button
@@ -619,64 +668,6 @@ export default function SpaceDetailPage() {
               </button>
               {showAiPanel && aiSummary && (
                 <p className="sdetail-ai-result">{aiSummary}</p>
-              )}
-            </div>
-
-            {/* Members */}
-            <div className="sdetail-sidebar-card">
-              <div className="sdetail-sb-section-title">
-                <Icon name="spaces" size={14} />
-                Members ({space.members.length})
-              </div>
-              <ul className="sdetail-member-list">
-                {space.members.map(member => (
-                  <li key={member.userId} className="sdetail-member">
-                    <div className="sdetail-member-avatar">
-                      {member.avatar
-                        ? <img src={member.avatar} alt="" />
-                        : member.username.charAt(0).toUpperCase()
-                      }
-                    </div>
-                    <div className="sdetail-member-info">
-                      <span className="sdetail-member-name">@{member.username}</span>
-                      {member.role === 'OWNER' && (
-                        <span className="sdetail-member-role">Owner</span>
-                      )}
-                    </div>
-                    {/* Owner can kick any non-owner member */}
-                    {isOwner && member.role !== 'OWNER' && (
-                      <button
-                        className="sdetail-kick-btn"
-                        onClick={() => handleKick(member)}
-                        title="Remove member"
-                      >
-                        <Icon name="close" size={12} />
-                      </button>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Danger zone */}
-            <div className="sdetail-sidebar-card sdetail-sidebar-card--danger">
-              {isOwner ? (
-                <>
-                  {!showEditSpace && (
-                    <button className="sdetail-btn sdetail-btn--edit" onClick={openEditSpace}>
-                      <Icon name="edit" size={14} />
-                      Edit Space
-                    </button>
-                  )}
-                  <button className="sdetail-btn sdetail-btn--danger" onClick={handleDelete}>
-                    <Icon name="trash" size={14} />
-                    Delete Space
-                  </button>
-                </>
-              ) : (
-                <button className="sdetail-btn sdetail-btn--danger" onClick={handleLeave}>
-                  Leave Space
-                </button>
               )}
             </div>
           </aside>
@@ -749,6 +740,12 @@ export default function SpaceDetailPage() {
               {editError && <p className="sdetail-error">{editError}</p>}
             </div>
             <div className="sdetail-modal-footer">
+              {/* Destructive action left-aligned, separated from Save/Cancel */}
+              <button className="sdetail-btn sdetail-btn--danger" onClick={handleDelete}>
+                <Icon name="trash" size={14} />
+                Delete Space
+              </button>
+              <div className="sdetail-modal-footer-spacer" />
               <button className="sdetail-btn" onClick={() => setShowEditSpace(false)}>Cancel</button>
               <button
                 className="sdetail-btn sdetail-btn--accent"
@@ -757,6 +754,90 @@ export default function SpaceDetailPage() {
               >
                 {editSaving ? 'Saving...' : 'Save'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Mobile info bottom sheet ────────────────────── */}
+      {showInfoSheet && (
+        <div
+          className="sdetail-sheet-overlay"
+          onClick={e => { if (e.target === e.currentTarget) setShowInfoSheet(false) }}
+        >
+          <div className="sdetail-sheet">
+            <div className="sdetail-sheet-handle" />
+            {/* Banner */}
+            <div className="sdetail-sb-banner sdetail-sb-banner--sheet" style={coverStyle}>
+              {!space.coverImage && (
+                <span className="sdetail-sb-initial">{space.name.charAt(0).toUpperCase()}</span>
+              )}
+              <div className="sdetail-sb-banner-overlay">
+                <p className="sdetail-sb-banner-name">{space.name}</p>
+                <p className="sdetail-sb-banner-count">{space.members.length} members</p>
+              </div>
+            </div>
+            {/* Scrollable content */}
+            <div className="sdetail-sheet-content">
+              {space.description && (
+                <p className="sdetail-sb-desc sdetail-sheet-desc">{space.description}</p>
+              )}
+              <p className="sdetail-sb-owner sdetail-sheet-owner">Owner @{space.ownerUsername}</p>
+              {/* Invite code */}
+              <div className="sdetail-invite-row sdetail-sheet-invite">
+                <span className="sdetail-invite-code">{space.inviteCode}</span>
+                <button className="sdetail-invite-copy" onClick={copyInvite} title="Copy invite code">
+                  <Icon name={inviteCopied ? 'check' : 'copy'} size={14} />
+                  {inviteCopied ? 'Copied' : 'Copy'}
+                </button>
+              </div>
+              {/* Members */}
+              <div className="sdetail-sb-section-title sdetail-sheet-section">
+                <Icon name="spaces" size={13} />
+                Members · {space.members.length}
+              </div>
+              <ul className="sdetail-member-list sdetail-sheet-members">
+                {space.members.map(member => (
+                  <li key={member.userId} className="sdetail-member">
+                    <div className="sdetail-member-avatar">
+                      {member.avatar
+                        ? <img src={member.avatar} alt="" />
+                        : member.username.charAt(0).toUpperCase()
+                      }
+                    </div>
+                    <div className="sdetail-member-info">
+                      <span className="sdetail-member-name">@{member.username}</span>
+                      {member.role === 'OWNER' && (
+                        <span className="sdetail-member-role">Owner</span>
+                      )}
+                    </div>
+                    {isOwner && member.role !== 'OWNER' && (
+                      <button
+                        className="sdetail-kick-btn"
+                        onClick={() => handleKick(member)}
+                        title="Remove member"
+                      >
+                        <Icon name="close" size={12} />
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              {/* AI Summary */}
+              <div className="sdetail-sb-section-title sdetail-sheet-section">
+                <Icon name="ai" size={13} />
+                AI Summary
+              </div>
+              <button
+                className="sdetail-btn sdetail-btn--accent sdetail-sheet-ai-btn"
+                onClick={handleAiSummary}
+                disabled={aiLoading}
+              >
+                {aiLoading ? 'Generating...' : 'Generate summary'}
+              </button>
+              {showAiPanel && aiSummary && (
+                <p className="sdetail-ai-result sdetail-sheet-ai-result">{aiSummary}</p>
+              )}
             </div>
           </div>
         </div>
@@ -844,9 +925,25 @@ function PostCard({
   onCommentInputChange, onAddComment, onDeleteComment,
   onOpenLightbox,
 }: PostCardProps) {
-  const isEditing   = editingPostId === post.id
+  const isEditing    = editingPostId === post.id
   const commentsOpen = expandedComments.has(post.id)
   const canModify    = post.authorId === currentUserId || isOwner
+
+  // Local emoji picker state — one picker per card
+  const [showPicker, setShowPicker] = useState(false)
+  const pickerRef = useRef<HTMLDivElement>(null)
+
+  // Close picker when clicking outside the picker wrapper
+  useEffect(() => {
+    if (!showPicker) return
+    function onMouseDown(e: MouseEvent) {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setShowPicker(false)
+      }
+    }
+    document.addEventListener('mousedown', onMouseDown)
+    return () => document.removeEventListener('mousedown', onMouseDown)
+  }, [showPicker])
 
   // Build image grid layout class
   const imgCount = post.images.length
@@ -957,9 +1054,11 @@ function PostCard({
         </>
       )}
 
-      {/* Reaction bar */}
+      {/* Reaction bar: only show emoji pills that have been used, plus picker trigger */}
       <div className="sdetail-reactions">
-        {EMOJIS.map(emoji => {
+        {EMOJIS.filter(emoji =>
+          (post.reactions.counts[emoji] ?? 0) > 0 || post.reactions.myReaction === emoji
+        ).map(emoji => {
           const count = post.reactions.counts[emoji] ?? 0
           const active = post.reactions.myReaction === emoji
           return (
@@ -973,6 +1072,29 @@ function PostCard({
             </button>
           )
         })}
+        {/* Emoji picker trigger */}
+        <div className="sdetail-emoji-picker-wrap" ref={pickerRef}>
+          <button
+            className="sdetail-add-reaction-btn"
+            onClick={() => setShowPicker(v => !v)}
+            aria-label="Add reaction"
+          >
+            <Icon name="smile" size={14} />
+          </button>
+          {showPicker && (
+            <div className="sdetail-emoji-picker">
+              {EMOJIS.map(emoji => (
+                <button
+                  key={emoji}
+                  className="sdetail-emoji-option"
+                  onClick={() => { onReaction(post, emoji); setShowPicker(false) }}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Comments toggle */}
