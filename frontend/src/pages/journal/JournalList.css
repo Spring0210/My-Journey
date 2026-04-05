@@ -679,6 +679,25 @@
     grid-template-columns: 1fr;
   }
 
+  /* Search sheet: date input full-width, then Search+Clear side by side */
+  .jlist-modal .jlist-filter-row {
+    flex-wrap: wrap;
+  }
+
+  .jlist-modal .jlist-filter-row .jlist-date-input {
+    flex: none;
+    width: 100%;
+    height: 44px;
+    font-size: 15px;
+  }
+
+  .jlist-modal .jlist-filter-row .jlist-search-btn,
+  .jlist-modal .jlist-filter-row .jlist-clear-btn {
+    flex: 1;
+    height: 44px;
+    justify-content: center;
+  }
+
   /* All modals become bottom sheets on mobile */
   .jlist-modal-overlay {
     align-items: flex-end;
