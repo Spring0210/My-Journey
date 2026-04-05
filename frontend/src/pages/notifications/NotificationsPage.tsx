@@ -9,6 +9,7 @@ import {
 import type { Notification } from '@/types/api'
 import Icon from '@/components/ui/Icon'
 import PageTopBar from '@/components/ui/PageTopBar'
+import { useAppLayout } from '@/context/AppLayoutContext'
 import './Notifications.css'
 
 // ─────────────────────────────────────────────────────────
@@ -37,6 +38,7 @@ function formatTime(iso: string): string {
 
 export default function NotificationsPage() {
   const navigate = useNavigate()
+  const { refreshNotifCount } = useAppLayout()
 
   const [notifs, setNotifs]   = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
@@ -56,6 +58,7 @@ export default function NotificationsPage() {
     try {
       await markAllRead()
       setNotifs(prev => prev.map(n => ({ ...n, read: true })))
+      refreshNotifCount() // update sidebar badge
     } catch {
       // Silently ignore — list still visible
     }
@@ -68,6 +71,7 @@ export default function NotificationsPage() {
     try {
       await deleteNotification(id)
       setNotifs(prev => prev.filter(n => n.id !== id))
+      refreshNotifCount() // update sidebar badge
     } catch {
       // Silently ignore
     }
@@ -79,6 +83,7 @@ export default function NotificationsPage() {
     try {
       await deleteAllNotifications()
       setNotifs([])
+      refreshNotifCount() // update sidebar badge
     } catch {
       // Silently ignore
     }
@@ -88,8 +93,9 @@ export default function NotificationsPage() {
   // Mark it read locally and navigate to the space
   async function handleRowClick(notif: Notification) {
     if (!notif.read) {
-      // Optimistically mark this one read
+      // Optimistically mark this one read and refresh sidebar badge
       setNotifs(prev => prev.map(n => n.id === notif.id ? { ...n, read: true } : n))
+      refreshNotifCount()
     }
     navigate(`/spaces/${notif.spaceId}`)
   }

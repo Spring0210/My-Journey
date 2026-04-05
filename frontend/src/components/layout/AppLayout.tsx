@@ -30,15 +30,19 @@ export default function AppLayout() {
   }, [])
 
   // Fetch unread notification count for the sidebar badge
-  useEffect(() => {
+  function fetchNotifCount() {
     apiRequest<{ count: number }>('/notifications/unread-count')
       .then(data => setNotifCount(data.count))
       .catch(() => { /* ignore — badge stays at 0 */ })
-  }, [])
+  }
+
+  useEffect(() => { fetchNotifCount() }, [])
 
   return (
-    // Provide openSidebar to all pages so PageTopBar can trigger the mobile drawer
-    <AppLayoutContext.Provider value={{ openSidebar: () => setSidebarOpen(true) }}>
+    <AppLayoutContext.Provider value={{
+      openSidebar: () => setSidebarOpen(true),
+      refreshNotifCount: fetchNotifCount,
+    }}>
       <div style={styles.shell}>
         {/* Desktop sidebar — always visible */}
         {!isMobile && (

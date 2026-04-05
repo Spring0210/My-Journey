@@ -7,10 +7,13 @@ import { createContext, useContext } from 'react'
 
 interface AppLayoutCtx {
   openSidebar: () => void
+  // Call this after any action that changes unread notification count
+  refreshNotifCount: () => void
 }
 
 export const AppLayoutContext = createContext<AppLayoutCtx>({
   openSidebar: () => {},
+  refreshNotifCount: () => {},
 })
 
 export function useAppLayout() {

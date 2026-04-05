@@ -209,25 +209,34 @@
 }
 
 /* Delete (x) button on the far right of each row */
+/* Delete button — absolute overlay on the right, hidden until row hover */
 .notif-delete-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  flex-shrink: 0;
-  background: transparent;
-  border: none;
-  color: var(--label-quaternary);
+  background: var(--surface-secondary);
+  border: 1px solid var(--separator);
+  color: var(--label-tertiary);
   cursor: pointer;
   opacity: 0;
   transition: opacity var(--ease-micro), color var(--ease-micro), background var(--ease-micro);
+  z-index: 1;
 }
 
-.notif-row:hover .notif-delete-btn { opacity: 1; }
+/* Show on hover of the parent list item */
+.notif-item:hover .notif-delete-btn { opacity: 1; }
 
 .notif-delete-btn:hover {
   color: var(--system-red);
-  background: color-mix(in srgb, var(--system-red) 8%, transparent);
+  background: color-mix(in srgb, var(--system-red) 10%, var(--surface-secondary));
+  border-color: color-mix(in srgb, var(--system-red) 20%, transparent);
 }
 
 /* ── Empty state ─────────────────────────────────────────── */
