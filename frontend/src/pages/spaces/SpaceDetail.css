@@ -1302,11 +1302,11 @@
   color: var(--label-primary);
 }
 
-/* Floating emoji panel — right-anchored to avoid page overflow */
+/* Floating emoji panel — left-anchored, expands rightward */
 .sdetail-emoji-picker {
   position: absolute;
   bottom: calc(100% + 8px);
-  right: 0;
+  left: 0;
   display: flex;
   gap: 2px;
   padding: 6px 8px;
@@ -1386,8 +1386,8 @@
 }
 
 @keyframes sdetail-sheet-in {
-  from { transform: translateY(24px); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
+  from { transform: translateY(24px); }
+  to   { transform: translateY(0); }
 }
 
 /* Banner as visual header of the sheet — fills the top edge-to-edge */
@@ -1467,8 +1467,8 @@
   }
 
   @keyframes sdetail-sheet-in-right {
-    from { transform: translateX(24px); opacity: 0; }
-    to   { transform: translateX(0);    opacity: 1; }
+    from { transform: translateX(24px); }
+    to   { transform: translateX(0); }
   }
 
   /* Hide drag handle on desktop — use close button instead */
