@@ -116,7 +116,9 @@ product pages and Apple Intelligence marketing materials.
 /* Dark surface CTA card */
 --gradient-cta-dark: linear-gradient(145deg, #1d1d1f 0%, #2c2c2e 100%);
 
-/* Feature icon backgrounds */
+/* Feature icon backgrounds — kept for space cards / avatar placeholders.
+   Do NOT use these for landing page feature icons; see §9.2 for the
+   current icon standard (soft tinted bg + colored icon). */
 --gradient-icon-blue:   linear-gradient(145deg, #0071e3, #0052cc);
 --gradient-icon-purple: linear-gradient(145deg, #af52de, #7c3aed);
 --gradient-icon-orange: linear-gradient(145deg, #ff9500, #e07800);
@@ -418,9 +420,44 @@ Apple's feature tiles can be:
 - **Asymmetric bento** — one wide card (2 cols) + two narrow cards, or 1 tall + 2 stacked
 
 Feature card anatomy:
-1. **Icon** — 56px square, colored gradient background (not gray), 16px radius
+1. **Icon** — 56px square, 16px radius. Use the **soft tinted icon** pattern (see below).
 2. **Title** — 21px / 600 / var(--label-primary)
 3. **Description** — 15px / 400 / var(--label-secondary) / 1.60 line-height
+
+#### Icon standard — soft tinted background (current)
+
+Do **not** use solid gradient backgrounds with white icons (`--gradient-icon-*`).
+Use a soft `color-mix` tint so the icon adapts naturally to dark and light mode:
+
+```css
+/* Light mode */
+.icon-container--blue {
+  background: color-mix(in srgb, #0071e3 10%, var(--surface-card));
+  color: #0071e3;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+}
+
+/* Dark mode override — lighter color for contrast on dark surface */
+[data-theme="dark"] .icon-container--blue {
+  background: color-mix(in srgb, #2997ff 14%, var(--surface-card));
+  color: #2997ff;
+}
+```
+
+Color pairs (light → dark):
+
+| Name   | Light color | Dark color |
+|--------|-------------|------------|
+| Blue   | `#0071e3`   | `#2997ff`  |
+| Purple | `#af52de`   | `#bf5af2`  |
+| Orange | `#ff9500`   | `#ff9f0a`  |
+| Green  | `#34c759`   | `#30d158`  |
+| Teal   | `#30b0c7`   | `#40cbe0`  |
+| Pink   | `#ff2d55`   | `#ff375f`  |
+| Indigo | `#5856d6`   | `#5e5ce6`  |
+
+The `--gradient-icon-*` tokens remain available for contexts that need a solid colored
+background (e.g. space cover placeholders, avatar initials), but **not** for feature icons.
 
 ### 9.3 "Dark CTA" Section
 
