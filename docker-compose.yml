@@ -19,6 +19,7 @@ services:
 
   app:
     build: .
+    image: ghcr.io/spring0210/my-journey:latest
     container_name: my-journey-app
     restart: always
     # Bind to localhost only — Nginx proxies to this port, no need for external access

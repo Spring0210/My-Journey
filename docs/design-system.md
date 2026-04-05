@@ -17,7 +17,9 @@ Apple's three core principles, applied to MyJourney:
 | **Deference** | The UI supports content, it never competes with it. | Neutral surfaces let the user's writing and photos be the visual focus. |
 | **Depth** | Layering and motion communicate hierarchy and relationships. | Subtle shadows, translucent layers, and spring animations give the interface physical weight. |
 
-**Additional rule for MyJourney:** The UI must feel calm and private — not loud or social-media-like. This is a journaling product; the design should invite reflection, not excitement.
+**Additional rules for MyJourney:**
+- The UI must feel calm and private — not loud or social-media-like. This is a journaling product; the design should invite reflection, not excitement.
+- Every decorative element (badge background, colored label, extra CTA text) must earn its place. If the same information can be conveyed with less visual weight — through typography, spacing, or a single icon — choose the lighter option.
 
 ---
 
@@ -436,6 +438,41 @@ backdrop-filter: saturate(180%) blur(20px);
 
 Do NOT use glassmorphism on cards that sit on top of other cards — the effect
 requires a colorful background to be visible and meaningful.
+
+### 8.8 Grouped List (iOS Settings / Apple Notes style)
+
+Use for: numbered prompt lists, settings rows, any vertically stacked selectable rows.
+
+**Visual spec:**
+
+```
+┌─────────────────────────────────────────┐
+│                                         │
+│  01   Row text content here       ›     │
+│                                         │
+├─────────────────────────────────────────┤
+│                                         │
+│  02   Another row                 ›     │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+```
+Container:   border: 1px solid var(--separator), border-radius: var(--radius-lg), overflow: hidden
+Row:         display: flex, align-items: center, padding: 18px 16px 18px 18px, background: var(--surface-card)
+             border-bottom: 1px solid var(--separator) (last-child: none)
+             hover: background: var(--fill-quaternary)
+Number:      font-size: 20px, font-weight: 300, color: var(--label-tertiary), width: 36px, text-align: right
+             — typographic only, NO background badge or tinted box
+Text:        flex: 1, font-size: 15px, font-weight: 400, color: var(--label-primary)
+Chevron:     color: var(--label-tertiary), hover: var(--label-secondary)
+```
+
+**Rules:**
+- Numbers are purely typographic — large, thin weight, muted. Never use a tinted badge/box for list numbers.
+- The chevron `›` is the sole affordance for "this row is tappable" — no extra "Write now" or "Go" text needed.
+- Remove any decorative element that doesn't carry meaning (Clarity principle).
+- Reference implementation: `JournalList.css` `.jlist-prompts-list` / `.jlist-prompt-card`
 
 ---
 

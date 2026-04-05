@@ -271,32 +271,32 @@ export default function JournalListPage() {
         {/* ── Mobile layout ──────────────────────────────── */}
         <div className="jlist-mobile-bar">
 
-          {/* 4-icon quick action grid — icon + label, each with a distinct color */}
-          <div className="jlist-quick-actions">
+          {/* Horizontal chip row — mirrors desktop toolbar spirit */}
+          <div className="jlist-chip-row">
             <button
-              className={`jlist-qa jlist-qa--search${searchOpen ? ' jlist-qa--active' : ''}`}
+              className={`jlist-chip${searchOpen ? ' jlist-chip--active' : ''}`}
               onClick={() => { setSearchOpen(v => !v); setAiOpen(false) }}
             >
-              <div className="jlist-qa-icon"><Icon name="search" size={20} /></div>
-              <span className="jlist-qa-label">Search</span>
+              <Icon name="search" size={15} />
+              Search
             </button>
             <button
-              className="jlist-qa jlist-qa--recap"
-              onClick={() => { setShowRecap(true); setRecapText('') }}
-            >
-              <div className="jlist-qa-icon"><Icon name="calendar" size={20} /></div>
-              <span className="jlist-qa-label">Recap</span>
-            </button>
-            <button className="jlist-qa jlist-qa--prompts" onClick={openPrompts}>
-              <div className="jlist-qa-icon"><Icon name="journal" size={20} /></div>
-              <span className="jlist-qa-label">Prompts</span>
-            </button>
-            <button
-              className={`jlist-qa jlist-qa--ai${aiOpen ? ' jlist-qa--active' : ''}`}
+              className={`jlist-chip${aiOpen ? ' jlist-chip--active' : ''}`}
               onClick={() => { setAiOpen(v => !v); setSearchOpen(false) }}
             >
-              <div className="jlist-qa-icon"><Icon name="ai" size={20} /></div>
-              <span className="jlist-qa-label">AI Search</span>
+              <Icon name="ai" size={15} />
+              AI Search
+            </button>
+            <button
+              className="jlist-chip"
+              onClick={() => { setShowRecap(true); setRecapText('') }}
+            >
+              <Icon name="calendar" size={15} />
+              Recap
+            </button>
+            <button className="jlist-chip" onClick={openPrompts}>
+              <Icon name="journal" size={15} />
+              Prompts
             </button>
           </div>
 
@@ -504,17 +504,11 @@ export default function JournalListPage() {
                     className="jlist-prompt-card"
                     onClick={() => setShowPrompts(false)}
                   >
-                    {/* Sequential number badge */}
                     <span className="jlist-prompt-num">
                       {String(i + 1).padStart(2, '0')}
                     </span>
-                    <div className="jlist-prompt-body">
-                      <p className="jlist-prompt-text">{prompt}</p>
-                      <span className="jlist-prompt-cta">
-                        Write now
-                        <Icon name="chevron-right" size={12} />
-                      </span>
-                    </div>
+                    <p className="jlist-prompt-text">{prompt}</p>
+                    <Icon name="chevron-right" size={16} className="jlist-prompt-chevron" />
                   </NavLink>
                 ))}
               </div>

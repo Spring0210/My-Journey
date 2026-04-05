@@ -423,9 +423,9 @@
 /* Each prompt card — iOS grouped list row style */
 .jlist-prompt-card {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 14px;
-  padding: 16px 18px;
+  padding: 18px 16px 18px 18px;
   background: var(--surface-card);
   border-bottom: 1px solid var(--separator);
   cursor: pointer;
@@ -446,48 +446,38 @@
   background: var(--fill-tertiary);
 }
 
-/* Sequential number badge — monospace, accent tint */
+/* Sequential number — large thin typographic, no background */
 .jlist-prompt-num {
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 300;
   font-variant-numeric: tabular-nums;
-  color: var(--accent);
-  background: var(--tint-accent-subtle);
-  border-radius: var(--radius-sm);
-  min-width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  color: var(--label-tertiary);
+  width: 36px;
   flex-shrink: 0;
-  margin-top: 1px;
-}
-
-/* Prompt body — text + "Write now" row */
-.jlist-prompt-body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  text-align: right;
+  line-height: 1;
 }
 
 /* Prompt sentence */
 .jlist-prompt-text {
+  flex: 1;
+  min-width: 0;
   font-size: 15px;
   font-weight: 400;
-  line-height: 1.50;
+  line-height: 1.55;
   color: var(--label-primary);
+  margin: 0;
 }
 
-/* "Write now →" CTA */
-.jlist-prompt-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--accent);
+/* Trailing chevron */
+.jlist-prompt-chevron {
+  color: var(--label-tertiary);
+  flex-shrink: 0;
+  transition: color var(--ease-micro);
+}
+
+.jlist-prompt-card:hover .jlist-prompt-chevron {
+  color: var(--label-secondary);
 }
 
 /* ── Active filter banner — shown when isSearchMode ─────── */
@@ -665,90 +655,42 @@
   background: var(--surface-tertiary);
 }
 
-/* ── Quick action grid (4 icon+label buttons) ────────────── */
-/* Inspired by iOS Contacts quick actions and WeChat shortcut grid */
-.jlist-quick-actions {
+/* ── Mobile chip grid — 2×2 equal-width action grid ─────────── */
+/* Symmetric, no scrolling — like iOS Wallet / Shortcuts quick actions */
+.jlist-chip-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-bottom: 12px;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
-/* Base quick action button */
-.jlist-qa {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 12px 4px 10px;
-  background: var(--surface-card);
-  border: 1px solid var(--separator);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: background var(--ease-micro), transform var(--ease-micro);
-}
-
-.jlist-qa:hover  { background: var(--surface-tertiary); }
-.jlist-qa:active { transform: scale(0.95); }
-
-/* Colored icon badge — design-system.md §9.2 soft tinted icon standard */
-.jlist-qa-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: var(--radius-sm);
+/* Individual chip */
+.jlist-chip {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Subtle colored border using the icon color at low opacity */
-  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
-  transition: background var(--ease-micro), color var(--ease-micro);
-}
-
-/* Label below icon */
-.jlist-qa-label {
-  font-size: 11px;
-  font-weight: 500;
+  gap: 7px;
+  height: 44px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--separator);
+  background: var(--surface-secondary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 400;
   color: var(--label-secondary);
-  text-align: center;
-  line-height: 1.2;
-  transition: color var(--ease-micro);
+  cursor: pointer;
+  transition: background var(--ease-micro), color var(--ease-micro), border-color var(--ease-micro);
 }
 
-/* Light mode — 10% tint mixed into surface-card */
-.jlist-qa--search .jlist-qa-icon {
-  background: color-mix(in srgb, var(--system-blue)   10%, var(--surface-card));
-  color: var(--system-blue);
-}
-.jlist-qa--recap .jlist-qa-icon {
-  background: color-mix(in srgb, var(--system-orange) 10%, var(--surface-card));
-  color: var(--system-orange);
-}
-.jlist-qa--prompts .jlist-qa-icon {
-  background: color-mix(in srgb, var(--system-teal)   10%, var(--surface-card));
-  color: var(--system-teal);
-}
-.jlist-qa--ai .jlist-qa-icon {
-  background: color-mix(in srgb, var(--system-purple) 10%, var(--surface-card));
-  color: var(--system-purple);
-}
+.jlist-chip:hover  { background: var(--surface-tertiary); }
+.jlist-chip:active { transform: scale(0.97); }
 
-/* Dark mode — bump tint to 14% (var(--system-*) tokens already resolve to
-   the lighter dark-mode system colors, so only the percentage needs updating) */
-[data-theme="dark"] .jlist-qa--search  .jlist-qa-icon { background: color-mix(in srgb, var(--system-blue)   14%, var(--surface-card)); }
-[data-theme="dark"] .jlist-qa--recap   .jlist-qa-icon { background: color-mix(in srgb, var(--system-orange) 14%, var(--surface-card)); }
-[data-theme="dark"] .jlist-qa--prompts .jlist-qa-icon { background: color-mix(in srgb, var(--system-teal)   14%, var(--surface-card)); }
-[data-theme="dark"] .jlist-qa--ai      .jlist-qa-icon { background: color-mix(in srgb, var(--system-purple) 14%, var(--surface-card)); }
-
-/* Active state — panel is open: switch to accent color */
-.jlist-qa--active .jlist-qa-icon {
-  background: color-mix(in srgb, var(--accent) 10%, var(--surface-card));
+/* Active state — panel open */
+.jlist-chip--active {
+  background: var(--tint-accent-subtle);
   color: var(--accent);
-}
-[data-theme="dark"] .jlist-qa--active .jlist-qa-icon {
-  background: color-mix(in srgb, var(--accent) 14%, var(--surface-card));
-}
-.jlist-qa--active .jlist-qa-label {
-  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 25%, transparent);
+  font-weight: 500;
 }
 
 /* Collapsible AI + date filter panel */
@@ -963,6 +905,17 @@
     max-height: 85vh;
     padding: 0 20px 36px;
     animation: jlist-sheet-in 280ms ease-out;
+  }
+
+  /* Recap controls inside bottom sheet — prevent iOS auto-zoom on select */
+  .jlist-select {
+    height: 46px;
+    font-size: 16px;
+  }
+
+  .jlist-recap-generate {
+    height: 50px;
+    font-size: 16px;
   }
 
   /* Drag handle at the top of every bottom sheet */
