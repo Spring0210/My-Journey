@@ -211,10 +211,11 @@
   border-color: var(--accent);
 }
 
-/* Day header row */
+/* Day header row — fc-cell-shaded is applied by FullCalendar and overrides generic rules */
 .cal-wrap .fc .fc-list-day th,
+.cal-wrap .fc .fc-cell-shaded,
 .cal-wrap .fc .fc-list-day-cushion {
-  background: var(--surface-secondary);
+  background: var(--surface-secondary) !important;
   border-color: var(--separator);
 }
 
@@ -222,6 +223,12 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--label-secondary);
+}
+
+/* Hidden thead row (Time / Event column headers) */
+.cal-wrap .fc .fc-list-table thead th {
+  background: var(--surface-card) !important;
+  border-color: var(--separator);
 }
 
 /* Day header text links */
