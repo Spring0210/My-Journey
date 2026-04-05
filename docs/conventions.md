@@ -71,8 +71,10 @@ Each HTML page has one corresponding JS file. Structure:
 - Follow mainstream industry patterns — use established UI conventions users already know
 - Match the interaction pattern to the weight of the action:
   - **Card view switch** — secondary actions within the same page (e.g. change password)
-  - **Modal** — focused tasks that need isolation from the current context (e.g. create/edit/confirm)
+  - **Modal** — focused tasks on desktop; becomes a **bottom sheet on mobile** (see below)
+  - **Bottom sheet** — standard mobile pattern per iOS HIG and Material Design; slide up from bottom, full width, rounded top corners, drag handle via `::before`
   - **Inline** — only for trivial, non-disruptive interactions
+- **Mobile modals must always be bottom sheets** — centered modals on small screens are cramped and off-target. Use CSS media query to convert the same element: `align-items: flex-end; padding: 0` on the overlay, full-width + rounded top on the modal. See `JournalList.css` for the reference implementation.
 - Think from the user's perspective before choosing an implementation; if it feels awkward to use, redesign it
 
 ### Third-party Libraries
@@ -110,7 +112,11 @@ All frontend features must work comfortably on mobile (phone-sized screens).
 >
 > **Rules:**
 > - Never hardcode a hex color, shadow, or spacing value in component CSS — always use a `var(--*)` token
+> - If a needed color is not in `tokens.css`, define it there first, then reference it
 > - All cards must have `border: 1px solid var(--separator)` for dark mode visibility
+> - App page CTA / highlighted cards: use `--tint-accent-subtle` (not gradients). Gradients are for marketing/landing pages only
+> - Dark mode colors: `--system-*` and `--accent` are intentionally brighter in dark mode — do not darken them. See `design-system.md §14`
+> - Animations: use `ease-out` + `translateY` only — no spring (`cubic-bezier(0.34,1.56,0.64,1)`), no `scale()`, no `opacity` changes on enter
 > - Refer to `design-system.md` before implementing any new component
 > - No emoji in any UI text or code
 > - Languages: English and Chinese only
