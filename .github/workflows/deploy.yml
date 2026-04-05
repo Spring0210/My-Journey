@@ -44,6 +44,7 @@ jobs:
           script: |
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u spring0210 --password-stdin
             cd /opt/my-journey
+            curl -fsSL https://raw.githubusercontent.com/Spring0210/My-Journey/main/docker-compose.yml -o docker-compose.yml
             docker compose pull
             docker compose up -d --remove-orphans
             docker image prune -f
