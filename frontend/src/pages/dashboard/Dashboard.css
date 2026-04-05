@@ -85,19 +85,43 @@
 .dash-today-cta-left {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Icon + title on same row */
+.dash-today-cta-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Semi-transparent white badge for the edit icon */
+.dash-today-cta-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
 }
 
 .dash-today-cta-title {
   font-size: 17px;
   font-weight: 600;
   color: #ffffff;
-  margin-bottom: 4px;
 }
 
 .dash-today-cta-sub {
   font-size: 14px;
   color: rgba(255, 255, 255, 0.70);
   line-height: 1.45;
+  /* indent to align with title (icon width + gap) */
+  padding-left: 46px;
 }
 
 /* "Start writing" pill button on gradient card */
@@ -119,6 +143,87 @@
 
 .dash-today-cta-btn:hover  { opacity: 0.88; }
 .dash-today-cta-btn:active { transform: scale(0.97); }
+
+/* ── Section label — shared "Recent" / "Explore" caption ─── */
+.dash-section-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--label-secondary);
+  letter-spacing: -0.005em;
+}
+
+/* ── Explore shortcuts ───────────────────────────────────── */
+.dash-explore {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 2-column equal grid */
+.dash-explore-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Individual shortcut card */
+.dash-explore-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 18px 16px;
+  background: var(--surface-card);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-sans);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--ease-micro), transform var(--ease-standard);
+}
+
+.dash-explore-card:hover  { background: var(--surface-secondary); }
+.dash-explore-card:active { transform: scale(0.97); }
+
+/* Colored icon badge — same soft-tint pattern as journal quick actions */
+.dash-explore-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.dash-explore-card--journal .dash-explore-card-icon {
+  background: color-mix(in srgb, var(--system-teal) 10%, var(--surface-card));
+  color: var(--system-teal);
+}
+
+.dash-explore-card--spaces .dash-explore-card-icon {
+  background: color-mix(in srgb, var(--system-indigo) 10%, var(--surface-card));
+  color: var(--system-indigo);
+}
+
+[data-theme="dark"] .dash-explore-card--journal .dash-explore-card-icon {
+  background: color-mix(in srgb, var(--system-teal) 14%, var(--surface-card));
+}
+[data-theme="dark"] .dash-explore-card--spaces .dash-explore-card-icon {
+  background: color-mix(in srgb, var(--system-indigo) 14%, var(--surface-card));
+}
+
+.dash-explore-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--label-primary);
+}
+
+.dash-explore-card-sub {
+  font-size: 13px;
+  color: var(--label-tertiary);
+  line-height: 1.4;
+}
 
 /* ── Today: written variant (entry exists) ───────────────── */
 .dash-today--written {
@@ -366,7 +471,20 @@
   .dash-today--cta {
     flex-direction: column;
     align-items: flex-start;
-    gap: 14px;
+    gap: 16px;
     padding: 20px;
+  }
+
+  /* Sub text: no indent on mobile since layout is already stacked */
+  .dash-today-cta-sub {
+    padding-left: 0;
+  }
+
+  /* Full-width prominent button — easier thumb tap */
+  .dash-today-cta-btn {
+    width: 100%;
+    height: 50px;
+    font-size: 16px;
+    justify-content: center;
   }
 }

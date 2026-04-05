@@ -93,7 +93,13 @@ export default function DashboardPage() {
               /* Nothing written yet */
               <div className="dash-today dash-today--cta">
                 <div className="dash-today-cta-left">
-                  <p className="dash-today-cta-title">Write today's entry</p>
+                  {/* Icon + title on same row */}
+                  <div className="dash-today-cta-header">
+                    <div className="dash-today-cta-icon">
+                      <Icon name="edit" size={20} />
+                    </div>
+                    <p className="dash-today-cta-title">Write today's entry</p>
+                  </div>
                   <p className="dash-today-cta-sub">Capture your thoughts before the day ends.</p>
                 </div>
                 <button
@@ -105,11 +111,38 @@ export default function DashboardPage() {
               </div>
             )}
 
+            {/* Explore shortcuts — Journal + Spaces quick navigation */}
+            <section className="dash-explore">
+              <span className="dash-section-label">Explore</span>
+              <div className="dash-explore-grid">
+                <button
+                  className="dash-explore-card dash-explore-card--journal"
+                  onClick={() => navigate('/journal')}
+                >
+                  <div className="dash-explore-card-icon">
+                    <Icon name="journal" size={22} />
+                  </div>
+                  <p className="dash-explore-card-title">My Journal</p>
+                  <p className="dash-explore-card-sub">View all entries</p>
+                </button>
+                <button
+                  className="dash-explore-card dash-explore-card--spaces"
+                  onClick={() => navigate('/spaces')}
+                >
+                  <div className="dash-explore-card-icon">
+                    <Icon name="spaces" size={22} />
+                  </div>
+                  <p className="dash-explore-card-title">Spaces</p>
+                  <p className="dash-explore-card-sub">Discover communities</p>
+                </button>
+              </div>
+            </section>
+
             {/* Recent entries */}
             {recentFour.length > 0 && (
               <section className="dash-recent">
                 <div className="dash-recent-header">
-                  <span className="dash-recent-title">Recent</span>
+                  <span className="dash-section-label">Recent</span>
                   <button
                     className="dash-recent-all"
                     onClick={() => navigate('/journal')}
