@@ -171,6 +171,26 @@
 }
 
 /* ── List view ───────────────────────────────────────────── */
+
+/* List container + internal scroller — prevent white bleed in dark mode */
+.cal-wrap .fc .fc-list,
+.cal-wrap .fc .fc-list-sticky-header,
+.cal-wrap .fc .fc-scroller-liquid-absolute {
+  background: var(--surface-card);
+}
+
+/* Scrollgrid section td wrappers inside list view */
+.cal-wrap .fc .fc-scrollgrid-section > td {
+  background: var(--surface-card);
+}
+
+/* Event rows — base state (not just hover) */
+.cal-wrap .fc .fc-list-event td {
+  background: var(--surface-card);
+  color: var(--label-primary);
+  border-color: var(--separator);
+}
+
 .cal-wrap .fc .fc-list-event:hover td {
   background: var(--surface-secondary);
 }
@@ -179,11 +199,25 @@
   border-color: var(--accent);
 }
 
+/* Day header row */
 .cal-wrap .fc .fc-list-day-cushion {
   background: var(--surface-secondary);
   font-size: 13px;
   font-weight: 600;
   color: var(--label-secondary);
+}
+
+/* Day header text links */
+.cal-wrap .fc .fc-list-day-text,
+.cal-wrap .fc .fc-list-day-side-text {
+  color: var(--label-secondary);
+  text-decoration: none;
+}
+
+/* Empty state */
+.cal-wrap .fc .fc-list-empty {
+  background: var(--surface-card);
+  color: var(--label-tertiary);
 }
 
 /* ── Responsive — mobile (≤768px) ───────────────────────── */
