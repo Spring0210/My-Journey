@@ -157,10 +157,71 @@
   padding: 0 12px;
 }
 
-/* Hide secondary topbar buttons (Recap, Prompts) on mobile — too crowded */
+/* On mobile the topbar only shows the primary New Entry button */
 @media (max-width: 768px) {
-  .jlist-btn-label { display: none; }
   .jlist-btn--topbar:not(.jlist-btn--primary) { display: none; }
+}
+
+/* Active variant — tinted when a toggle button is on */
+.jlist-btn--active {
+  background: var(--tint-accent-subtle);
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+/* ── Desktop unified search card ─────────────────────────── */
+.jlist-search-card {
+  background: var(--surface-card);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-lg);
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+/* ── Toolbar row — single flex-wrap row ──────────────────── */
+/* Two groups: search inputs (flex:1) and tool buttons (margin-left:auto).
+   On tablet, the tool group wraps naturally to a second line. */
+.jlist-toolbar-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Search inputs + Search/Clear — flex:1 fills available space */
+.jlist-toolbar-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 280px;
+  flex-wrap: wrap;
+}
+
+/* AI Search + Recap + Prompts — pushed right, wraps as a unit */
+.jlist-toolbar-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+/* ── AI expandable bar ───────────────────────────────────── */
+.jlist-ai-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--separator);
+  animation: jlist-bar-in 160ms ease-out;
+}
+
+@keyframes jlist-bar-in {
+  from { transform: translateY(-4px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
 }
 
 /* ── Entry grid ──────────────────────────────────────────── */

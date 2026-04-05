@@ -43,7 +43,10 @@ export default function JournalListPage() {
   const [aiMeta, setAiMeta]       = useState('')
   const [aiLoading, setAiLoading] = useState(false)
 
-  // ── Mobile collapsible panel states ──────────────────
+  // ── Desktop AI bar toggle ─────────────────────────────
+  const [showAiBar, setShowAiBar] = useState(false)
+
+  // ── Mobile bottom sheet states ────────────────────────
   const [searchOpen, setSearchOpen] = useState(false)
   const [aiOpen, setAiOpen]         = useState(false)
 
@@ -178,14 +181,6 @@ export default function JournalListPage() {
         title="My Journal"
         actions={
           <>
-            <button className="jlist-btn jlist-btn--topbar" onClick={() => { setShowRecap(true); setRecapText('') }}>
-              <Icon name="ai" size={16} />
-              <span className="jlist-btn-label">Monthly Recap</span>
-            </button>
-            <button className="jlist-btn jlist-btn--topbar" onClick={openPrompts}>
-              <Icon name="journal" size={16} />
-              <span className="jlist-btn-label">Writing Prompts</span>
-            </button>
             <NavLink to="/journal/new" className="jlist-btn jlist-btn--primary jlist-btn--topbar">
               <Icon name="plus" size={16} />
               New entry
@@ -196,42 +191,80 @@ export default function JournalListPage() {
 
       <div className="jlist-inner">
 
-        {/* ── Desktop: search toolbar + AI row ──────────── */}
+        {/* ── Desktop: single flex-wrap toolbar card ─────────── */}
         <div className="jlist-desktop-bar">
-          <div className="jlist-toolbar">
-            <input
-              className="jlist-input jlist-input--keyword"
-              type="text"
-              placeholder="Search by keyword..."
-              value={keyword}
-              onChange={e => setKeyword(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSearch()}
-            />
-            <input
-              className="jlist-input jlist-input--date"
-              type="date"
-              value={date}
-              onChange={e => setDate(e.target.value)}
-            />
-            <div className="jlist-toolbar-btns">
-              <button className="jlist-btn" onClick={handleSearch}>Search</button>
-              <button className="jlist-btn" onClick={handleClear}>Clear</button>
-            </div>
-          </div>
+          <div className="jlist-search-card">
 
-          <div className="jlist-ai-row">
-            <input
-              className="jlist-ai-input"
-              type="text"
-              placeholder='AI search — try "entries about my mom"'
-              value={aiQuery}
-              onChange={e => setAiQuery(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleAiSearch()}
-            />
-            <button className="jlist-btn" onClick={handleAiSearch} disabled={aiLoading}>
-              <Icon name="ai" size={15} />
-              {aiLoading ? 'Searching...' : 'AI Search'}
-            </button>
+            {/* Toolbar row — search inputs on left, tools on right.
+                flex-wrap: wraps naturally on tablet widths. */}
+            <div className="jlist-toolbar-row">
+
+              {/* Group 1: keyword + date + Search/Clear */}
+              <div className="jlist-toolbar-search">
+                <input
+                  className="jlist-input jlist-input--keyword"
+                  type="text"
+                  placeholder="Search by keyword..."
+                  value={keyword}
+                  onChange={e => setKeyword(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                />
+                <input
+                  className="jlist-input jlist-input--date"
+                  type="date"
+                  value={date}
+                  onChange={e => setDate(e.target.value)}
+                />
+                <button className="jlist-btn" onClick={handleClear}>Clear</button>
+                <button className="jlist-btn jlist-btn--primary" onClick={handleSearch}>
+                  <Icon name="search" size={14} />
+                  Search
+                </button>
+              </div>
+
+              {/* Group 2: AI Search + Recap + Prompts — pushed right */}
+              <div className="jlist-toolbar-tools">
+                <button
+                  className={`jlist-btn${showAiBar ? ' jlist-btn--active' : ''}`}
+                  onClick={() => setShowAiBar(v => !v)}
+                >
+                  <Icon name="ai" size={14} />
+                  AI Search
+                </button>
+                <button className="jlist-btn" onClick={() => { setShowRecap(true); setRecapText('') }}>
+                  <Icon name="calendar" size={14} />
+                  Recap
+                </button>
+                <button className="jlist-btn" onClick={openPrompts}>
+                  <Icon name="journal" size={14} />
+                  Prompts
+                </button>
+              </div>
+            </div>
+
+            {/* AI Search bar — expands below when toggled */}
+            {showAiBar && (
+              <div className="jlist-ai-bar">
+                <input
+                  className="jlist-ai-input"
+                  type="text"
+                  placeholder='Try "entries about my mom" or "times I felt proud"'
+                  value={aiQuery}
+                  onChange={e => setAiQuery(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleAiSearch()}
+                  autoFocus
+                />
+                <button
+                  className="jlist-btn jlist-btn--primary"
+                  onClick={handleAiSearch}
+                  disabled={aiLoading}
+                >
+                  <Icon name="ai" size={14} />
+                  {aiLoading ? 'Searching...' : 'Search'}
+                </button>
+              </div>
+            )}
+
           </div>
         </div>
 
@@ -343,25 +376,48 @@ export default function JournalListPage() {
                 <Icon name="close" size={16} />
               </button>
             </div>
-            <input
-              className="jlist-mobile-input"
-              type="text"
-              placeholder="Search by keyword..."
-              value={keyword}
-              onChange={e => setKeyword(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') { handleSearch(); setSearchOpen(false) } }}
-              autoFocus
-            />
-            <div className="jlist-filter-row" style={{ marginTop: 10 }}>
+
+            {/* Keyword field */}
+            <div className="jlist-sheet-field">
+              <label className="jlist-sheet-label">Keyword</label>
               <input
-                className="jlist-input jlist-date-input"
+                className="jlist-sheet-input"
+                type="text"
+                placeholder="Search entries..."
+                value={keyword}
+                onChange={e => setKeyword(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { handleSearch(); setSearchOpen(false) } }}
+                autoFocus
+              />
+            </div>
+
+            {/* Date field */}
+            <div className="jlist-sheet-field">
+              <label className="jlist-sheet-label">Date</label>
+              <input
+                className="jlist-sheet-input jlist-sheet-date"
                 type="date"
                 value={date}
                 onChange={e => setDate(e.target.value)}
               />
-              <button className="jlist-search-btn" onClick={() => { handleSearch(); setSearchOpen(false) }}>Search</button>
-              <button className="jlist-clear-btn" onClick={() => { handleClear(); setSearchOpen(false) }}>Clear</button>
             </div>
+
+            {/* Primary action */}
+            <button
+              className="jlist-sheet-primary-btn"
+              onClick={() => { handleSearch(); setSearchOpen(false) }}
+            >
+              <Icon name="search" size={16} />
+              Search
+            </button>
+
+            {/* Secondary clear */}
+            <button
+              className="jlist-sheet-clear-link"
+              onClick={() => { handleClear(); setSearchOpen(false) }}
+            >
+              Clear all
+            </button>
           </div>
         </div>
       )}
@@ -376,25 +432,29 @@ export default function JournalListPage() {
                 <Icon name="close" size={16} />
               </button>
             </div>
-            <div className="jlist-filter-row">
-              <input
-                className="jlist-ai-input"
-                type="text"
-                placeholder='e.g. "entries about my mom"'
+
+            {/* Query field — textarea for longer descriptions */}
+            <div className="jlist-sheet-field">
+              <label className="jlist-sheet-label">Describe what you're looking for</label>
+              <textarea
+                className="jlist-sheet-input jlist-sheet-textarea"
+                placeholder={'e.g. "entries about my mom"'}
                 value={aiQuery}
                 onChange={e => setAiQuery(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') { handleAiSearch(); setAiOpen(false) } }}
+                rows={3}
                 autoFocus
               />
-              <button
-                className="jlist-filter-btn"
-                onClick={() => { handleAiSearch(); setAiOpen(false) }}
-                disabled={aiLoading}
-              >
-                <Icon name="ai" size={15} />
-                {aiLoading ? '...' : 'Search'}
-              </button>
             </div>
+
+            {/* Primary action */}
+            <button
+              className="jlist-sheet-primary-btn"
+              onClick={() => { handleAiSearch(); setAiOpen(false) }}
+              disabled={aiLoading}
+            >
+              <Icon name="ai" size={16} />
+              {aiLoading ? 'Searching...' : 'Search'}
+            </button>
           </div>
         </div>
       )}
