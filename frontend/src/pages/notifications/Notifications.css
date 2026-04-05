@@ -196,6 +196,7 @@
 }
 
 /* Type icon badge (right edge) */
+/* Type icon — fades out on row hover so delete can take its place */
 .notif-type-icon {
   width: 28px;
   height: 28px;
@@ -206,36 +207,38 @@
   justify-content: center;
   color: var(--label-tertiary);
   flex-shrink: 0;
+  transition: opacity var(--ease-micro);
 }
 
-/* Delete (x) button on the far right of each row */
-/* Delete button — top-right corner of the card, hidden until row hover.
-   Industry standard: iOS notification dismiss, Gmail hover actions. */
+.notif-item:hover .notif-type-icon { opacity: 0; }
+
+/* Delete button — overlays the type icon position on hover (Gmail pattern).
+   Absolutely positioned to match the type icon's flex slot on the right. */
 .notif-delete-btn {
   position: absolute;
-  top: 7px;
-  right: 8px;
-  width: 20px;
-  height: 20px;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--fill-secondary);
+  background: var(--fill-tertiary);
   border: none;
-  color: var(--label-tertiary);
+  color: var(--label-secondary);
   cursor: pointer;
   opacity: 0;
   transition: opacity var(--ease-micro), color var(--ease-micro), background var(--ease-micro);
   z-index: 1;
 }
 
-/* Show on hover of the parent list item */
 .notif-item:hover .notif-delete-btn { opacity: 1; }
 
 .notif-delete-btn:hover {
   color: var(--system-red);
-  background: color-mix(in srgb, var(--system-red) 12%, var(--fill-secondary));
+  background: color-mix(in srgb, var(--system-red) 10%, var(--fill-tertiary));
 }
 
 /* ── Empty state ─────────────────────────────────────────── */
