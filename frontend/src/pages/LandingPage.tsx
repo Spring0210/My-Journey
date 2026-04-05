@@ -86,7 +86,11 @@ function HeroMockup() {
 
         {/* Journal entry body */}
         <div className="hero-entry">
-          <p className="hero-entry-date">Wednesday, April 3, 2025</p>
+          <p className="hero-entry-date">
+            {new Date().toLocaleDateString('en-US', {
+              weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+            })}
+          </p>
           <p className="hero-entry-title">Morning Light</p>
           <div className="hero-entry-sep" />
           <p className="hero-entry-body">

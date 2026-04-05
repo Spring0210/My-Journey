@@ -411,7 +411,7 @@
   box-shadow: var(--shadow-elevated);
 }
 
-/* Icon container — 56px with gradient background, white icon */
+/* Icon container — 56px, soft tinted bg + colored icon (adapts to dark/light) */
 .landing-feature-icon {
   width: 56px;
   height: 56px;
@@ -419,16 +419,47 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
   margin-bottom: 20px;
   flex-shrink: 0;
+  /* Subtle border using the icon color at low opacity */
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
 }
 
-/* Per-feature gradient colors — uses tokens */
-.landing-feature-icon--blue   { background: var(--gradient-icon-blue); }
-.landing-feature-icon--purple { background: var(--gradient-icon-purple); }
-.landing-feature-icon--orange { background: var(--gradient-icon-orange); }
-.landing-feature-icon--green  { background: var(--gradient-icon-green); }
+/* Light mode — soft tinted background, saturated icon color */
+.landing-feature-icon--blue {
+  background: color-mix(in srgb, #0071e3 10%, var(--surface-card));
+  color: #0071e3;
+}
+.landing-feature-icon--purple {
+  background: color-mix(in srgb, #af52de 10%, var(--surface-card));
+  color: #af52de;
+}
+.landing-feature-icon--orange {
+  background: color-mix(in srgb, #ff9500 10%, var(--surface-card));
+  color: #ff9500;
+}
+.landing-feature-icon--green {
+  background: color-mix(in srgb, #34c759 10%, var(--surface-card));
+  color: #34c759;
+}
+
+/* Dark mode — slightly stronger tint, lighter icon color for contrast */
+[data-theme="dark"] .landing-feature-icon--blue {
+  background: color-mix(in srgb, #2997ff 14%, var(--surface-card));
+  color: #2997ff;
+}
+[data-theme="dark"] .landing-feature-icon--purple {
+  background: color-mix(in srgb, #bf5af2 14%, var(--surface-card));
+  color: #bf5af2;
+}
+[data-theme="dark"] .landing-feature-icon--orange {
+  background: color-mix(in srgb, #ff9f0a 14%, var(--surface-card));
+  color: #ff9f0a;
+}
+[data-theme="dark"] .landing-feature-icon--green {
+  background: color-mix(in srgb, #30d158 14%, var(--surface-card));
+  color: #30d158;
+}
 
 /* Title 3 — 21px / 600 */
 .landing-feature-title {
