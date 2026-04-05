@@ -188,70 +188,24 @@
 }
 
 /* ── List view ───────────────────────────────────────────── */
+/* Background and border colors are handled by --fc-* variables above.
+   Only typography and accent overrides are needed here. */
 
-/* ── List view — comprehensive dark mode overrides ───────── */
-
-/* Container, scroller, and scrollgrid wrappers */
-.cal-wrap .fc .fc-list,
-.cal-wrap .fc .fc-list-sticky,
-.cal-wrap .fc .fc-listWeek-view,
-.cal-wrap .fc .fc-listMonth-view,
-.cal-wrap .fc .fc-listYear-view,
-.cal-wrap .fc .fc-listDay-view,
-.cal-wrap .fc [class*="fc-list"][class*="-view"],
-.cal-wrap .fc .fc-list-sticky-header,
-.cal-wrap .fc .fc-scroller-liquid-absolute,
-.cal-wrap .fc .fc-scrollgrid-section > td {
-  background: var(--surface-card) !important;
-}
-
-/* Table itself */
-.cal-wrap .fc .fc-list-table {
-  background: var(--surface-card);
-  border-color: var(--separator);
-}
-
-/* All td and th inside the list table — catch any remaining white cells */
-.cal-wrap .fc .fc-list-table td,
-.cal-wrap .fc .fc-list-table th {
-  background: var(--surface-card);
-  border-color: var(--separator);
-}
-
-/* Event tr rows */
-.cal-wrap .fc .fc-list-event,
-.cal-wrap .fc .fc-list-event td {
-  background: var(--surface-card);
-  color: var(--label-primary);
-  border-color: var(--separator);
-}
-
-.cal-wrap .fc .fc-list-event:hover td {
-  background: var(--surface-secondary);
-}
-
+/* Event dot — accent color */
 .cal-wrap .fc .fc-list-event-dot {
   border-color: var(--accent);
 }
 
-/* Day header row — fc-cell-shaded is applied by FullCalendar and overrides generic rules */
-.cal-wrap .fc .fc-list-day th,
-.cal-wrap .fc .fc-cell-shaded,
-.cal-wrap .fc .fc-list-day-cushion {
-  background: var(--surface-secondary) !important;
-  border-color: var(--separator);
+/* Event row text color */
+.cal-wrap .fc .fc-list-event td {
+  color: var(--label-primary);
 }
 
+/* Day header typography */
 .cal-wrap .fc .fc-list-day-cushion {
   font-size: 13px;
   font-weight: 600;
   color: var(--label-secondary);
-}
-
-/* Hidden thead row (Time / Event column headers) */
-.cal-wrap .fc .fc-list-table thead th {
-  background: var(--surface-card) !important;
-  border-color: var(--separator);
 }
 
 /* Day header text links */
@@ -261,9 +215,8 @@
   text-decoration: none;
 }
 
-/* Empty state */
+/* Empty state text */
 .cal-wrap .fc .fc-list-empty {
-  background: var(--surface-card);
   color: var(--label-tertiary);
 }
 
