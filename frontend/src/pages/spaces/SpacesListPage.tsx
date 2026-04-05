@@ -11,15 +11,16 @@ import './Spaces.css'
 // Allows creating a new space or joining one via invite code.
 // ─────────────────────────────────────────────────────────
 
-// Gradient palette for space covers without an image (cycles by id)
+// Gradient palette for space covers without an image (cycles by id).
+// Multi-stop gradients at 135deg give more visual depth than two-stop.
 const COVER_GRADIENTS = [
-  'var(--gradient-icon-blue)',
-  'var(--gradient-icon-purple)',
-  'var(--gradient-icon-orange)',
-  'var(--gradient-icon-green)',
-  'var(--gradient-icon-teal)',
-  'var(--gradient-icon-pink)',
-  'var(--gradient-icon-indigo)',
+  'linear-gradient(135deg, #0071e3 0%, #2997ff 50%, #5ac8fa 100%)',   // ocean blue
+  'linear-gradient(135deg, #af52de 0%, #7c3aed 50%, #5856d6 100%)',   // violet
+  'linear-gradient(135deg, #ff9500 0%, #ff6b00 50%, #ff2d55 100%)',   // sunset
+  'linear-gradient(135deg, #34c759 0%, #1da647 50%, #30b0c7 100%)',   // emerald
+  'linear-gradient(135deg, #5856d6 0%, #af52de 50%, #ff375f 100%)',   // aurora
+  'linear-gradient(135deg, #ff2d55 0%, #ff6b00 50%, #ffd60a 100%)',   // fire
+  'linear-gradient(135deg, #30b0c7 0%, #0071e3 50%, #5856d6 100%)',   // deep sea
 ]
 
 export default function SpacesListPage() {
