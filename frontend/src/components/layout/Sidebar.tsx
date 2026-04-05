@@ -395,6 +395,6 @@ const styles: Record<string, React.CSSProperties> = {
     width: 280,
     background: 'var(--surface-secondary)',
     boxShadow: 'var(--shadow-floating)',
-    animation: 'drawer-in 250ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+    animation: 'drawer-in 240ms ease-out',
   },
 }

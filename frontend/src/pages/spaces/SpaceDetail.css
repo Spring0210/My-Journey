@@ -74,8 +74,9 @@
 }
 
 /* ── Main layout: inner container ────────────────────────── */
+/* Single-column feed — narrower max-width reads better */
 .sdetail-inner {
-  max-width: var(--content-wide);
+  max-width: 720px;
   margin: 0 auto;
   padding: 24px 24px 0;
 }
@@ -590,7 +591,7 @@
   line-height: 1.45;
 }
 
-/* Delete comment button */
+/* Delete comment button — hidden until row hovered */
 .sdetail-comment-del {
   width: 20px;
   height: 20px;
@@ -603,9 +604,12 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: color var(--ease-micro), background var(--ease-micro);
   margin-top: 3px;
+  opacity: 0;
+  transition: opacity var(--ease-micro), color var(--ease-micro), background var(--ease-micro);
 }
+
+.sdetail-comment:hover .sdetail-comment-del { opacity: 1; }
 
 .sdetail-comment-del:hover {
   color: var(--system-red);
@@ -923,7 +927,7 @@
   font-weight: 600;
 }
 
-/* Kick (remove) button */
+/* Kick (remove) button — hidden until row hovered */
 .sdetail-kick-btn {
   width: 22px;
   height: 22px;
@@ -936,8 +940,11 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: color var(--ease-micro), background var(--ease-micro);
+  opacity: 0;
+  transition: opacity var(--ease-micro), color var(--ease-micro), background var(--ease-micro);
 }
+
+.sdetail-member:hover .sdetail-kick-btn { opacity: 1; }
 
 .sdetail-kick-btn:hover {
   color: var(--system-red);
@@ -963,12 +970,12 @@
   width: 100%;
   max-width: 480px;
   box-shadow: var(--shadow-floating);
-  animation: sdetail-modal-in 250ms var(--ease-spring);
+  animation: sdetail-modal-in 220ms ease-out;
 }
 
 @keyframes sdetail-modal-in {
-  from { opacity: 0; transform: scale(0.94) translateY(8px); }
-  to   { opacity: 1; transform: scale(1)    translateY(0); }
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .sdetail-modal-header {
@@ -1191,8 +1198,8 @@
 }
 
 @keyframes sdetail-menu-in {
-  from { opacity: 0; transform: scale(0.93) translateY(-4px); }
-  to   { opacity: 1; transform: scale(1)    translateY(0); }
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* Individual menu item */
@@ -1313,8 +1320,8 @@
 }
 
 @keyframes sdetail-picker-in {
-  from { opacity: 0; transform: scale(0.88) translateY(4px); }
-  to   { opacity: 1; transform: scale(1)    translateY(0);   }
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* Individual emoji button in picker */
@@ -1375,12 +1382,12 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: sdetail-sheet-in 300ms var(--ease-spring);
+  animation: sdetail-sheet-in 280ms ease-out;
 }
 
 @keyframes sdetail-sheet-in {
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
 }
 
 /* Banner as visual header of the sheet — fills the top edge-to-edge */
@@ -1456,12 +1463,12 @@
     max-height: 100%;
     border-radius: var(--radius-xl) 0 0 var(--radius-xl);
     border-right: none;
-    animation: sdetail-sheet-in-right 300ms var(--ease-spring);
+    animation: sdetail-sheet-in-right 280ms ease-out;
   }
 
   @keyframes sdetail-sheet-in-right {
-    from { transform: translateX(100%); }
-    to   { transform: translateX(0); }
+    from { transform: translateX(24px); opacity: 0; }
+    to   { transform: translateX(0);    opacity: 1; }
   }
 
   /* Hide drag handle on desktop — use close button instead */
