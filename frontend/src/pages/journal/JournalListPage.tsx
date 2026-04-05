@@ -238,12 +238,6 @@ export default function JournalListPage() {
         {/* ── Mobile layout ──────────────────────────────── */}
         <div className="jlist-mobile-bar">
 
-          {/* Primary CTA — full-width New Entry button */}
-          <NavLink to="/journal/new" className="jlist-mobile-new-btn">
-            <Icon name="plus" size={18} />
-            New Entry
-          </NavLink>
-
           {/* 4-icon quick action grid — icon + label, each with a distinct color */}
           <div className="jlist-quick-actions">
             <button
