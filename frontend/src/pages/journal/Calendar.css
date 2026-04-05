@@ -172,19 +172,31 @@
 
 /* ── List view ───────────────────────────────────────────── */
 
-/* List container + internal scroller — prevent white bleed in dark mode */
+/* ── List view — comprehensive dark mode overrides ───────── */
+
+/* Container, scroller, and scrollgrid wrappers */
 .cal-wrap .fc .fc-list,
 .cal-wrap .fc .fc-list-sticky-header,
-.cal-wrap .fc .fc-scroller-liquid-absolute {
-  background: var(--surface-card);
-}
-
-/* Scrollgrid section td wrappers inside list view */
+.cal-wrap .fc .fc-scroller-liquid-absolute,
 .cal-wrap .fc .fc-scrollgrid-section > td {
   background: var(--surface-card);
 }
 
-/* Event rows — base state (not just hover) */
+/* Table itself */
+.cal-wrap .fc .fc-list-table {
+  background: var(--surface-card);
+  border-color: var(--separator);
+}
+
+/* All td and th inside the list table — catch any remaining white cells */
+.cal-wrap .fc .fc-list-table td,
+.cal-wrap .fc .fc-list-table th {
+  background: var(--surface-card);
+  border-color: var(--separator);
+}
+
+/* Event tr rows */
+.cal-wrap .fc .fc-list-event,
 .cal-wrap .fc .fc-list-event td {
   background: var(--surface-card);
   color: var(--label-primary);
@@ -200,8 +212,13 @@
 }
 
 /* Day header row */
+.cal-wrap .fc .fc-list-day th,
 .cal-wrap .fc .fc-list-day-cushion {
   background: var(--surface-secondary);
+  border-color: var(--separator);
+}
+
+.cal-wrap .fc .fc-list-day-cushion {
   font-size: 13px;
   font-weight: 600;
   color: var(--label-secondary);
