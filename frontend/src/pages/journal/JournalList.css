@@ -295,7 +295,7 @@
 
 .jlist-modal {
   background: var(--surface-card);
-  border-radius: var(--radius-xl);  /* 22px */
+  border-radius: var(--radius-xl);
   border: 1px solid var(--separator);
   width: 100%;
   max-width: 560px;
@@ -303,12 +303,18 @@
   overflow-y: auto;
   padding: 32px;
   box-shadow: var(--shadow-floating);
-  animation: modal-in 250ms var(--ease-spring);
+  animation: modal-in 220ms ease-out;
 }
 
 @keyframes modal-in {
-  from { opacity: 0; transform: scale(0.94) translateY(8px); }
-  to   { opacity: 1; transform: scale(1)    translateY(0); }
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Bottom sheet slide-up animation — used on mobile */
+@keyframes jlist-sheet-in {
+  from { transform: translateY(24px); }
+  to   { transform: translateY(0); }
 }
 
 .jlist-modal-header {
@@ -673,7 +679,29 @@
     grid-template-columns: 1fr;
   }
 
+  /* All modals become bottom sheets on mobile */
+  .jlist-modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
   .jlist-modal {
-    padding: 24px 20px;
+    max-width: 100%;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    border-bottom: none;
+    max-height: 85vh;
+    padding: 0 20px 36px;
+    animation: jlist-sheet-in 280ms ease-out;
+  }
+
+  /* Drag handle at the top of every bottom sheet */
+  .jlist-modal::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--fill-secondary);
+    margin: 12px auto 20px;
   }
 }

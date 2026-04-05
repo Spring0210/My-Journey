@@ -267,49 +267,6 @@ export default function JournalListPage() {
             </button>
           </div>
 
-          {/* Collapsible: keyword + date search */}
-          {searchOpen && (
-            <div className="jlist-mobile-filters">
-              <input
-                className="jlist-mobile-input"
-                type="text"
-                placeholder="Search by keyword..."
-                value={keyword}
-                onChange={e => setKeyword(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSearch()}
-              />
-              <div className="jlist-filter-row">
-                <input
-                  className="jlist-input jlist-date-input"
-                  type="date"
-                  value={date}
-                  onChange={e => setDate(e.target.value)}
-                />
-                <button className="jlist-search-btn" onClick={handleSearch}>Search</button>
-                <button className="jlist-clear-btn" onClick={handleClear}>Clear</button>
-              </div>
-            </div>
-          )}
-
-          {/* Collapsible: AI search */}
-          {aiOpen && (
-            <div className="jlist-mobile-filters">
-              <div className="jlist-filter-row">
-                <input
-                  className="jlist-ai-input"
-                  type="text"
-                  placeholder='e.g. "entries about my mom"'
-                  value={aiQuery}
-                  onChange={e => setAiQuery(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleAiSearch()}
-                />
-                <button className="jlist-filter-btn" onClick={handleAiSearch} disabled={aiLoading}>
-                  <Icon name="ai" size={15} />
-                  {aiLoading ? '...' : 'Search'}
-                </button>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* AI match metadata — shown on both desktop and mobile */}
@@ -375,6 +332,72 @@ export default function JournalListPage() {
           </div>
         )}
       </div>
+
+      {/* ── Search bottom sheet ──────────────────────────── */}
+      {searchOpen && (
+        <div className="jlist-modal-overlay" onClick={e => { if (e.target === e.currentTarget) setSearchOpen(false) }}>
+          <div className="jlist-modal">
+            <div className="jlist-modal-header">
+              <h2 className="jlist-modal-title">Search</h2>
+              <button className="jlist-modal-close" onClick={() => setSearchOpen(false)} aria-label="Close">
+                <Icon name="close" size={16} />
+              </button>
+            </div>
+            <input
+              className="jlist-mobile-input"
+              type="text"
+              placeholder="Search by keyword..."
+              value={keyword}
+              onChange={e => setKeyword(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') { handleSearch(); setSearchOpen(false) } }}
+              autoFocus
+            />
+            <div className="jlist-filter-row" style={{ marginTop: 10 }}>
+              <input
+                className="jlist-input jlist-date-input"
+                type="date"
+                value={date}
+                onChange={e => setDate(e.target.value)}
+              />
+              <button className="jlist-search-btn" onClick={() => { handleSearch(); setSearchOpen(false) }}>Search</button>
+              <button className="jlist-clear-btn" onClick={() => { handleClear(); setSearchOpen(false) }}>Clear</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── AI Search bottom sheet ────────────────────────── */}
+      {aiOpen && (
+        <div className="jlist-modal-overlay" onClick={e => { if (e.target === e.currentTarget) setAiOpen(false) }}>
+          <div className="jlist-modal">
+            <div className="jlist-modal-header">
+              <h2 className="jlist-modal-title">AI Search</h2>
+              <button className="jlist-modal-close" onClick={() => setAiOpen(false)} aria-label="Close">
+                <Icon name="close" size={16} />
+              </button>
+            </div>
+            <div className="jlist-filter-row">
+              <input
+                className="jlist-ai-input"
+                type="text"
+                placeholder='e.g. "entries about my mom"'
+                value={aiQuery}
+                onChange={e => setAiQuery(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { handleAiSearch(); setAiOpen(false) } }}
+                autoFocus
+              />
+              <button
+                className="jlist-filter-btn"
+                onClick={() => { handleAiSearch(); setAiOpen(false) }}
+                disabled={aiLoading}
+              >
+                <Icon name="ai" size={15} />
+                {aiLoading ? '...' : 'Search'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Writing Prompts Modal ─────────────────────────── */}
       {showPrompts && (
