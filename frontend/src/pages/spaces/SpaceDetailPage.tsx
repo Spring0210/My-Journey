@@ -99,9 +99,10 @@ export default function SpaceDetailPage() {
   const [aiLoading, setAiLoading]     = useState(false)
   const [showAiPanel, setShowAiPanel] = useState(false)
 
-  const [inviteCopied, setInviteCopied] = useState(false)
+  const [inviteCopied, setInviteCopied]     = useState(false)
+  const [inviteVisible, setInviteVisible]   = useState(false)
 
-  // Controls mobile info bottom sheet
+  // Controls info sheet (used on both mobile and desktop)
   const [showInfoSheet, setShowInfoSheet] = useState(false)
 
   const isOwner = space?.ownerUsername === username
@@ -614,9 +615,18 @@ export default function SpaceDetailPage() {
                 )}
                 <p className="sdetail-sb-owner">Owner @{space.ownerUsername}</p>
               </div>
-              {/* Invite code */}
+              {/* Invite code: eye toggle + copy button */}
               <div className="sdetail-invite-row sdetail-invite-row--card">
-                <span className="sdetail-invite-code">{space.inviteCode}</span>
+                <span className="sdetail-invite-code">
+                  {inviteVisible ? space.inviteCode : '••••••••••••'}
+                </span>
+                <button
+                  className="sdetail-invite-eye"
+                  onClick={() => setInviteVisible(v => !v)}
+                  title={inviteVisible ? 'Hide code' : 'Show code'}
+                >
+                  <Icon name={inviteVisible ? 'eye-off' : 'eye'} size={14} />
+                </button>
                 <button
                   className="sdetail-invite-copy"
                   onClick={copyInvite}
@@ -759,19 +769,27 @@ export default function SpaceDetailPage() {
         </div>
       )}
 
-      {/* ── Mobile info bottom sheet ────────────────────── */}
+      {/* ── Info sheet (mobile bottom sheet / desktop right panel) ── */}
       {showInfoSheet && (
         <div
           className="sdetail-sheet-overlay"
           onClick={e => { if (e.target === e.currentTarget) setShowInfoSheet(false) }}
         >
           <div className="sdetail-sheet">
-            <div className="sdetail-sheet-handle" />
-            {/* Banner */}
+            {/* Banner with drag handle overlaid at top */}
             <div className="sdetail-sb-banner sdetail-sb-banner--sheet" style={coverStyle}>
               {!space.coverImage && (
                 <span className="sdetail-sb-initial">{space.name.charAt(0).toUpperCase()}</span>
               )}
+              {/* Drag handle sits inside banner on mobile, close button on desktop */}
+              <div className="sdetail-sheet-handle" />
+              <button
+                className="sdetail-sheet-close"
+                onClick={() => setShowInfoSheet(false)}
+                aria-label="Close"
+              >
+                <Icon name="close" size={16} />
+              </button>
               <div className="sdetail-sb-banner-overlay">
                 <p className="sdetail-sb-banner-name">{space.name}</p>
                 <p className="sdetail-sb-banner-count">{space.members.length} members</p>
@@ -783,9 +801,18 @@ export default function SpaceDetailPage() {
                 <p className="sdetail-sb-desc sdetail-sheet-desc">{space.description}</p>
               )}
               <p className="sdetail-sb-owner sdetail-sheet-owner">Owner @{space.ownerUsername}</p>
-              {/* Invite code */}
+              {/* Invite code: eye toggle + copy button */}
               <div className="sdetail-invite-row sdetail-sheet-invite">
-                <span className="sdetail-invite-code">{space.inviteCode}</span>
+                <span className="sdetail-invite-code">
+                  {inviteVisible ? space.inviteCode : '••••••••••••'}
+                </span>
+                <button
+                  className="sdetail-invite-eye"
+                  onClick={() => setInviteVisible(v => !v)}
+                  title={inviteVisible ? 'Hide code' : 'Show code'}
+                >
+                  <Icon name={inviteVisible ? 'eye-off' : 'eye'} size={14} />
+                </button>
                 <button className="sdetail-invite-copy" onClick={copyInvite} title="Copy invite code">
                   <Icon name={inviteCopied ? 'check' : 'copy'} size={14} />
                   {inviteCopied ? 'Copied' : 'Copy'}
@@ -945,6 +972,22 @@ function PostCard({
     return () => document.removeEventListener('mousedown', onMouseDown)
   }, [showPicker])
 
+  // Post action menu (...) state
+  const [showMenu, setShowMenu] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    if (!showMenu) return
+    function onMouseDown(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', onMouseDown)
+    return () => document.removeEventListener('mousedown', onMouseDown)
+  }, [showMenu])
+
   // Build image grid layout class
   const imgCount = post.images.length
   const imgClass = imgCount === 1 ? 'sdetail-img-grid--1'
@@ -970,24 +1013,35 @@ function PostCard({
           )}
         </div>
         {canModify && !isEditing && (
-          <div className="sdetail-post-actions">
-            {/* Only the author can edit their own post */}
-            {post.authorId === currentUserId && (
-              <button
-                className="sdetail-post-action-btn"
-                onClick={() => onEdit(post)}
-                title="Edit post"
-              >
-                <Icon name="edit" size={14} />
-              </button>
-            )}
+          /* Single ... button with dropdown menu */
+          <div className="sdetail-post-menu-wrap" ref={menuRef}>
             <button
-              className="sdetail-post-action-btn sdetail-post-action-btn--danger"
-              onClick={() => onDelete(post.id)}
-              title="Delete post"
+              className="sdetail-post-action-btn"
+              onClick={() => setShowMenu(v => !v)}
+              aria-label="More options"
             >
-              <Icon name="trash" size={14} />
+              <Icon name="more" size={16} strokeWidth={2} />
             </button>
+            {showMenu && (
+              <div className="sdetail-post-menu">
+                {post.authorId === currentUserId && (
+                  <button
+                    className="sdetail-post-menu-item"
+                    onClick={() => { onEdit(post); setShowMenu(false) }}
+                  >
+                    <Icon name="edit" size={14} />
+                    Edit
+                  </button>
+                )}
+                <button
+                  className="sdetail-post-menu-item sdetail-post-menu-item--danger"
+                  onClick={() => { onDelete(post.id); setShowMenu(false) }}
+                >
+                  <Icon name="trash" size={14} />
+                  Delete
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

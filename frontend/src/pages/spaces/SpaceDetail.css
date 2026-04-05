@@ -681,21 +681,10 @@
 .sdetail-load-more:disabled { opacity: 0.50; cursor: not-allowed; }
 
 /* ── Sidebar column ──────────────────────────────────────── */
+/* Sidebar hidden — all info accessible via [ℹ] info sheet */
 .sdetail-sidebar {
-  width: 268px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  /* Sticky within the two-column body */
-  position: sticky;
-  top: 76px; /* 52px topbar + 24px gap */
-  max-height: calc(100vh - 108px);
-  overflow-y: auto;
-  scrollbar-width: none;
+  display: none;
 }
-
-.sdetail-sidebar::-webkit-scrollbar { display: none; }
 
 /* Sidebar card container */
 /* border required for dark-mode */
@@ -809,6 +798,24 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Eye toggle — reveal/hide invite code like a password field */
+.sdetail-invite-eye {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  color: var(--label-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: color var(--ease-micro);
+}
+
+.sdetail-invite-eye:hover { color: var(--label-primary); }
 
 .sdetail-invite-copy {
   display: inline-flex;
@@ -1161,6 +1168,59 @@
   color: rgba(255, 255, 255, 0.65);
 }
 
+/* ── Post action ... menu ────────────────────────────────── */
+/* Wrapper provides positioning context for the dropdown */
+.sdetail-post-menu-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* Dropdown card */
+.sdetail-post-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 130px;
+  background: var(--surface-card);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-floating);
+  z-index: 50;
+  overflow: hidden;
+  animation: sdetail-menu-in 130ms var(--ease-spring);
+}
+
+@keyframes sdetail-menu-in {
+  from { opacity: 0; transform: scale(0.93) translateY(-4px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+/* Individual menu item */
+.sdetail-post-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 38px;
+  padding: 0 14px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--label-primary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--ease-micro);
+}
+
+.sdetail-post-menu-item:hover { background: var(--fill-tertiary); }
+
+.sdetail-post-menu-item--danger { color: var(--system-red); }
+
+.sdetail-post-menu-item--danger:hover {
+  background: color-mix(in srgb, var(--system-red) 8%, transparent);
+}
+
 /* ── Member avatar stack ─────────────────────────────────── */
 /* Overlapping circles, later avatars shift right */
 .sdetail-avatar-stack {
@@ -1235,12 +1295,11 @@
   color: var(--label-primary);
 }
 
-/* Floating emoji panel — appears above the button */
+/* Floating emoji panel — right-anchored to avoid page overflow */
 .sdetail-emoji-picker {
   position: absolute;
   bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
+  right: 0;
   display: flex;
   gap: 2px;
   padding: 6px 8px;
@@ -1254,8 +1313,8 @@
 }
 
 @keyframes sdetail-picker-in {
-  from { opacity: 0; transform: translateX(-50%) scale(0.88) translateY(4px); }
-  to   { opacity: 1; transform: translateX(-50%) scale(1)    translateY(0);   }
+  from { opacity: 0; transform: scale(0.88) translateY(4px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);   }
 }
 
 /* Individual emoji button in picker */
@@ -1277,10 +1336,10 @@
 .sdetail-emoji-option:hover  { background: var(--fill-tertiary); }
 .sdetail-emoji-option:active { transform: scale(0.88); }
 
-/* ── Info toggle button (mobile only) ────────────────────── */
-/* Hidden on desktop — shown only when sidebar is hidden */
+/* ── Info toggle button (always visible) ─────────────────── */
+/* Always shown — sidebar is hidden on all screen sizes */
 .sdetail-info-toggle {
-  display: none;
+  display: inline-flex;
 }
 
 /* ── Modal footer spacer ─────────────────────────────────── */
@@ -1289,14 +1348,14 @@
   flex: 1;
 }
 
-/* ── Bottom sheet (mobile info panel) ────────────────────── */
+/* ── Info sheet (bottom sheet on mobile, right panel on desktop) ── */
 .sdetail-sheet-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
   z-index: 200;
   display: flex;
-  align-items: flex-end;
+  align-items: flex-end; /* mobile: bottom */
   animation: sdetail-sheet-overlay-in 200ms ease;
 }
 
@@ -1305,9 +1364,10 @@
   to   { background: rgba(0, 0, 0, 0.45); }
 }
 
+/* Mobile: full-width bottom sheet */
 .sdetail-sheet {
   width: 100%;
-  max-height: 82vh;
+  max-height: 84vh;
   background: var(--surface-card);
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   border: 1px solid var(--separator);
@@ -1323,20 +1383,49 @@
   to   { transform: translateY(0); }
 }
 
-/* Drag handle indicator */
-.sdetail-sheet-handle {
-  width: 36px;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--fill-secondary);
-  margin: 10px auto 0;
+/* Banner as visual header of the sheet — fills the top edge-to-edge */
+.sdetail-sb-banner--sheet {
+  aspect-ratio: 16 / 6;
+  border-radius: 0;
   flex-shrink: 0;
 }
 
-/* Banner inside sheet — full-width, slightly shorter than sidebar banner */
-.sdetail-sb-banner--sheet {
-  aspect-ratio: 16 / 6;
+/* Drag handle — overlaid at top-center of the banner */
+.sdetail-sheet-handle {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.50);
+  z-index: 10;
+  pointer-events: none;
 }
+
+/* Close button — top-right corner of the banner, desktop only */
+.sdetail-sheet-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  color: #ffffff;
+  display: none; /* shown on desktop via media query */
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background var(--ease-micro);
+}
+
+.sdetail-sheet-close:hover { background: rgba(0, 0, 0, 0.55); }
 
 /* Scrollable content area inside sheet */
 .sdetail-sheet-content {
@@ -1347,37 +1436,48 @@
   flex-direction: column;
 }
 
-.sdetail-sheet-desc   { font-size: 14px; margin-bottom: 4px; }
-.sdetail-sheet-owner  { margin-bottom: 16px; }
-.sdetail-sheet-invite { margin-bottom: 20px; }
+.sdetail-sheet-desc    { font-size: 14px; margin-bottom: 4px; }
+.sdetail-sheet-owner   { margin-bottom: 16px; }
+.sdetail-sheet-invite  { margin-bottom: 20px; }
 .sdetail-sheet-section { margin-bottom: 12px; }
 .sdetail-sheet-members { margin-bottom: 20px; }
 .sdetail-sheet-ai-btn  { width: 100%; height: 42px; margin-bottom: 12px; }
 .sdetail-sheet-ai-result { margin-bottom: 20px; }
 
+/* Desktop: right-side panel sliding in from the right */
+@media (min-width: 769px) {
+  .sdetail-sheet-overlay {
+    align-items: stretch;
+    justify-content: flex-end;
+  }
+
+  .sdetail-sheet {
+    width: 340px;
+    max-height: 100%;
+    border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+    border-right: none;
+    animation: sdetail-sheet-in-right 300ms var(--ease-spring);
+  }
+
+  @keyframes sdetail-sheet-in-right {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(0); }
+  }
+
+  /* Hide drag handle on desktop — use close button instead */
+  .sdetail-sheet-handle { display: none; }
+  .sdetail-sheet-close  { display: flex; }
+
+  .sdetail-sb-banner--sheet {
+    aspect-ratio: 16 / 7;
+  }
+}
+
 /* ── Responsive — mobile (≤768px) ───────────────────────── */
 @media (max-width: 768px) {
+  /* Top padding so composer doesn't butt up against the topbar */
   .sdetail-inner {
-    padding: 0 12px;
-  }
-
-  /* Feed takes full width — sidebar hidden on mobile */
-  .sdetail-body {
-    flex-direction: column;
-  }
-
-  .sdetail-feed {
-    width: 100%;
-  }
-
-  /* Sidebar hidden — info accessible via bottom sheet */
-  .sdetail-sidebar {
-    display: none;
-  }
-
-  /* Info toggle button shown on mobile */
-  .sdetail-info-toggle {
-    display: inline-flex;
+    padding: 16px 12px 0;
   }
 
   .sdetail-lightbox {
