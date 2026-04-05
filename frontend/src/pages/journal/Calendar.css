@@ -27,6 +27,23 @@
   box-shadow: var(--shadow-raised);
 }
 
+/* ── FullCalendar CSS variable overrides ────────────────────
+   Setting --fc-* tokens here ensures FullCalendar's own rules
+   (e.g. .fc-theme-standard .fc-list { border: 1px solid var(--fc-border-color) })
+   resolve to our design tokens instead of the default light values. */
+.cal-wrap {
+  --fc-border-color:              var(--separator);
+  --fc-button-bg-color:           var(--surface-secondary);
+  --fc-button-border-color:       var(--separator);
+  --fc-button-text-color:         var(--label-primary);
+  --fc-button-hover-bg-color:     var(--surface-tertiary);
+  --fc-button-active-bg-color:    var(--accent);
+  --fc-today-bg-color:            color-mix(in srgb, var(--accent) 8%, transparent);
+  --fc-list-event-hover-bg-color: var(--surface-secondary);
+  --fc-page-bg-color:             var(--surface-card);
+  --fc-neutral-bg-color:          var(--surface-secondary);
+}
+
 /* ── FullCalendar overrides ─���────────────────────────────── */
 
 /* Base font */
