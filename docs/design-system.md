@@ -380,9 +380,48 @@ Overlay:        rgba(0, 0, 0, 0.45) — not pure black
 Modal card:     var(--surface-card), var(--radius-xl), var(--shadow-floating)
 Max width:      560px
 Padding:        32px
-Animation in:   scale(0.94) → scale(1), opacity 0→1, 250ms spring
-Animation out:  scale(1) → scale(0.96), opacity 1→0, 180ms ease-in
+Animation in:   translateY(12px) → translateY(0), 220ms ease-out  (no scale, no opacity change — avoids dizzy effect)
+Animation out:  translateY(0) → translateY(12px), 180ms ease-in
 Close button:   32px circle, var(--surface-secondary), var(--label-secondary)
+```
+
+**Mobile rule (≤768px): always use a bottom sheet instead of a centered modal.**
+
+iOS HIG and Material Design both mandate this. Centered modals on small screens are
+awkward — buttons are near the edge and the modal feels cramped. Bottom sheets slide
+up from the thumb zone and feel native.
+
+Implementation pattern:
+
+```css
+@media (max-width: 768px) {
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal {
+    max-width: 100%;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    border-bottom: none;
+    max-height: 85vh;
+    padding-bottom: 36px;          /* safe-area clearance */
+    animation: sheet-in 280ms ease-out;
+  }
+  /* Drag handle */
+  .modal::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--fill-secondary);
+    margin: 12px auto 20px;
+  }
+}
+@keyframes sheet-in {
+  from { transform: translateY(24px); }
+  to   { transform: translateY(0); }
+}
 ```
 
 ### 8.7 Glassmorphism
