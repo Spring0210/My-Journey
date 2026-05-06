@@ -1,6 +1,7 @@
 package com.myjourney.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 import jakarta.persistence.*;
 
 @Entity
@@ -13,11 +14,11 @@ public class User {
     @Column(nullable = false, unique = true, length = 50)
     private String username;
 
-    @JsonIgnore
+    @JsonProperty(access = WRITE_ONLY)
     @Column(nullable = true)  // null for Google OAuth users who have no password
     private String password;
 
-    @JsonIgnore
+    @JsonProperty(access = WRITE_ONLY)
     @Column(unique = true)
     private String email;
 
