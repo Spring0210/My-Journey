@@ -60,9 +60,10 @@ public class SecurityConfig {
                 .anyRequest().permitAll()
             )
             .oauth2Login(oauth2 -> oauth2
+                .loginPage("/login")  // disable Spring's default OAuth2 login page at /login; let SpaController serve React
                 .userInfoEndpoint(info -> info.userService(customOAuth2UserService))
                 .successHandler(oAuth2SuccessHandler)
-                .failureUrl("/login.html?error=oauth2")
+                .failureUrl("/login?error=oauth2")
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         
