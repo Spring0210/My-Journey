@@ -125,17 +125,17 @@
 - [x] Landing page — product intro for unauthenticated visitors, CTA to sign up / log in
 - [x] Auth pages — Login, Register, Forgot Password, OAuth2 callback
 - [x] Journal pages — list, detail, create/edit, calendar view
-- [ ] Spaces pages — list, space detail, posts, comments, reactions
-- [ ] Other pages — Dashboard, Notifications, Profile
-- [ ] Privacy Policy (`/privacy`)
-- [ ] Terms of Service (`/terms`)
+- [x] Spaces pages — list, space detail, posts, comments, reactions
+- [x] Other pages — Dashboard, Notifications, Profile
+- [ ] Privacy Policy (`/privacy`) — currently ComingSoon placeholder
+- [ ] Terms of Service (`/terms`) — currently ComingSoon placeholder
 - [x] Footer on all pages with links to Privacy and Terms
 
 ### Architecture
 - [x] TypeScript types for all API responses and shared data models (`src/types/api.ts`)
 - [x] Global auth state via React Context (`userId`, `username`, `avatar`, `token`)
 - [x] Typed API wrapper layer (`src/api/`) — no raw `fetch` in components
-- [ ] Google OAuth frontend (completes Phase 5 OAuth work)
+- [x] Google OAuth frontend (OAuth2CallbackPage — exchanges tokens and populates auth context)
 - [ ] PWA support — Web App Manifest + Service Worker (installable on mobile/desktop)
 
 ### Module Progress
@@ -144,8 +144,8 @@
 - [x] Module 3 — Landing page
 - [x] Module 4 — Auth pages (Login, Register, Forgot Password, OAuth2 callback)
 - [x] Module 5 — Journal pages (list, detail, create/edit, calendar)
-- [ ] Module 6 — Spaces pages (list, detail, posts, comments, reactions)
-- [ ] Module 7 — Other pages (Profile, Notifications, Dashboard)
+- [x] Module 6 — Spaces pages (list, detail, posts, comments, reactions)
+- [x] Module 7 — Other pages (Profile, Notifications, Dashboard)
 - [ ] Module 8 — Legal pages (Privacy Policy, Terms of Service)
 
 ---
