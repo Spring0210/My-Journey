@@ -3,7 +3,6 @@ package com.myjourney.controller;
 import com.myjourney.dto.AuthResponse;
 import com.myjourney.dto.ProfileResponse;
 import com.myjourney.model.RefreshToken;
-import com.myjourney.model.User;
 import com.myjourney.service.RefreshTokenService;
 import com.myjourney.service.UserService;
 import com.myjourney.repository.UserRepository;
@@ -34,9 +33,21 @@ public class UserController {
     @Autowired
     private JwtUtil jwtUtil;
 
+    // Step 1: validate and send verification code to email
+    @PostMapping("/register/send-code")
+    public String sendRegistrationCode(@RequestBody Map<String, String> body) {
+        return userService.sendRegistrationCode(body.get("username"), body.get("email"));
+    }
+
+    // Step 2: verify code and create the account
     @PostMapping("/register")
-    public String register(@RequestBody User user) {
-        return userService.register(user);
+    public String register(@RequestBody Map<String, String> body) {
+        return userService.register(
+                body.get("username"),
+                body.get("email"),
+                body.get("password"),
+                body.get("code")
+        );
     }
 
     @PostMapping("/login")

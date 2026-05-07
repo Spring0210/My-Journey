@@ -5,8 +5,10 @@ import com.myjourney.dto.ProfileResponse;
 import com.myjourney.exception.AppException;
 import com.myjourney.model.PasswordResetToken;
 import com.myjourney.model.RefreshToken;
+import com.myjourney.model.RegistrationCode;
 import com.myjourney.model.User;
 import com.myjourney.repository.PasswordResetTokenRepository;
+import com.myjourney.repository.RegistrationCodeRepository;
 import com.myjourney.repository.UserRepository;
 import com.myjourney.util.JwtUtil;
 import com.resend.Resend;
@@ -38,6 +40,9 @@ public class UserService {
     private PasswordResetTokenRepository tokenRepository;
 
     @Autowired
+    private RegistrationCodeRepository registrationCodeRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -55,19 +60,67 @@ public class UserService {
     @Value("${resend.from}")
     private String fromEmail;
 
-    // Returns a plain string — frontend checks response text for register/password flows
-    public String register(User user) {
-        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
-            return "Username already exists";
+    // Step 1: validate fields and send a 6-digit code to the given email.
+    // Does not create the user yet.
+    @Transactional
+    public String sendRegistrationCode(String username, String email) {
+        if (username == null || username.isBlank()) return "Username is required";
+        if (email == null || !EMAIL_PATTERN.matcher(email).matches()) return "Invalid email address";
+        if (userRepository.findByUsername(username).isPresent()) return "Username already exists";
+        if (userRepository.findByEmail(email).isPresent()) return "Email already in use";
+
+        String code = String.format("%06d", new Random().nextInt(1_000_000));
+
+        // Upsert: replace any existing code for this email
+        registrationCodeRepository.deleteByEmail(email);
+        RegistrationCode rc = new RegistrationCode();
+        rc.setEmail(email);
+        rc.setCode(code);
+        rc.setExpiresAt(LocalDateTime.now().plusMinutes(10));
+        registrationCodeRepository.save(rc);
+
+        try {
+            Resend resend = new Resend(resendApiKey);
+            CreateEmailOptions params = CreateEmailOptions.builder()
+                    .from(fromEmail)
+                    .to(email)
+                    .subject("Your MyJourney verification code")
+                    .text("Your verification code is: " + code
+                            + "\n\nThis code expires in 10 minutes."
+                            + "\n\nIf you did not request this, please ignore this email.")
+                    .build();
+            resend.emails().send(params);
+        } catch (ResendException e) {
+            return "Failed to send email, please try again later";
         }
-        if (user.getEmail() == null || !EMAIL_PATTERN.matcher(user.getEmail()).matches()) {
-            return "Invalid email address";
+
+        return "Code sent";
+    }
+
+    // Step 2: verify the code and create the account.
+    @Transactional
+    public String register(String username, String email, String password, String code) {
+        if (username == null || username.isBlank()) return "Username is required";
+        if (email == null || !EMAIL_PATTERN.matcher(email).matches()) return "Invalid email address";
+        if (userRepository.findByUsername(username).isPresent()) return "Username already exists";
+        if (userRepository.findByEmail(email).isPresent()) return "Email already in use";
+
+        Optional<RegistrationCode> rcOpt = registrationCodeRepository.findByEmailAndCode(email, code);
+        if (rcOpt.isEmpty()) return "Invalid verification code";
+
+        RegistrationCode rc = rcOpt.get();
+        if (rc.getExpiresAt().isBefore(LocalDateTime.now())) {
+            registrationCodeRepository.delete(rc);
+            return "Verification code has expired";
         }
-        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-            return "Email already in use";
-        }
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        User user = new User();
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(password));
         userRepository.save(user);
+
+        registrationCodeRepository.delete(rc);
         return "Registration successful";
     }
 

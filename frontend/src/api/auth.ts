@@ -21,28 +21,34 @@ export async function login(identifier: string, password: string): Promise<AuthR
   return data as AuthResponse
 }
 
+// POST /api/register/send-code
+// Step 1: validate fields and send a 6-digit verification code to the email.
+// Backend returns "Code sent" on success, or a plain-text error message.
+export async function sendRegistrationCode(username: string, email: string): Promise<void> {
+  const res = await fetch('/api/register/send-code', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, email }),
+  })
+  const text = await res.text()
+  if (text !== 'Code sent') throw new Error(text || 'Failed to send code')
+}
+
 // POST /api/register
-// Backend returns plain text on success or JSON error via GlobalExceptionHandler.
+// Step 2: verify the code and create the account.
+// Backend returns "Registration successful" on success, or a plain-text error message.
 export async function register(
   username: string,
   email: string,
   password: string,
+  code: string,
 ): Promise<void> {
   const res = await fetch('/api/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, email, password }),
+    body: JSON.stringify({ username, email, password, code }),
   })
   const text = await res.text()
-  if (!res.ok) {
-    // GlobalExceptionHandler returns JSON { "error": "..." } on 4xx
-    try {
-      const json = JSON.parse(text)
-      throw new Error(json.error || text)
-    } catch {
-      throw new Error(text || 'Registration failed')
-    }
-  }
   if (!text.toLowerCase().includes('successful')) {
     throw new Error(text || 'Registration failed')
   }
