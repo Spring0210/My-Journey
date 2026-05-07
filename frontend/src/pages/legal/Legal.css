@@ -1,0 +1,106 @@
+/* ─────────────────────────────────────────────────────────
+   Legal pages — Privacy Policy & Terms of Service
+   Prose layout, Apple HIG typography, tokens only.
+   ───────────────────────────────────────────────────────── */
+
+.legal-page {
+  padding: 80px var(--page-gutter) 120px;
+  background: var(--surface-primary);
+  min-height: 100vh;
+}
+
+.legal-inner {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+.legal-eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.legal-title {
+  font-size: clamp(28px, 5vw, 40px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--label-primary);
+  margin-bottom: 8px;
+  line-height: 1.15;
+}
+
+.legal-updated {
+  font-size: 14px;
+  color: var(--label-tertiary);
+  margin-bottom: 48px;
+}
+
+/* ── Divider ─────────────────────────────────────────────── */
+.legal-divider {
+  border: none;
+  border-top: 1px solid var(--separator-opaque);
+  margin-bottom: 48px;
+}
+
+/* ── Body ────────────────────────────────────────────────── */
+.legal-body {
+  color: var(--label-primary);
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.legal-body h2 {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--label-primary);
+  margin-top: 48px;
+  margin-bottom: 12px;
+}
+
+.legal-body h2:first-child {
+  margin-top: 0;
+}
+
+.legal-body p {
+  color: var(--label-secondary);
+  margin-bottom: 16px;
+}
+
+.legal-body ul {
+  color: var(--label-secondary);
+  padding-left: 24px;
+  margin-bottom: 16px;
+}
+
+.legal-body ul li {
+  margin-bottom: 6px;
+}
+
+.legal-body a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.legal-body a:hover {
+  text-decoration: underline;
+}
+
+/* ── Back link ───────────────────────────────────────────── */
+.legal-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--accent);
+  text-decoration: none;
+  margin-bottom: 40px;
+}
+
+.legal-back:hover {
+  text-decoration: underline;
+}

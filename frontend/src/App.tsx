@@ -17,22 +17,8 @@ import SpaceDetailPage     from '@/pages/spaces/SpaceDetailPage'
 import NotificationsPage   from '@/pages/notifications/NotificationsPage'
 import ProfilePage         from '@/pages/profile/ProfilePage'
 import DashboardPage       from '@/pages/dashboard/DashboardPage'
-
-// Placeholder — replaced page by page during migration
-function ComingSoon({ name }: { name: string }) {
-  return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '40vh',
-      color: 'var(--label-secondary)',
-      fontSize: 15,
-    }}>
-      {name} — coming soon
-    </div>
-  )
-}
+import PrivacyPage         from '@/pages/legal/PrivacyPage'
+import TermsPage           from '@/pages/legal/TermsPage'
 
 // Redirect unauthenticated users to /login
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -52,8 +38,8 @@ function AppRoutes() {
       {/* ── Public pages (NavBar + Footer) ───────────────── */}
       <Route element={<PublicLayout />}>
         <Route path="/"        element={<LandingPage />} />
-        <Route path="/privacy" element={<ComingSoon name="Privacy Policy" />} />
-        <Route path="/terms"   element={<ComingSoon name="Terms of Service" />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms"   element={<TermsPage />} />
       </Route>
 
       {/* ── Auth pages (centered card, no sidebar) ────────── */}
