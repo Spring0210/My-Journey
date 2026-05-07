@@ -127,8 +127,8 @@
 - [x] Journal pages — list, detail, create/edit, calendar view
 - [x] Spaces pages — list, space detail, posts, comments, reactions
 - [x] Other pages — Dashboard, Notifications, Profile
-- [ ] Privacy Policy (`/privacy`) — currently ComingSoon placeholder
-- [ ] Terms of Service (`/terms`) — currently ComingSoon placeholder
+- [x] Privacy Policy (`/privacy`)
+- [x] Terms of Service (`/terms`)
 - [x] Footer on all pages with links to Privacy and Terms
 
 ### Architecture
@@ -146,7 +146,7 @@
 - [x] Module 5 — Journal pages (list, detail, create/edit, calendar)
 - [x] Module 6 — Spaces pages (list, detail, posts, comments, reactions)
 - [x] Module 7 — Other pages (Profile, Notifications, Dashboard)
-- [ ] Module 8 — Legal pages (Privacy Policy, Terms of Service)
+- [x] Module 8 — Legal pages (Privacy Policy, Terms of Service)
 
 ---
 
