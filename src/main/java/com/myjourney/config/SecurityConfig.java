@@ -15,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
@@ -59,6 +60,16 @@ public class SecurityConfig {
                 .requestMatchers("/api/spaces/**").authenticated()
                 .requestMatchers("/api/notifications/**").authenticated()
                 .anyRequest().permitAll()
+            )
+            .exceptionHandling(ex -> ex
+                // Return 401 JSON for unauthenticated API requests instead of redirecting to the login page.
+                // Without this, Spring Security redirects to /login, fetch follows the redirect,
+                // gets index.html (200), and the frontend never triggers its token-refresh logic.
+                .authenticationEntryPoint((req, res, e) -> {
+                    res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    res.setContentType("application/json");
+                    res.getWriter().write("{\"error\":\"Unauthorized\"}");
+                })
             )
             .oauth2Login(oauth2 -> oauth2
                 .loginPage("/login")  // disable Spring's default OAuth2 login page at /login; let SpaController serve React

@@ -51,7 +51,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 userId = String.valueOf(jwtUtil.extractUserId(jwt));
             } catch (Exception e) {
-                logger.error("JWT token is invalid: " + e.getMessage());
+                // Expired or malformed token — return 401 immediately so the frontend
+                // refresh logic triggers instead of getting a redirect to /login.
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
             }
         }
 
