@@ -136,7 +136,6 @@
 - [x] Global auth state via React Context (`userId`, `username`, `avatar`, `token`)
 - [x] Typed API wrapper layer (`src/api/`) — no raw `fetch` in components
 - [x] Google OAuth frontend (OAuth2CallbackPage — exchanges tokens and populates auth context)
-- [ ] PWA support — Web App Manifest + Service Worker (installable on mobile/desktop)
 
 ### Module Progress
 - [x] Module 1 — Project scaffold (Vite + React + TypeScript + Tailwind v4, SpaController, Dockerfile)

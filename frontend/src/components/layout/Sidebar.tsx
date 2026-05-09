@@ -396,5 +396,8 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'var(--surface-secondary)',
     boxShadow: 'var(--shadow-floating)',
     animation: 'drawer-in 240ms ease-out',
+    // Honor iOS standalone safe areas (notch top, home indicator bottom)
+    paddingTop: 'env(safe-area-inset-top)',
+    paddingBottom: 'env(safe-area-inset-bottom)',
   },
 }
