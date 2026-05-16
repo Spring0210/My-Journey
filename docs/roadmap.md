@@ -110,7 +110,7 @@
 
 ---
 
-## Phase 6 — Frontend Migration
+## Phase 6 — Frontend Migration ✅ Complete
 
 ### Stack
 - [x] Migrate from vanilla HTML/CSS/JS to React (Vite) + TypeScript + Tailwind CSS v4
@@ -175,3 +175,29 @@
 ### Quality
 - [ ] **Automated tests** — JUnit unit + integration tests for backend services; Vitest for frontend utils
 - [ ] **CI test step** — run tests in GitHub Actions before building the Docker image
+
+---
+
+## Phase 8 — AI-Native Reflection Companion
+
+> Repositioning MyJourney from generic journaling into an AI-native reflection companion.
+> Full design spec: **[`docs/system-design.md`](system-design.md)**.
+> Hard constraint: LLM/embedding spend ≤ **$10/month** at ~100 users.
+
+### Sub-phases (A → K, ~11 weeks solo)
+
+- [ ] **A — Infrastructure** — Qdrant + Redis containers; BGE-M3 embedding sidecar; `agent_runs`, `journal_embeddings_meta`, `user_memory_summaries` tables; at-rest encryption converter
+- [ ] **B — Embedding Pipeline** — async producer/consumer via Redis queue; PII scrubber; backfill endpoint; retry/janitor
+- [ ] **C — Semantic Search** — `/api/memory/search` with time-decay + theme-overlap ranking; React search page
+- [ ] **D — Agent Orchestrator** — custom state-machine; LLM Router (Haiku/Sonnet/Opus tiering + prompt caching); tool framework; per-run cost tracking; SSE streaming
+- [ ] **E — Reflection + Memory Agents** — first end-to-end multi-agent flow triggered on entry create
+- [ ] **F — On-This-Day** — scheduled job with anniversary kernel; email + in-app push
+- [ ] **G — Pattern + Recap Agents** — batch API integration; weekly/monthly summaries; recap dashboard
+- [ ] **H — Memory Hierarchy (L1/L2/L3)** — Redis hot / MySQL warm / Qdrant cold + nightly compaction
+- [ ] **I — Spaces × AI** — monthly AI report per Space (couples/family templates) — differentiator
+- [ ] **J — Encryption + Quotas** — migrate `journal_entry.content` to AES-256-GCM; per-user monthly token quota + global daily spend ceiling
+- [ ] **K — System Design Doc + Load Test** — JMeter scripts + results; finalize design doc; portfolio README polish
+
+### Why this phase (interview narrative)
+
+Demonstrates: polyglot persistence, async pipelines, multi-agent orchestration, RAG, hierarchical memory, LLM cost engineering, encryption-at-rest, observability. Each sub-phase maps to a classic system-design interview topic.

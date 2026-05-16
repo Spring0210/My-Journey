@@ -1,5 +1,8 @@
 # Architecture
 
+> **Scope:** This document describes the architecture **as currently deployed in production**.
+> For the next-phase target architecture (AI-native reflection companion with multi-agent orchestration, vector store, and memory hierarchy), see **[`system-design.md`](system-design.md)**.
+
 ## Overview
 
 My Journey is a monolithic full-stack application. The Spring Boot backend serves both the REST API and the static frontend assets from a single deployable JAR.

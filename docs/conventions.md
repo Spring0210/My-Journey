@@ -42,30 +42,9 @@ com.myjourney
 
 ---
 
-## Frontend (JavaScript)
+## Frontend (React + TypeScript)
 
-### Naming
-- Files: `kebab-case` — `space-utils.js` (or descriptive noun: `api.js`, `layout.js`)
-- Functions / variables: `camelCase` — `loadPosts`, `currentPage`
-- CSS classes: `kebab-case` — `.post-card`, `.space-header`
-
-### Auth
-- JWT token stored as `localStorage.getItem('token')`
-- User info: `localStorage.getItem('username')`, `localStorage.getItem('userId')`
-- All API calls go through `apiRequest()` or `apiRequestWithFile()` in `api.js` — never use raw `fetch` directly
-
-### State Management
-- No global state library — keep state local to each page script
-- Images in posts stored in a JS `Map` (not DOM data attributes) to avoid browser performance issues
-
-### Page Script Pattern
-Each HTML page has one corresponding JS file. Structure:
-```js
-// 1. Init (runs on DOMContentLoaded)
-// 2. Load data from API
-// 3. Render to DOM
-// 4. Attach event listeners
-```
+> The legacy vanilla-JS pages under `src/main/resources/static/` are deprecated and being phased out. All new frontend work is in `frontend/` (React + TypeScript + Tailwind v4).
 
 ### UX Principles
 - Follow mainstream industry patterns — use established UI conventions users already know
@@ -74,35 +53,21 @@ Each HTML page has one corresponding JS file. Structure:
   - **Modal** — focused tasks on desktop; becomes a **bottom sheet on mobile** (see below)
   - **Bottom sheet** — standard mobile pattern per iOS HIG and Material Design; slide up from bottom, full width, rounded top corners, drag handle via `::before`
   - **Inline** — only for trivial, non-disruptive interactions
-- **Mobile modals must always be bottom sheets** — centered modals on small screens are cramped and off-target. Use CSS media query to convert the same element: `align-items: flex-end; padding: 0` on the overlay, full-width + rounded top on the modal. See `JournalList.css` for the reference implementation.
+- **Mobile modals must always be bottom sheets** — centered modals on small screens are cramped and off-target. Use CSS media query to convert the same element: `align-items: flex-end; padding: 0` on the overlay, full-width + rounded top on the modal.
 - Think from the user's perspective before choosing an implementation; if it feels awkward to use, redesign it
 
 ### Third-party Libraries
 - Always use actively maintained, currently mainstream libraries — do not default to popular-but-outdated options
 - Before choosing a library, evaluate: Is it still widely adopted? Is it actively maintained? Does it fit the project style?
-- Preferred libraries for this project:
-  - Rich text editor: **Trix** (used by Basecamp/HEY — minimal, modern, CDN-ready)
-  - Calendar: **FullCalendar 6** (already in use)
-  - HTTP: native `fetch` via `api.js` wrapper (no axios needed at this scale)
 - If a better option exists, recommend it proactively — do not wait to be questioned
 
 ### Mobile Responsiveness
 All frontend features must work comfortably on mobile (phone-sized screens).
 
-**Breakpoints (defined in `ui.css`):**
-- `≤ 1024px` — sidebar collapses to off-canvas drawer, toggle button appears
-- `≤ 768px` — single-column layout, stacked form fields
-- `≤ 480px` — sidebar goes full-width, tighter padding
-
 **Rules for new features:**
-- Every new CSS component must include a `@media (max-width: 768px)` block if it uses fixed widths, multi-column layout, or absolute positioning
 - Tap targets must be at least 44×44px on mobile
-- Floating/popup elements (e.g. reaction picker) must not overflow the screen edge — use `left: 0` or clamp position on small screens
+- Floating/popup elements must not overflow the screen edge — clamp position on small screens
 - Test new UI at 390px width (iPhone 14 viewport) before considering it done
-
----
-
-## Frontend (Phase 6 — React + TypeScript)
 
 ### Design
 

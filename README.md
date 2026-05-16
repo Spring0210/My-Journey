@@ -119,14 +119,32 @@ cd /opt/my-journey
 docker compose pull && docker compose up -d --remove-orphans
 ```
 
+## What's Next — Phase 8: AI-Native Reflection Companion
+
+MyJourney is being repositioned from a generic journaling app into an AI-native reflection companion. The core insight: most journals die because users never re-read them. AI changes that by surfacing the right past entry at the right moment, detecting patterns invisible to the writer, and turning a corpus of fragmented entries into a continuous personal narrative.
+
+**Highlights of the upcoming design:**
+
+- **Multi-agent reflection system** — five specialized agents (Reflection / Memory / Pattern / Goal / Recap) coordinated by a custom state-machine orchestrator
+- **RAG over personal corpus** — Qdrant vector store + local BGE-M3 multilingual embedding sidecar (no plaintext leaves the server)
+- **Three-tier memory hierarchy** — Redis hot cache / MySQL warm store / Qdrant cold store + nightly compaction, inspired by OS memory hierarchies
+- **Cost-engineered LLM pipeline** — Anthropic prompt caching, model tier routing (Haiku 4.5 → Sonnet 4.6 → Opus 4.7), batch API; hard ceiling of $10/month at ~100 users
+- **Privacy-first** — AES-256-GCM encryption at rest, automatic PII scrubbing before embedding
+- **Shared Spaces × AI** — couples / family / accountability-partner templates with monthly AI reports
+
+Full design specification: **[`docs/system-design.md`](docs/system-design.md)** — covers requirements, ADRs, data model, agent orchestration, memory hierarchy, scalability path to 100k users, observability, and cost model.
+
 ## Docs
 
 | File | Contents |
 |---|---|
-| `docs/conventions.md` | Naming, architecture, UX, and coding rules |
-| `docs/design-system.md` | Apple HIG design spec — colors, typography, components |
-| `docs/roadmap.md` | Phase-by-phase feature history and upcoming work |
-| `docs/deploy.md` | CI/CD setup, branch workflow, troubleshooting |
+| [`docs/system-design.md`](docs/system-design.md) | **Target architecture (Phase 8)** — multi-agent system, RAG, memory hierarchy, cost engineering |
+| [`docs/architecture.md`](docs/architecture.md) | Current-state architecture (as deployed in production) |
+| [`docs/roadmap.md`](docs/roadmap.md) | Phase-by-phase feature history and upcoming work |
+| [`docs/api-spec.md`](docs/api-spec.md) | REST API reference |
+| [`docs/conventions.md`](docs/conventions.md) | Naming, architecture, UX, and coding rules |
+| [`docs/design-system.md`](docs/design-system.md) | Apple HIG design spec — colors, typography, components |
+| [`docs/deploy.md`](docs/deploy.md) | CI/CD setup, branch workflow, troubleshooting |
 
 ## License
 
