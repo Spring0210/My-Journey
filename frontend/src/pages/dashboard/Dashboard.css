@@ -76,6 +76,31 @@
   /* Subtle accent tint — adapts automatically via token in both modes */
   background: var(--tint-accent-subtle);
   cursor: default;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decorative soft radial glow at upper-left — purely visual, ignores pointer */
+.dash-today--cta::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  left: -20%;
+  width: 70%;
+  height: 180%;
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, var(--accent) 12%, transparent) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+/* Lift content above the ::before glow */
+.dash-today-cta-left,
+.dash-today-cta-btn {
+  position: relative;
+  z-index: 1;
 }
 
 .dash-today-cta-left {
@@ -177,10 +202,18 @@
   font-family: var(--font-sans);
   text-align: left;
   cursor: pointer;
-  transition: background var(--ease-micro), transform var(--ease-standard);
+  transition: background var(--ease-micro),
+              transform var(--ease-standard),
+              box-shadow var(--ease-standard);
 }
 
-.dash-explore-card:hover  { background: var(--surface-secondary); }
+.dash-explore-card:hover {
+  background: var(--surface-secondary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-raised);
+}
+
+.dash-explore-card:hover .dash-explore-card-icon { transform: scale(1.05); }
 .dash-explore-card:active { transform: scale(0.97); }
 
 /* Colored icon badge — same soft-tint pattern as journal quick actions */
@@ -192,6 +225,7 @@
   align-items: center;
   justify-content: center;
   border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  transition: transform var(--ease-standard);
 }
 
 .dash-explore-card--journal .dash-explore-card-icon {
@@ -369,13 +403,33 @@
   gap: 2px;
 }
 
-/* Date — Caption / eyebrow style */
-.dash-entry-row-date {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+/* Date pill — left side, MONTH on top, day number below */
+.dash-entry-row-pill {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  background: var(--tint-accent-subtle);
+  border: 1px solid color-mix(in srgb, var(--accent) 14%, transparent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+
+.dash-entry-row-pill-month {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   color: var(--accent);
-  text-transform: uppercase;
+}
+
+.dash-entry-row-pill-day {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--label-primary);
+  line-height: 1;
 }
 
 /* Title — Subhead */
@@ -420,6 +474,20 @@
   text-align: center;
   padding: 48px 0;
   gap: 8px;
+}
+
+/* Soft icon hero above the empty-state title */
+.dash-empty-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-full);
+  background: var(--tint-accent-subtle);
+  border: 1px solid color-mix(in srgb, var(--accent) 14%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  margin-bottom: 16px;
 }
 
 .dash-empty-title {

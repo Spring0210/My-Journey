@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import Icon from '@/components/ui/Icon'
+import { useFadeInOnScroll } from '@/hooks/useFadeInOnScroll'
 import './LandingPage.css'
 
 // ─────────────────────────────────────────────────────────
@@ -55,6 +56,40 @@ const aiFeatures = [
     desc: 'Personalized prompts based on themes in your own entries, not generic questions.',
   },
 ] as const
+
+type Feature = typeof features[number]
+type AiFeature = typeof aiFeatures[number]
+
+// ── Wrapper components for staggered scroll-driven fade-up ──────────────────
+// Each instance gets its own ref so it can be observed independently.
+
+function FadeInFeatureCard({ feature, index }: { feature: Feature; index: number }) {
+  const ref = useFadeInOnScroll<HTMLDivElement>(index * 80)
+  return (
+    <div ref={ref} className="landing-feature-card fade-up">
+      <div className={`landing-feature-icon landing-feature-icon--${feature.iconColor}`}>
+        <Icon name={feature.icon} size={28} strokeWidth={1.5} />
+      </div>
+      <h3 className="landing-feature-title">{feature.title}</h3>
+      <p className="landing-feature-desc">{feature.description}</p>
+    </div>
+  )
+}
+
+function FadeInAiItem({ item, index }: { item: AiFeature; index: number }) {
+  const ref = useFadeInOnScroll<HTMLDivElement>(index * 100)
+  return (
+    <div ref={ref} className="landing-ai-item fade-up">
+      <div className="landing-ai-icon">
+        <Icon name={item.icon} size={22} strokeWidth={1.5} />
+      </div>
+      <div>
+        <p className="landing-ai-label">{item.label}</p>
+        <p className="landing-ai-desc">{item.desc}</p>
+      </div>
+    </div>
+  )
+}
 
 // ── Hero mockup — CSS-based app preview, adapts to dark/light mode ──────────
 // Renders a fake journal entry window with floating badges.
@@ -122,6 +157,10 @@ function HeroMockup() {
 }
 
 export default function LandingPage() {
+  // Single-instance fade-up targets (the multi-instance ones are wrapped above)
+  const aiPanelRef = useFadeInOnScroll<HTMLDivElement>(200)
+  const ctaCardRef = useFadeInOnScroll<HTMLDivElement>(0)
+
   return (
     <div>
       {/* ── Hero ───────────────────────────────────────────── */}
@@ -158,14 +197,8 @@ export default function LandingPage() {
             Everything you need to capture your journey
           </h2>
           <div className="landing-feature-grid">
-            {features.map(f => (
-              <div key={f.title} className="landing-feature-card">
-                <div className={`landing-feature-icon landing-feature-icon--${f.iconColor}`}>
-                  <Icon name={f.icon} size={28} strokeWidth={1.5} />
-                </div>
-                <h3 className="landing-feature-title">{f.title}</h3>
-                <p className="landing-feature-desc">{f.description}</p>
-              </div>
+            {features.map((f, i) => (
+              <FadeInFeatureCard key={f.title} feature={f} index={i} />
             ))}
           </div>
         </div>
@@ -181,21 +214,13 @@ export default function LandingPage() {
           <div className="landing-ai-grid">
             {/* Feature list */}
             <div className="landing-ai-list">
-              {aiFeatures.map(item => (
-                <div key={item.label} className="landing-ai-item">
-                  <div className="landing-ai-icon">
-                    <Icon name={item.icon} size={22} strokeWidth={1.5} />
-                  </div>
-                  <div>
-                    <p className="landing-ai-label">{item.label}</p>
-                    <p className="landing-ai-desc">{item.desc}</p>
-                  </div>
-                </div>
+              {aiFeatures.map((item, i) => (
+                <FadeInAiItem key={item.label} item={item} index={i} />
               ))}
             </div>
 
             {/* Visual panel — shows a sample AI interaction */}
-            <div className="landing-ai-panel">
+            <div ref={aiPanelRef} className="landing-ai-panel fade-up">
               <p className="landing-ai-panel-title">AI Search</p>
               <div className="landing-ai-bubble landing-ai-bubble--user">
                 find entries about my trip to Japan
@@ -219,7 +244,7 @@ export default function LandingPage() {
       {/* ── Final CTA ──────────────────────────────────────── */}
       <section className="landing-section landing-cta">
         <div className="landing-inner">
-          <div className="landing-cta-card">
+          <div ref={ctaCardRef} className="landing-cta-card fade-up">
             <h2 className="landing-cta-title">Start writing today</h2>
             <p className="landing-cta-sub">Free to get started. No credit card required.</p>
             <NavLink to="/register" className="landing-btn-cta">

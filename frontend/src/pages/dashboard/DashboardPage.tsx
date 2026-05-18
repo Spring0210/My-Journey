@@ -27,6 +27,16 @@ function fmtDate(s: string): string {
   })
 }
 
+// MONTH + day split, for the date pill on each recent entry row
+function dateParts(s: string): { month: string; day: string } {
+  const [y, m, d] = s.split('-').map(Number)
+  const dt = new Date(y, m - 1, d)
+  return {
+    month: dt.toLocaleDateString('en-US', { month: 'short' }).toUpperCase(),
+    day: String(dt.getDate()),
+  }
+}
+
 export default function DashboardPage() {
   const navigate = useNavigate()
   const { userId, username } = useAuth()
@@ -153,29 +163,35 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="dash-entry-list">
-                  {recentFour.map((entry, i) => (
-                    <button
-                      key={entry.id}
-                      className={`dash-entry-row${i < recentFour.length - 1 ? ' dash-entry-row--border' : ''}`}
-                      onClick={() => navigate(`/journal/${entry.id}`)}
-                    >
-                      <div className="dash-entry-row-inner">
-                        <p className="dash-entry-row-date">{fmtDate(entry.entryDate)}</p>
-                        <p className="dash-entry-row-title">{entry.title}</p>
-                        {entry.content && (
-                          <p className="dash-entry-row-excerpt">{entry.content}</p>
+                  {recentFour.map((entry, i) => {
+                    const { month, day } = dateParts(entry.entryDate)
+                    return (
+                      <button
+                        key={entry.id}
+                        className={`dash-entry-row${i < recentFour.length - 1 ? ' dash-entry-row--border' : ''}`}
+                        onClick={() => navigate(`/journal/${entry.id}`)}
+                      >
+                        <div className="dash-entry-row-pill">
+                          <span className="dash-entry-row-pill-month">{month}</span>
+                          <span className="dash-entry-row-pill-day">{day}</span>
+                        </div>
+                        <div className="dash-entry-row-inner">
+                          <p className="dash-entry-row-title">{entry.title}</p>
+                          {entry.content && (
+                            <p className="dash-entry-row-excerpt">{entry.content}</p>
+                          )}
+                        </div>
+                        {entry.imagePathList[0] && (
+                          <img
+                            src={entry.imagePathList[0]}
+                            alt=""
+                            className="dash-entry-row-thumb"
+                          />
                         )}
-                      </div>
-                      {entry.imagePathList[0] && (
-                        <img
-                          src={entry.imagePathList[0]}
-                          alt=""
-                          className="dash-entry-row-thumb"
-                        />
-                      )}
-                      <Icon name="chevron-right" size={15} className="dash-entry-row-arrow" />
-                    </button>
-                  ))}
+                        <Icon name="chevron-right" size={15} className="dash-entry-row-arrow" />
+                      </button>
+                    )
+                  })}
                 </div>
               </section>
             )}
@@ -183,6 +199,9 @@ export default function DashboardPage() {
             {/* First-time empty state */}
             {entries.length === 0 && (
               <div className="dash-empty">
+                <div className="dash-empty-icon">
+                  <Icon name="journal" size={32} />
+                </div>
                 <p className="dash-empty-title">Your journal is empty</p>
                 <p className="dash-empty-sub">Write your first entry to get started.</p>
                 <button
