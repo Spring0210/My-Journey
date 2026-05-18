@@ -4,6 +4,7 @@ import { ThemeProvider } from '@/context/ThemeContext'
 import AppLayout    from '@/components/layout/AppLayout'
 import PublicLayout from '@/components/layout/PublicLayout'
 import AuthLayout   from '@/components/layout/AuthLayout'
+import ScrollToTop  from '@/components/layout/ScrollToTop'
 import LandingPage        from '@/pages/LandingPage'
 import LoginPage          from '@/pages/auth/LoginPage'
 import RegisterPage       from '@/pages/auth/RegisterPage'
@@ -76,6 +77,7 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <AppRoutes />
         </BrowserRouter>
       </AuthProvider>
