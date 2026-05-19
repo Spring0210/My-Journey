@@ -12,16 +12,16 @@ import './Spaces.css'
 // Allows creating a new space or joining one via invite code.
 // ─────────────────────────────────────────────────────────
 
-// Gradient palette for space covers without an image (cycles by id).
-// Multi-stop gradients at 135deg give more visual depth than two-stop.
+// Muted single-hue gradient palette for space covers without an image (cycles by id).
+// Two-stop, lower saturation than vibrant system colors so cards feel calm in a grid.
 const COVER_GRADIENTS = [
-  'linear-gradient(135deg, #0071e3 0%, #2997ff 50%, #5ac8fa 100%)',   // ocean blue
-  'linear-gradient(135deg, #af52de 0%, #7c3aed 50%, #5856d6 100%)',   // violet
-  'linear-gradient(135deg, #ff9500 0%, #ff6b00 50%, #ff2d55 100%)',   // sunset
-  'linear-gradient(135deg, #34c759 0%, #1da647 50%, #30b0c7 100%)',   // emerald
-  'linear-gradient(135deg, #5856d6 0%, #af52de 50%, #ff375f 100%)',   // aurora
-  'linear-gradient(135deg, #ff2d55 0%, #ff6b00 50%, #ffd60a 100%)',   // fire
-  'linear-gradient(135deg, #30b0c7 0%, #0071e3 50%, #5856d6 100%)',   // deep sea
+  'linear-gradient(135deg, #5b8def 0%, #3d6ad6 100%)',   // sky blue
+  'linear-gradient(135deg, #9b87c4 0%, #6e5ba0 100%)',   // soft violet
+  'linear-gradient(135deg, #d49a6a 0%, #a77544 100%)',   // warm sand
+  'linear-gradient(135deg, #6fa893 0%, #4d8a73 100%)',   // sage green
+  'linear-gradient(135deg, #c47788 0%, #95586a 100%)',   // dusty rose
+  'linear-gradient(135deg, #7995a8 0%, #54718a 100%)',   // dusty teal
+  'linear-gradient(135deg, #a08e7a 0%, #75644f 100%)',   // taupe
 ]
 
 export default function SpacesListPage() {

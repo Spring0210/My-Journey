@@ -107,8 +107,7 @@
   flex-shrink: 0;
 }
 
-/* Top-center radial highlight — gives gradient covers iOS icon-style depth.
-   Low enough opacity that it doesn't distract on cover photos. */
+/* Top-center radial highlight — very subtle, gives covers a soft top sheen. */
 .slist-card-cover::before {
   content: '';
   position: absolute;
@@ -117,7 +116,7 @@
   transform: translateX(-50%);
   width: 80%;
   height: 65%;
-  background: radial-gradient(ellipse, rgba(255, 255, 255, 0.20) 0%, transparent 68%);
+  background: radial-gradient(ellipse, rgba(255, 255, 255, 0.12) 0%, transparent 68%);
   pointer-events: none;
   z-index: 1;
 }
@@ -130,7 +129,7 @@
   left: 0;
   right: 0;
   height: 48%;
-  background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.28));
+  background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.18));
   pointer-events: none;
   z-index: 1;
 }

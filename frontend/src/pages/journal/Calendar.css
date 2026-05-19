@@ -110,12 +110,20 @@
   color: var(--label-primary);
 }
 
-/* Toolbar */
+/* Toolbar — use grid so title truly centers regardless of empty right chunk.
+   FullCalendar's default flex + space-between drifts the title to the right
+   when the right chunk has no buttons. */
 .cal-wrap .fc .fc-toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
   margin-bottom: 16px;
-  flex-wrap: wrap;
   gap: 8px;
 }
+
+.cal-wrap .fc .fc-toolbar > .fc-toolbar-chunk:nth-child(1) { justify-self: start; }
+.cal-wrap .fc .fc-toolbar > .fc-toolbar-chunk:nth-child(2) { justify-self: center; }
+.cal-wrap .fc .fc-toolbar > .fc-toolbar-chunk:nth-child(3) { justify-self: end; }
 
 /* Calendar title (month name) — Title 3 */
 .cal-wrap .fc .fc-toolbar-title {

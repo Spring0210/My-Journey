@@ -314,11 +314,24 @@
   color: var(--label-quaternary);
 }
 
-/* Edit / delete icon buttons */
+/* Edit / delete icon buttons.
+   Hidden until card is hovered on devices with a pointer; always visible
+   on touch (no hover) so mobile users can still reach the menu. */
 .sdetail-post-actions {
   display: flex;
   gap: 4px;
   flex-shrink: 0;
+  transition: opacity var(--ease-micro);
+}
+
+@media (hover: hover) {
+  .sdetail-post-actions {
+    opacity: 0;
+  }
+  .sdetail-post:hover .sdetail-post-actions,
+  .sdetail-post:focus-within .sdetail-post-actions {
+    opacity: 1;
+  }
 }
 
 .sdetail-post-action-btn {
@@ -488,9 +501,10 @@
   font-size: 15px;
   line-height: 1;
   background: var(--fill-quaternary);
+  /* Reserve a transparent 1px ring so toggling active doesn't shift the row */
   border: 1px solid transparent;
   cursor: pointer;
-  transition: background var(--ease-micro), transform var(--ease-micro);
+  transition: background var(--ease-micro), border-color var(--ease-micro), transform var(--ease-micro);
 }
 
 .sdetail-reaction-btn:hover  { background: var(--fill-tertiary); }
