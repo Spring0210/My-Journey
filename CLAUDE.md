@@ -9,7 +9,7 @@ Live at [myjourneycloud.com](https://myjourneycloud.com)
 - **Frontend:** React 18 + TypeScript + Vite + Tailwind CSS v4
 - **Storage:** Cloudinary (images + videos)
 - **Email:** Resend (`noreply@myjourneycloud.com`)
-- **AI:** Anthropic Claude — Haiku 4.5 today for recap/prompts/smart-search; Phase 8 introduces a multi-agent reflection system (Haiku/Sonnet/Opus tiered routing). See `docs/system-design.md`.
+- **AI:** Anthropic Claude — Haiku 4.5 for all features (recap, prompts, smart-search rerank, reflection, on-this-day, weekly pattern). Single-call agents, no orchestrator.
 - **Deploy:** Docker + Docker Compose + GitHub Actions CI/CD → DigitalOcean
 
 ## Key Paths
@@ -42,10 +42,10 @@ JWT access token (24h) + refresh token (30-day, stored in DB, rotated on use). T
 GitHub Actions CI/CD: push to `main` → build Docker image → push to `ghcr.io/spring0210/my-journey:latest` → SSH deploy to server at `/opt/my-journey/`. See `docs/deploy.md`.
 
 ## Current State
-Phases 1–6 complete and live in production. Next major arc: **Phase 8 — AI-Native Reflection Companion** (multi-agent reflection, RAG over personal corpus via Qdrant + BGE-M3, hierarchical memory, ≤ $10/mo LLM budget). Phase 7 (Production Hardening) runs as a parallel track. See `docs/roadmap.md`.
+Phases 1–6 complete and live in production. **Next: Phase 7 (Production Hardening) — backups, Sentry, UptimeRobot, Flyway. Then Phase 8 (Smart Journaling) — mood/tag/streak + lightweight AI (on-this-day, reflection-on-save, weekly pattern recap) + frontend polish.** Deploy target is a **2GB VPS**, which rules out local embedding models / Qdrant / Redis in the current iteration — those are deferred to Phase 9 in `docs/roadmap.md`.
 
 ## System Design
-The target architecture for Phase 8 — Qdrant vector store, Redis cache, local BGE-M3 embedding sidecar, custom agent orchestrator, L1/L2/L3 memory hierarchy, encryption at rest — is fully specified in **`docs/system-design.md`**. Refer to it before designing new backend work; refer to `docs/architecture.md` for the as-deployed architecture.
+`docs/system-design.md` describes an **aspirational future architecture** (Qdrant + BGE-M3 + agent orchestrator + L1/L2/L3 memory + encryption at rest). It is **not the current implementation plan** — see the banner at the top of that file. The actual plan is in `docs/roadmap.md`. The system-design doc is preserved as the portfolio narrative for "how I would scale this if usage demanded it". `docs/architecture.md` documents the as-deployed architecture.
 
 ## Conventions
 See `docs/conventions.md`.

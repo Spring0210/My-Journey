@@ -164,40 +164,75 @@
 
 ## Phase 7 — Production Hardening
 
-### Critical
-- [ ] **Database backups** — automated daily MySQL dump, stored off-server (DigitalOcean Spaces or S3)
-- [ ] **Database migrations (Flyway)** — replace Hibernate `auto-ddl` with versioned migration scripts; safe for production schema changes
+> Reordered to **come before** new feature work. Backups and observability are non-negotiable before adding any new surface area.
 
-### Observability
-- [ ] **Error monitoring (Sentry)** — catch and alert on backend exceptions and frontend JS errors; free tier sufficient
-- [ ] **Uptime monitoring (UptimeRobot)** — ping every 5 min, email alert on downtime; free
+### Critical (Week 1)
+- [x] **Database backups** — daily server-side cron pushes `backup.sql.gz` to private GitHub repo `Spring0210/my-journey-backup`; git history gives free per-day versioning
+- [ ] **Backup hardening** — encrypt dump before push (gpg or `openssl enc -aes-256-cbc`); heartbeat monitor via healthchecks.io (alert if no ping in 26h); monthly restore drill with documented runbook
+- [ ] **UptimeRobot** — 5-min HTTPS ping on `/`; email alert on downtime; free tier
+- [ ] **Sentry** — backend (Spring Boot) + frontend (React) error capture; free tier sufficient at current scale
 
 ### Quality
-- [ ] **Automated tests** — JUnit unit + integration tests for backend services; Vitest for frontend utils
+- [ ] **Flyway** — replace Hibernate `ddl-auto=update` with versioned migrations; baseline current production schema as `V1__baseline.sql` (use `baseline-on-migrate` for the first deploy)
+- [ ] **Golden-path tests** — JUnit integration tests for auth + entry CRUD + space CRUD; Vitest for the 2–3 most critical frontend utils. Skip exhaustive unit tests — diminishing returns at this scale.
 - [ ] **CI test step** — run tests in GitHub Actions before building the Docker image
 
 ---
 
-## Phase 8 — AI-Native Reflection Companion
+## Phase 8 — Smart Journaling
 
-> Repositioning MyJourney from generic journaling into an AI-native reflection companion.
-> Full design spec: **[`docs/system-design.md`](system-design.md)**.
-> Hard constraint: LLM/embedding spend ≤ **$10/month** at ~100 users.
+> Repositioned from the original "AI-Native Reflection Companion" plan (Qdrant + multi-agent orchestrator + L1/L2/L3 memory hierarchy) to a **lighter, product-driven phase** that fits a **2GB VPS** and a real user base of tens, not hundreds.
+>
+> The original ambitious architecture is preserved in **[`docs/system-design.md`](system-design.md)** and in [Phase 9 — Deferred](#phase-9--deferred--future) below — to be revisited when actual usage signals demand it.
 
-### Sub-phases (A → K, ~11 weeks solo)
+### 8A — Core product features (no new infrastructure)
+- [ ] **Mood selector** — 5–7 emoji moods on entry create; stored as enum on `journal_entry`; powers later trend visualizations
+- [ ] **Tag system** — user-defined tags per entry; tag filter in journal list; tag cloud on stats page
+- [ ] **Streak counter** — "N days in a row" badge on dashboard; pure SQL aggregate; grace period rules TBD
+- [ ] **Daily writing reminder email** — user-configurable time + opt-in toggle in profile; `@Scheduled` cron + existing Resend integration
 
-- [ ] **A — Infrastructure** — Qdrant + Redis containers; BGE-M3 embedding sidecar; `agent_runs`, `journal_embeddings_meta`, `user_memory_summaries` tables; at-rest encryption converter
-- [ ] **B — Embedding Pipeline** — async producer/consumer via Redis queue; PII scrubber; backfill endpoint; retry/janitor
-- [ ] **C — Semantic Search** — `/api/memory/search` with time-decay + theme-overlap ranking; React search page
-- [ ] **D — Agent Orchestrator** — custom state-machine; LLM Router (Haiku/Sonnet/Opus tiering + prompt caching); tool framework; per-run cost tracking; SSE streaming
-- [ ] **E — Reflection + Memory Agents** — first end-to-end multi-agent flow triggered on entry create
-- [ ] **F — On-This-Day** — scheduled job with anniversary kernel; email + in-app push
-- [ ] **G — Pattern + Recap Agents** — batch API integration; weekly/monthly summaries; recap dashboard
-- [ ] **H — Memory Hierarchy (L1/L2/L3)** — Redis hot / MySQL warm / Qdrant cold + nightly compaction
-- [ ] **I — Spaces × AI** — monthly AI report per Space (couples/family templates) — differentiator
-- [ ] **J — Encryption + Quotas** — migrate `journal_entry.content` to AES-256-GCM; per-user monthly token quota + global daily spend ceiling
-- [ ] **K — System Design Doc + Load Test** — JMeter scripts + results; finalize design doc; portfolio README polish
+### 8B — Lightweight AI features (no Qdrant, no embedding model, no new services)
+- [ ] **On This Day** — daily cron picks `entry_date = today − 1y / 5y`; in-app card on dashboard + optional email digest
+- [ ] **Reflection prompt on save** — opt-in button after entry create → single Haiku call returns 1–3 Socratic follow-up questions; streamed via existing WebSocket
+- [ ] **Weekly pattern recap** — Sunday cron samples last 7 days of entries → Haiku summarizes recurring themes / mood shifts; pushed via in-app notification
+- [ ] **Smart Search improvements** — keep existing Claude rerank; add result highlighting and a "why this matched" snippet per hit
 
-### Why this phase (interview narrative)
+### 8C — Frontend polish
+- [ ] **Skeleton loaders** — replace `"Loading..."` text on Dashboard, Journal List, Space Detail, Notifications
+- [ ] **Toast notification system** — unified success/error feedback; replaces inconsistent `alert()` calls
+- [ ] **Page transition animations** — Framer Motion spring transitions on route change and modal open
+- [ ] **Calendar heatmap** — GitHub-style year-view contribution graph; supplements current month calendar
+- [ ] **Reading mode** for journal detail — serif typography, 17pt, 1.7 line height, max 680px width; toggle in detail page
+- [ ] **Empty state illustrations** — replace text-only empty states on Dashboard, Spaces, Notifications
+- [ ] **Writing stats page** — words written, entries per month, top tags, mood distribution — pure SQL, Apple-Health-style card layout
 
-Demonstrates: polyglot persistence, async pipelines, multi-agent orchestration, RAG, hierarchical memory, LLM cost engineering, encryption-at-rest, observability. Each sub-phase maps to a classic system-design interview topic.
+### 8D — Code health
+- [ ] Refactor `SpaceDetailPage.tsx` (1216 lines) into `<PostList>`, `<PostComposer>`, `<MemberList>`, `<InviteModal>` sub-components
+- [ ] Extract shared modal/sheet pattern into a reusable `<BottomSheet>` component (used today in journal list AI bar and space invite)
+
+### Why this phase (vs. the original Phase 8 plan)
+- **2GB VPS rules out local embedding models** — BGE-M3 alone needs ~2.5GB RAM. Voyage hosted is cheap but Qdrant + Redis on the remaining headroom is still tight, with no measurable user-side win at this scale.
+- **MySQL FULLTEXT + Claude rerank handles ~10k entries comfortably** — well past the ~1k–2k entries this app actually has today.
+- **Mood / tag / streak / stats deliver user value with zero AI cost** — addressing the real retention problem (users don't come back), not the imagined one (semantic search can't find the right entry).
+- **Each AI feature here is a single Claude call**, not a state-machine multi-agent flow. Same product outcome, ~10× less complexity.
+
+---
+
+## Phase 9 — Deferred / Future
+
+> The original "AI-Native Reflection Companion" architecture lives in **[`docs/system-design.md`](system-design.md)** as an aspirational future state. Adopt sub-items below **only when real usage signals demand them** — not pre-emptively.
+
+| Item | Signal that justifies adopting it |
+|---|---|
+| Voyage AI embedding + Qdrant vector search | Users report FULLTEXT misses cross-language / synonym queries; or > 5k entries per user |
+| Custom agent orchestrator with state machine | A use case emerges that genuinely needs multi-step reasoning (e.g., goal tracking with tool calls) |
+| L1/L2/L3 memory hierarchy | Caching pressure becomes measurable — p95 latency degrades or LLM context costs spike |
+| AES-256-GCM at-rest encryption | Compliance requirement (GDPR DPA, HIPAA) or a paying user explicitly asks |
+| Per-user quotas + global daily spend ceiling | Monthly LLM spend approaches the $10 ceiling, or an abuse pattern appears |
+| Server upgrade (4GB+) | Any of the above goes live, or memory pressure becomes a real incident |
+| Load testing (JMeter) | Onboarding a stakeholder who asks for capacity numbers |
+| Mobile native app | PWA install rate plateaus or feature requests need native-only APIs |
+| Voice-first capture (Whisper sidecar) | Sustained user request for voice input |
+
+### Conscious choice
+Shipping **lower-complexity, higher-leverage features** now, in the actual deployment environment, demonstrates the same engineering judgment as building a multi-agent orchestrator — and produces a working product instead of a half-finished demo. The system-design doc remains as the portfolio narrative for *"how I would scale this if usage demanded it"*.

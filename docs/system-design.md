@@ -1,9 +1,14 @@
 # MyJourney — System Design Document
 
-> **Status**: v0.1 — Design draft. Phase A implementation pending.
+> **Status: Aspirational future architecture — NOT the current implementation plan.**
+>
+> This document describes the architecture MyJourney *would* adopt if usage signals justified it (Qdrant, Redis, local BGE-M3 embedding sidecar, custom agent orchestrator, L1/L2/L3 memory hierarchy, at-rest encryption). It is preserved as a system-design narrative for portfolio / interview purposes — "how I would scale this".
+>
+> The actual short-term plan ships **lighter-weight features on the existing 2GB VPS** without these components. See **[`roadmap.md`](roadmap.md)** for what is actually being built next (Phase 7 hardening + Phase 8 Smart Journaling).
+>
 > **Author**: Spring (solo)
 > **Live**: [myjourneycloud.com](https://myjourneycloud.com)
-> **Last updated**: 2026-05-15
+> **Last revised**: 2026-05-18 (scope downgraded to aspirational; see roadmap.md for active plan)
 
 ---
 

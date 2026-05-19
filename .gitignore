@@ -41,5 +41,17 @@ frontend/dist/
 
 # Built React assets are generated at build time; do not commit them.
 # The Dockerfile runs `npm run build` before `mvn package`.
+# Source files live in frontend/public/ (manifest + icons) and frontend/src/.
 src/main/resources/static/assets/
 src/main/resources/static/index.html
+src/main/resources/static/manifest.webmanifest
+src/main/resources/static/app-icon-master.svg
+src/main/resources/static/apple-touch-icon.png
+src/main/resources/static/icon-192.png
+src/main/resources/static/icon-512.png
+src/main/resources/static/favicon.svg
+src/main/resources/static/icons.svg
+
+# Internal planning docs from the superpowers brainstorming/plan workflow.
+# Kept locally as session context; not part of the product or portfolio.
+docs/superpowers/
