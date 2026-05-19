@@ -24,16 +24,9 @@ import './SpaceDetail.css'
 // Emoji reactions available on every post
 const EMOJIS = ['❤️', '👍', '😂', '🐮', '🥲', '😭', '😮']
 
-// Titanium-inspired palette — shared with SpacesListPage (cycles by space id)
-const COVER_GRADIENTS = [
-  'linear-gradient(135deg, #1e2a3f 0%, #3a4e6f 100%)',
-  'linear-gradient(135deg, #2d2a3f 0%, #4d4565 100%)',
-  'linear-gradient(135deg, #3a2f2a 0%, #5d4a40 100%)',
-  'linear-gradient(135deg, #2a3a35 0%, #4a5e55 100%)',
-  'linear-gradient(135deg, #3a2f3f 0%, #5d4a5e 100%)',
-  'linear-gradient(135deg, #2f3a3f 0%, #4f5e65 100%)',
-  'linear-gradient(135deg, #3a3530 0%, #5d5448 100%)',
-]
+// Apple-tinted cover variants — shared palette with SpacesListPage.
+// Tint classes (.slist-cover-N) are defined in Spaces.css and adapt to theme.
+const COVER_COUNT = 7
 
 // Format ISO timestamp to a human-readable relative string
 function formatTime(iso: string): string {
@@ -426,9 +419,11 @@ export default function SpaceDetailPage() {
 
   if (!space) return null
 
-  const coverStyle = space.coverImage
+  // Cover image overrides tint; otherwise pick a deterministic tint variant by id.
+  const coverTintClass = space.coverImage ? '' : ` slist-cover-${(space.id % COVER_COUNT) + 1}`
+  const coverImageStyle = space.coverImage
     ? { backgroundImage: `url(${space.coverImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-    : { background: COVER_GRADIENTS[space.id % COVER_GRADIENTS.length] }
+    : undefined
 
   return (
     <div className="sdetail-page">
@@ -619,7 +614,7 @@ export default function SpaceDetailPage() {
             {/* Space info card: banner + description + invite */}
             <div className="sdetail-sidebar-card sdetail-sidebar-card--info">
               {/* Full-width banner with name + member count overlay */}
-              <div className="sdetail-sb-banner" style={coverStyle}>
+              <div className={`sdetail-sb-banner${coverTintClass}`} style={coverImageStyle}>
                 {!space.coverImage && (
                   <span className="sdetail-sb-initial">{space.name.charAt(0).toUpperCase()}</span>
                 )}
@@ -726,10 +721,10 @@ export default function SpaceDetailPage() {
               {/* Cover image upload */}
               <label className="sdetail-label">Cover Image</label>
               <div
-                className="sdetail-cover-picker"
+                className={`sdetail-cover-picker${(coverPreview || space.coverImage) ? '' : coverTintClass}`}
                 style={coverPreview || space.coverImage
                   ? { backgroundImage: `url(${coverPreview ?? space.coverImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-                  : coverStyle
+                  : undefined
                 }
               >
                 <button
@@ -797,7 +792,7 @@ export default function SpaceDetailPage() {
         >
           <div className="sdetail-sheet">
             {/* Banner with drag handle overlaid at top */}
-            <div className="sdetail-sb-banner sdetail-sb-banner--sheet" style={coverStyle}>
+            <div className={`sdetail-sb-banner sdetail-sb-banner--sheet${coverTintClass}`} style={coverImageStyle}>
               {!space.coverImage && (
                 <span className="sdetail-sb-initial">{space.name.charAt(0).toUpperCase()}</span>
               )}

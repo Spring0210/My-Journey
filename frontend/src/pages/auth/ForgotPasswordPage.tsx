@@ -6,7 +6,9 @@ import './Auth.css'
 
 // ─────────────────────────────────────────────────────────
 // ForgotPasswordPage — two-step password reset flow.
-// Step 1: enter username + email to receive a 6-digit code.
+// Step 1: enter email to receive a 6-digit code. The backend
+//         responds "Code sent" regardless of whether the email
+//         is registered, so the screen always advances to step 2.
 // Step 2: enter code + new password to complete the reset.
 // ─────────────────────────────────────────────────────────
 
@@ -19,7 +21,6 @@ export default function ForgotPasswordPage() {
   const [step, setStep] = useState<1 | 2>(1)
 
   // Step 1 fields
-  const [username, setUsername] = useState('')
   const [email, setEmail]       = useState('')
   const [step1Error, setStep1Error] = useState('')
   const [step1Loading, setStep1Loading] = useState(false)
@@ -59,7 +60,7 @@ export default function ForgotPasswordPage() {
     setStep1Error('')
     setStep1Loading(true)
     try {
-      await sendResetCode(username.trim(), email.trim())
+      await sendResetCode(email.trim())
       setStep(2)
       startCooldown()
     } catch (err) {
@@ -73,7 +74,7 @@ export default function ForgotPasswordPage() {
   async function handleResend() {
     setStep2Error('')
     try {
-      await sendResetCode(username.trim(), email.trim())
+      await sendResetCode(email.trim())
       setCode('')
       startCooldown()
     } catch (err) {
@@ -93,7 +94,7 @@ export default function ForgotPasswordPage() {
 
     setStep2Loading(true)
     try {
-      await resetPassword(username.trim(), code.trim(), newPassword)
+      await resetPassword(email.trim(), code.trim(), newPassword)
       navigate('/login', { replace: true })
     } catch (err) {
       setStep2Error(err instanceof Error ? err.message : 'Reset failed')
@@ -111,23 +112,10 @@ export default function ForgotPasswordPage() {
       {step === 1 && (
         <>
           <p className="auth-subtitle">
-            Enter your username and email to receive a reset code.
+            Enter your email and we'll send you a 6-digit reset code.
           </p>
           <form className="auth-form" onSubmit={handleStep1} noValidate>
             {step1Error && <p className="auth-error-banner">{step1Error}</p>}
-
-            <div className="auth-field">
-              <label className="auth-label" htmlFor="username">Username</label>
-              <input
-                id="username"
-                type="text"
-                className="auth-input"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-                autoCapitalize="none"
-                required
-              />
-            </div>
 
             <div className="auth-field">
               <label className="auth-label" htmlFor="email">Email</label>
@@ -138,6 +126,7 @@ export default function ForgotPasswordPage() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 autoComplete="email"
+                autoFocus
                 required
               />
             </div>
@@ -153,7 +142,7 @@ export default function ForgotPasswordPage() {
       {step === 2 && (
         <>
           <p className="auth-subtitle">
-            A 6-digit code was sent to {email}. It expires in 10 minutes.
+            If an account exists for <strong>{email}</strong>, a 6-digit code is on its way. It expires in 10 minutes.
           </p>
           <form className="auth-form" onSubmit={handleStep2} noValidate>
             {step2Error && <p className="auth-error-banner">{step2Error}</p>}

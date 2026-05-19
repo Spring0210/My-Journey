@@ -734,88 +734,90 @@
   overflow: hidden;
 }
 
-/* Diagonal glass sheen + corner highlight — matches Spaces card cover */
+/* Subtle top highlight — matches the pastel card cover */
 .sdetail-sb-banner::before {
   content: '';
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(
-      115deg,
-      transparent 38%,
-      rgba(255, 255, 255, 0.10) 50%,
-      transparent 62%
-    ),
-    radial-gradient(
-      ellipse at 15% 10%,
-      rgba(255, 255, 255, 0.18) 0%,
-      transparent 55%
-    );
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.32) 0%,
+    transparent 42%
+  );
   pointer-events: none;
   z-index: 1;
 }
 
-/* Centered initial letter — sits over a small frosted glass disc */
+[data-theme="dark"] .sdetail-sb-banner::before {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    transparent 42%
+  );
+}
+
+/* Centered initial letter — color inherited from the cover tint variant */
 .sdetail-sb-initial {
   position: relative;
-  font-size: 36px;
+  font-size: 40px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.96);
   letter-spacing: -0.02em;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
   user-select: none;
   z-index: 2;
 }
 
-.sdetail-sb-initial::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 68px;
-  height: 68px;
-  border-radius: var(--radius-full);
-  background: linear-gradient(
-    155deg,
-    rgba(255, 255, 255, 0.24) 0%,
-    rgba(255, 255, 255, 0.10) 45%,
-    rgba(255, 255, 255, 0.04) 100%
-  );
-  backdrop-filter: blur(8px) saturate(140%);
-  -webkit-backdrop-filter: blur(8px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  box-shadow:
-    inset 0 1px 0.5px rgba(255, 255, 255, 0.35),
-    inset 0 -1px 1px rgba(0, 0, 0, 0.10),
-    0 4px 12px rgba(0, 0, 0, 0.20);
-  z-index: -1;
+/* When a real cover image is used, banner has no tint class — letter stays white with a soft shadow.
+   The :not selector keeps the tint variants' color rule winning normally. */
+.sdetail-sb-banner:not([class*="slist-cover-"]) .sdetail-sb-initial {
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 
-/* Gradient overlay at the bottom of the banner for name readability */
+/* Bottom info strip — frosted glass that adapts to the pastel cover */
 .sdetail-sb-banner-overlay {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
+  padding: 10px 14px 12px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  z-index: 2;
+}
+
+[data-theme="dark"] .sdetail-sb-banner-overlay {
+  background: rgba(0, 0, 0, 0.45);
+  border-top-color: rgba(255, 255, 255, 0.10);
+}
+
+/* When using a real cover image, fall back to the dark gradient for readability */
+.sdetail-sb-banner:not([class*="slist-cover-"]) .sdetail-sb-banner-overlay {
   padding: 20px 14px 12px;
   background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.55));
-  z-index: 2;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-top: none;
 }
 
 .sdetail-sb-banner-name {
   font-size: 15px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--label-primary);
   letter-spacing: -0.01em;
   line-height: 1.2;
 }
 
 .sdetail-sb-banner-count {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--label-secondary);
   margin-top: 2px;
 }
+
+/* For cover-image banners only — keep the old white text */
+.sdetail-sb-banner:not([class*="slist-cover-"]) .sdetail-sb-banner-name  { color: #ffffff; }
+.sdetail-sb-banner:not([class*="slist-cover-"]) .sdetail-sb-banner-count { color: rgba(255, 255, 255, 0.75); }
 
 /* Text info block below banner */
 .sdetail-sb-info {
@@ -1081,7 +1083,9 @@
   border-top: 1px solid var(--separator);
 }
 
-/* Cover image picker area in edit modal */
+/* Cover image picker area in edit modal.
+   Background comes from the tint variant class (.slist-cover-N) or an inline
+   backgroundImage when a real cover is set — no fallback bg needed here. */
 .sdetail-cover-picker {
   position: relative;
   width: 100%;
@@ -1091,7 +1095,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--fill-tertiary);
 }
 
 .sdetail-cover-upload-btn {

@@ -5,15 +5,15 @@ import Icon from '@/components/ui/Icon'
 import './Auth.css'
 
 // ─────────────────────────────────────────────────────────
-// RegisterPage — two-step registration flow.
-// Step 1: fill in username, email, and password, then send
-//         a 6-digit verification code to the email address.
-// Step 2: enter the code to confirm the email and create
-//         the account.
+// RegisterPage — two-step registration.
+// Step 1 is framed as "Create account" — the verification step
+// is presented as the final confirmation, not as a barrier.
+// Step 2 uses a 6-box OTP input that auto-submits when filled.
 // ─────────────────────────────────────────────────────────
 
 const EMAIL_PATTERN = /^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
 const RESEND_COOLDOWN = 60 // seconds
+const CODE_LENGTH = 6
 
 export default function RegisterPage() {
   const navigate = useNavigate()
@@ -31,16 +31,22 @@ export default function RegisterPage() {
   const [step1Error, setStep1Error]           = useState('')
   const [step1Loading, setStep1Loading]       = useState(false)
 
-  // Step 2 fields
-  const [code, setCode]             = useState('')
+  // Step 2 fields — 6 separate digit slots
+  const [codeDigits, setCodeDigits] = useState<string[]>(() => Array(CODE_LENGTH).fill(''))
   const [step2Error, setStep2Error] = useState('')
   const [step2Loading, setStep2Loading] = useState(false)
+  const codeInputRefs = useRef<Array<HTMLInputElement | null>>([])
 
   // Resend cooldown
   const [cooldown, setCooldown] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current) }, [])
+
+  // Focus the first code box when entering step 2
+  useEffect(() => {
+    if (step === 2) codeInputRefs.current[0]?.focus()
+  }, [step])
 
   function startCooldown() {
     setCooldown(RESEND_COOLDOWN)
@@ -83,32 +89,98 @@ export default function RegisterPage() {
     setStep2Error('')
     try {
       await sendRegistrationCode(username.trim(), email.trim())
-      setCode('')
+      setCodeDigits(Array(CODE_LENGTH).fill(''))
+      codeInputRefs.current[0]?.focus()
       startCooldown()
     } catch (err) {
       setStep2Error(err instanceof Error ? err.message : 'Failed to resend code')
     }
   }
 
-  // ── Step 2: verify code and create account ────────────
-  async function handleStep2(e: React.FormEvent) {
-    e.preventDefault()
+  // ── Step 2: submit the code ───────────────────────────
+  async function submitCode(code: string) {
     setStep2Error('')
     setStep2Loading(true)
     try {
-      await register(username.trim(), email.trim(), password, code.trim())
+      await register(username.trim(), email.trim(), password, code)
       navigate('/login', { replace: true })
     } catch (err) {
       setStep2Error(err instanceof Error ? err.message : 'Registration failed')
+      // Clear digits so the user can retype after an error
+      setCodeDigits(Array(CODE_LENGTH).fill(''))
+      codeInputRefs.current[0]?.focus()
     } finally {
       setStep2Loading(false)
     }
   }
 
+  function handleStep2Submit(e: React.FormEvent) {
+    e.preventDefault()
+    const code = codeDigits.join('')
+    if (code.length === CODE_LENGTH) submitCode(code)
+  }
+
+  // ── OTP input handlers ────────────────────────────────
+  // Accept one digit, auto-advance, auto-submit when filled
+  function handleDigitChange(index: number, value: string) {
+    // Only keep the last digit if user types fast or pastes more than one char
+    const digit = value.replace(/\D/g, '').slice(-1)
+    const next = [...codeDigits]
+    next[index] = digit
+    setCodeDigits(next)
+    setStep2Error('')
+
+    if (digit && index < CODE_LENGTH - 1) {
+      codeInputRefs.current[index + 1]?.focus()
+    }
+
+    // Auto-submit when all 6 are filled
+    if (digit && index === CODE_LENGTH - 1) {
+      const filled = next.join('')
+      if (filled.length === CODE_LENGTH && !next.includes('')) {
+        submitCode(filled)
+      }
+    }
+  }
+
+  function handleDigitKeyDown(index: number, e: React.KeyboardEvent<HTMLInputElement>) {
+    // Backspace on empty box jumps to previous box and clears it
+    if (e.key === 'Backspace' && !codeDigits[index] && index > 0) {
+      e.preventDefault()
+      const next = [...codeDigits]
+      next[index - 1] = ''
+      setCodeDigits(next)
+      codeInputRefs.current[index - 1]?.focus()
+    }
+    if (e.key === 'ArrowLeft' && index > 0) {
+      codeInputRefs.current[index - 1]?.focus()
+    }
+    if (e.key === 'ArrowRight' && index < CODE_LENGTH - 1) {
+      codeInputRefs.current[index + 1]?.focus()
+    }
+  }
+
+  // Handle paste of a full 6-digit code into any box
+  function handleDigitPaste(e: React.ClipboardEvent<HTMLInputElement>) {
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, CODE_LENGTH)
+    if (!pasted) return
+    e.preventDefault()
+    const next = Array(CODE_LENGTH).fill('').map((_, i) => pasted[i] ?? '')
+    setCodeDigits(next)
+    setStep2Error('')
+    // Focus the next empty box, or the last one if all filled
+    const firstEmpty = next.findIndex(d => !d)
+    const focusIdx = firstEmpty === -1 ? CODE_LENGTH - 1 : firstEmpty
+    codeInputRefs.current[focusIdx]?.focus()
+    if (pasted.length === CODE_LENGTH) submitCode(pasted)
+  }
+
   // ── Render ────────────────────────────────────────────
   return (
     <div className="auth-card">
-      <h1 className="auth-title">Create account</h1>
+
+      {step === 1 && <h1 className="auth-title">Create account</h1>}
+      {step === 2 && <h1 className="auth-title">Verify your email</h1>}
 
       {/* Step 1 — fill in details */}
       {step === 1 && (
@@ -192,7 +264,7 @@ export default function RegisterPage() {
             </div>
 
             <button type="submit" className="auth-btn-primary" disabled={step1Loading}>
-              {step1Loading ? 'Sending...' : 'Send verification code'}
+              {step1Loading ? 'Creating account...' : 'Create account'}
             </button>
           </form>
 
@@ -210,34 +282,44 @@ export default function RegisterPage() {
         </>
       )}
 
-      {/* Step 2 — enter verification code */}
+      {/* Step 2 — verify email with 6-box OTP */}
       {step === 2 && (
         <>
           <p className="auth-subtitle">
-            A 6-digit code was sent to <strong>{email}</strong>. It expires in 10 minutes.
+            Almost done! We sent a 6-digit code to <strong>{email}</strong>. Enter it below to finish setting up your account.
           </p>
 
-          <form className="auth-form" onSubmit={handleStep2} noValidate>
+          <form className="auth-form" onSubmit={handleStep2Submit} noValidate>
             {step2Error && <p className="auth-error-banner">{step2Error}</p>}
 
-            <div className="auth-field">
-              <label className="auth-label" htmlFor="code">Verification code</label>
-              <input
-                id="code"
-                type="text"
-                inputMode="numeric"
-                className="auth-input"
-                value={code}
-                onChange={e => { setCode(e.target.value); setStep2Error('') }}
-                placeholder="6-digit code"
-                maxLength={6}
-                autoComplete="one-time-code"
-                autoFocus
-                required
-              />
+            {/* 6 separate digit boxes — auto-advance, paste-friendly, auto-submit */}
+            <div className="auth-otp" role="group" aria-label="Verification code">
+              {codeDigits.map((digit, i) => (
+                <input
+                  key={i}
+                  ref={el => { codeInputRefs.current[i] = el }}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={1}
+                  className={`auth-otp-box${step2Error ? ' auth-input--error' : ''}`}
+                  value={digit}
+                  onChange={e => handleDigitChange(i, e.target.value)}
+                  onKeyDown={e => handleDigitKeyDown(i, e)}
+                  onPaste={handleDigitPaste}
+                  onFocus={e => e.target.select()}
+                  autoComplete={i === 0 ? 'one-time-code' : 'off'}
+                  aria-label={`Digit ${i + 1} of ${CODE_LENGTH}`}
+                  disabled={step2Loading}
+                />
+              ))}
             </div>
 
-            <button type="submit" className="auth-btn-primary" disabled={step2Loading}>
+            <button
+              type="submit"
+              className="auth-btn-primary"
+              disabled={step2Loading || codeDigits.join('').length !== CODE_LENGTH}
+            >
               {step2Loading ? 'Creating account...' : 'Create account'}
             </button>
 
@@ -248,7 +330,7 @@ export default function RegisterPage() {
                 onClick={handleResend}
                 disabled={cooldown > 0}
               >
-                {cooldown > 0 ? `Resend code (${cooldown}s)` : 'Resend code'}
+                {cooldown > 0 ? `Resend code (${cooldown}s)` : "Didn't get it? Resend code"}
               </button>
             </div>
           </form>
@@ -258,7 +340,11 @@ export default function RegisterPage() {
               type="button"
               className="auth-bottom-link"
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-              onClick={() => { setStep(1); setCode(''); setStep2Error('') }}
+              onClick={() => {
+                setStep(1)
+                setCodeDigits(Array(CODE_LENGTH).fill(''))
+                setStep2Error('')
+              }}
             >
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                 <Icon name="arrow-left" size={14} />

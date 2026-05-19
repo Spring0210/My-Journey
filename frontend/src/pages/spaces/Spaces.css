@@ -95,7 +95,8 @@
 
 .slist-card:active { transform: scale(0.98); box-shadow: var(--shadow-raised); }
 
-/* Cover — gradient or cover image */
+/* Cover — Apple Contacts/Reminders pastel tint.
+   Background + initial color come from .slist-cover-N variants below. */
 .slist-card-cover {
   position: relative;
   width: 100%;
@@ -105,104 +106,82 @@
   justify-content: center;
   overflow: hidden;
   flex-shrink: 0;
+  transition: background var(--ease-micro);
 }
 
-/* Layer 1 — diagonal glass sheen + top-left corner highlight.
-   Combined into a single pseudo-element via stacked backgrounds to keep
-   ::before/::after available for vignette. The sheen mimics light hitting
-   a glass surface; the corner highlight gives Apple Titanium depth. */
+/* Subtle top highlight — a hint of light without the heavy Titanium sheen */
 .slist-card-cover::before {
   content: '';
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(
-      115deg,
-      transparent 38%,
-      rgba(255, 255, 255, 0.10) 50%,
-      transparent 62%
-    ),
-    radial-gradient(
-      ellipse at 15% 10%,
-      rgba(255, 255, 255, 0.18) 0%,
-      transparent 55%
-    );
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.32) 0%,
+    transparent 42%
+  );
   pointer-events: none;
   z-index: 1;
 }
 
-/* Layer 2 — bottom vignette deepens the card foot into the body */
-.slist-card-cover::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 55%;
-  background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.32));
-  pointer-events: none;
-  z-index: 1;
+[data-theme="dark"] .slist-card-cover::before {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    transparent 42%
+  );
 }
 
-/* Initial letter — sits over a frosted glass disc.
-   Letter z-index 2 keeps it above the disc, sheen, and vignette. */
+/* Initial — single tinted letter, no frosted disc. Color set by variant class. */
 .slist-card-initial {
   position: relative;
-  font-size: 44px;
+  font-size: 48px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.96);
   letter-spacing: -0.02em;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
   user-select: none;
   z-index: 2;
 }
 
-/* Frosted glass disc behind the initial — proper glass-orb treatment:
-   - subtle top-down glass gradient (highlight at top, shadow at bottom)
-   - backdrop-filter blur picks up gradient + sheen behind the disc
-   - inset shadows simulate edge bevel (light top, dark bottom)
-   - drop shadow lifts the disc off the cover */
-.slist-card-initial::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 88px;
-  height: 88px;
-  border-radius: var(--radius-full);
-  background: linear-gradient(
-    155deg,
-    rgba(255, 255, 255, 0.24) 0%,
-    rgba(255, 255, 255, 0.10) 45%,
-    rgba(255, 255, 255, 0.04) 100%
-  );
-  backdrop-filter: blur(8px) saturate(140%);
-  -webkit-backdrop-filter: blur(8px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  box-shadow:
-    inset 0 1px 0.5px rgba(255, 255, 255, 0.35),
-    inset 0 -1px 1px rgba(0, 0, 0, 0.10),
-    0 6px 18px rgba(0, 0, 0, 0.22);
-  z-index: -1;
-}
+/* ── Cover tint variants (cycle by space id) ──────────────
+   Light mode: soft pastel surface + deep tint text.
+   Dark mode:  deep tonal surface + light tint text. */
+.slist-cover-1 { background: #E8F1FF; color: #2A5DA5; }  /* sky      */
+.slist-cover-2 { background: #FFECEC; color: #9A2F2F; }  /* rose     */
+.slist-cover-3 { background: #E8F3EB; color: #2F6B42; }  /* sage     */
+.slist-cover-4 { background: #FFF1E0; color: #8C4F0F; }  /* apricot  */
+.slist-cover-5 { background: #F1EBFA; color: #5E3F9C; }  /* lilac    */
+.slist-cover-6 { background: #E2F2F1; color: #2A6F70; }  /* mint     */
+.slist-cover-7 { background: #FFEEF3; color: #A03A66; }  /* blush    */
 
-/* "Owner" pill — bottom-left of cover, above the vignette */
+[data-theme="dark"] .slist-cover-1 { background: #1B2C49; color: #7FB3F0; }
+[data-theme="dark"] .slist-cover-2 { background: #3A1F1F; color: #E08585; }
+[data-theme="dark"] .slist-cover-3 { background: #1B2F22; color: #7BBF8F; }
+[data-theme="dark"] .slist-cover-4 { background: #3A2A18; color: #E8B070; }
+[data-theme="dark"] .slist-cover-5 { background: #2A2440; color: #B89DEA; }
+[data-theme="dark"] .slist-cover-6 { background: #163030; color: #6FC8C9; }
+[data-theme="dark"] .slist-cover-7 { background: #3A1E29; color: #E891B0; }
+
+/* "Owner" pill — bottom-left of cover. Adapts to theme so it reads on pastel covers. */
 .slist-card-badge {
   position: absolute;
   bottom: 10px;
   left: 10px;
   padding: 3px 9px;
-  background: rgba(0, 0, 0, 0.38);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--label-primary);
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
   border-radius: var(--radius-pill);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   z-index: 3;
+}
+
+[data-theme="dark"] .slist-card-badge {
+  background: rgba(0, 0, 0, 0.45);
+  color: rgba(255, 255, 255, 0.95);
+  border-color: rgba(255, 255, 255, 0.10);
 }
 
 /* Text area below cover */

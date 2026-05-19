@@ -87,12 +87,12 @@ public class UserController {
 
     @PostMapping("/forgot-password")
     public String forgotPassword(@RequestBody Map<String, String> map) {
-        return userService.sendResetCode(map.get("username"), map.get("email"));
+        return userService.sendResetCode(map.get("email"));
     }
 
     @PostMapping("/reset-password")
     public String resetPassword(@RequestBody Map<String, String> map) {
-        return userService.verifyAndResetPassword(map.get("username"), map.get("code"), map.get("newPassword"));
+        return userService.verifyAndResetPassword(map.get("email"), map.get("code"), map.get("newPassword"));
     }
 
     // POST /api/auth/refresh — exchange a valid refresh token for a new access token + rotated refresh token

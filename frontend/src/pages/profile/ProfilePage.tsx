@@ -164,7 +164,7 @@ export default function ProfilePage() {
 
       <div className="prof-inner">
 
-        {/* ── Hero card: avatar + username ──────────────── */}
+        {/* ── Hero card: iOS Settings-style row (avatar left, name right) ── */}
         <div className="prof-hero">
           {/* Clickable avatar with camera badge */}
           <div
@@ -183,7 +183,7 @@ export default function ProfilePage() {
                 </div>
             }
             <div className="prof-hero-avatar-badge" aria-hidden="true">
-              <Icon name="image" size={13} />
+              <Icon name="image" size={12} />
             </div>
           </div>
           <input
@@ -194,17 +194,21 @@ export default function ProfilePage() {
             onChange={handleAvatarSelect}
           />
 
-          <p className="prof-hero-username">@{username}</p>
-
-          {/* Save/error feedback */}
-          {heroMsg === 'saved' && (
-            <span className="prof-hero-feedback prof-hero-feedback--ok">
-              <Icon name="check" size={13} /> Saved
-            </span>
-          )}
-          {heroMsg && heroMsg !== 'saved' && (
-            <span className="prof-hero-feedback prof-hero-feedback--err">{heroMsg}</span>
-          )}
+          {/* Right column — name + secondary hint or feedback */}
+          <div className="prof-hero-meta">
+            <p className="prof-hero-name">@{username}</p>
+            {heroMsg === 'saved' ? (
+              <span className="prof-hero-feedback prof-hero-feedback--ok">
+                <Icon name="check" size={13} /> Photo updated
+              </span>
+            ) : heroMsg ? (
+              <span className="prof-hero-feedback prof-hero-feedback--err">{heroMsg}</span>
+            ) : (
+              <span className="prof-hero-hint">
+                {avatarSaving ? 'Uploading photo...' : 'Tap photo to change'}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* ── Account section ───────────────────────────── */}

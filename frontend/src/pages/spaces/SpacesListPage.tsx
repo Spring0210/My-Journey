@@ -12,19 +12,9 @@ import './Spaces.css'
 // Allows creating a new space or joining one via invite code.
 // ─────────────────────────────────────────────────────────
 
-// Titanium-inspired deep duo-tone gradients for space covers without an image
-// (cycles by id). Each is a single-hue dark gradient — sophisticated, low
-// saturation, paired with a frosted-glass disc behind the initial letter
-// for Apple Pro / iPhone Titanium feel.
-const COVER_GRADIENTS = [
-  'linear-gradient(135deg, #1e2a3f 0%, #3a4e6f 100%)',   // midnight navy
-  'linear-gradient(135deg, #2d2a3f 0%, #4d4565 100%)',   // deep purple
-  'linear-gradient(135deg, #3a2f2a 0%, #5d4a40 100%)',   // espresso
-  'linear-gradient(135deg, #2a3a35 0%, #4a5e55 100%)',   // forest sage
-  'linear-gradient(135deg, #3a2f3f 0%, #5d4a5e 100%)',   // dusk mauve
-  'linear-gradient(135deg, #2f3a3f 0%, #4f5e65 100%)',   // pacific gray
-  'linear-gradient(135deg, #3a3530 0%, #5d5448 100%)',   // graphite warm
-]
+// Number of Apple-tinted cover variants (see .slist-cover-N in Spaces.css).
+// Each variant has matched light/dark theme colors. Cycles by space id.
+const COVER_COUNT = 7
 
 export default function SpacesListPage() {
   const navigate = useNavigate()
@@ -140,12 +130,12 @@ export default function SpacesListPage() {
                 className="slist-card"
                 onClick={() => navigate(`/spaces/${space.id}`)}
               >
-                {/* Cover image or gradient with initial letter */}
+                {/* Cover image, or a pastel tint variant chosen by id */}
                 <div
-                  className="slist-card-cover"
+                  className={`slist-card-cover${space.coverImage ? '' : ` slist-cover-${(space.id % COVER_COUNT) + 1}`}`}
                   style={space.coverImage
                     ? { backgroundImage: `url(${space.coverImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-                    : { background: COVER_GRADIENTS[space.id % COVER_GRADIENTS.length] }
+                    : undefined
                   }
                 >
                   {!space.coverImage && (

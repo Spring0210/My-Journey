@@ -14,6 +14,8 @@ import com.myjourney.util.JwtUtil;
 import com.resend.Resend;
 import com.resend.core.exception.ResendException;
 import com.resend.services.emails.model.CreateEmailOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -29,6 +31,8 @@ import java.util.regex.Pattern;
 
 @Service
 public class UserService {
+
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     private static final Pattern EMAIL_PATTERN =
             Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
@@ -91,6 +95,12 @@ public class UserService {
                     .build();
             resend.emails().send(params);
         } catch (ResendException e) {
+            log.warn("Resend send failed for registration code to {}: {}", email, e.getMessage());
+            return "Failed to send email, please try again later";
+        } catch (Exception e) {
+            // Catches okhttp IOExceptions, NPE from bad config, etc. — keep the user-facing
+            // message friendly but log the full trace so we can diagnose recurrences.
+            log.error("Unexpected error sending registration code to {}", email, e);
             return "Failed to send email, please try again later";
         }
 
@@ -202,6 +212,10 @@ public class UserService {
                     .build();
             resend.emails().send(params);
         } catch (ResendException e) {
+            log.warn("Resend send failed for change-password code: {}", e.getMessage());
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to send email, please try again later");
+        } catch (Exception e) {
+            log.error("Unexpected error sending change-password code", e);
             throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to send email, please try again later");
         }
     }
@@ -232,18 +246,23 @@ public class UserService {
         tokenRepository.delete(token);
     }
 
+    // Send a reset code to the email address.
+    // For privacy, we return the same "Code sent" string whether or not an account
+    // exists for the email — this prevents enumeration of registered email addresses.
     @Transactional
-    public String sendResetCode(String username, String email) {
-        Optional<User> userOpt = userRepository.findByUsername(username);
+    public String sendResetCode(String email) {
+        if (email == null || email.isBlank()) {
+            return "Code sent";
+        }
+
+        Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isEmpty()) {
-            return "User not found";
+            // Silent no-op — same response as success so attackers can't enumerate emails.
+            return "Code sent";
         }
 
         User user = userOpt.get();
-        if (user.getEmail() == null || !user.getEmail().equalsIgnoreCase(email)) {
-            return "Email does not match";
-        }
-
+        String username = user.getUsername();
         tokenRepository.deleteByUsername(username);
 
         String code = String.format("%06d", new Random().nextInt(1000000));
@@ -264,6 +283,10 @@ public class UserService {
                     .build();
             resend.emails().send(params);
         } catch (ResendException e) {
+            log.warn("Resend send failed for reset code to {}: {}", email, e.getMessage());
+            return "Failed to send email, please try again later";
+        } catch (Exception e) {
+            log.error("Unexpected error sending reset code to {}", email, e);
             return "Failed to send email, please try again later";
         }
 
@@ -271,7 +294,17 @@ public class UserService {
     }
 
     @Transactional
-    public String verifyAndResetPassword(String username, String code, String newPassword) {
+    public String verifyAndResetPassword(String email, String code, String newPassword) {
+        if (email == null || email.isBlank() || code == null || newPassword == null) {
+            return "Invalid code";
+        }
+
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            return "Invalid code";
+        }
+        String username = userOpt.get().getUsername();
+
         Optional<PasswordResetToken> tokenOpt = tokenRepository.findByUsernameAndCode(username, code);
         if (tokenOpt.isEmpty()) {
             return "Invalid code";
@@ -281,11 +314,6 @@ public class UserService {
         if (token.getExpiredAt().isBefore(LocalDateTime.now())) {
             tokenRepository.delete(token);
             return "Code has expired";
-        }
-
-        Optional<User> userOpt = userRepository.findByUsername(username);
-        if (userOpt.isEmpty()) {
-            return "User not found";
         }
 
         User user = userOpt.get();

@@ -21,58 +21,57 @@
 }
 
 /* ── Hero card ───────────────────────────────────────────── */
-/* Prominent avatar + username — visual anchor of the page */
+/* iOS Settings-style row: avatar on left, name + hint on right */
 .prof-hero {
   background: var(--surface-card);
   border: 1px solid var(--separator);
   border-radius: var(--radius-xl);
-  padding: 32px 24px 28px;
+  padding: 20px 22px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 18px;
 }
 
 /* Avatar circle — clickable to change photo */
 .prof-hero-avatar {
   position: relative;
-  width: 96px;
-  height: 96px;
+  width: 72px;
+  height: 72px;
   border-radius: var(--radius-full);
   cursor: pointer;
   flex-shrink: 0;
 }
 
 .prof-hero-avatar img {
-  width: 96px;
-  height: 96px;
+  width: 72px;
+  height: 72px;
   border-radius: var(--radius-full);
   object-fit: cover;
   display: block;
 }
 
-/* Gradient placeholder with initial letter — muted to match Spaces card palette */
+/* Neutral tinted placeholder — Apple Contacts style, no AI-feeling gradient */
 .prof-hero-avatar-initial {
-  width: 96px;
-  height: 96px;
+  width: 72px;
+  height: 72px;
   border-radius: var(--radius-full);
-  background: linear-gradient(135deg, #5b8def 0%, #3d6ad6 100%);
+  background: var(--fill-tertiary);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 40px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.92);
+  font-size: 30px;
+  font-weight: 500;
+  color: var(--label-secondary);
   user-select: none;
 }
 
 /* Camera badge — always visible bottom-right */
 .prof-hero-avatar-badge {
   position: absolute;
-  bottom: 2px;
-  right: 2px;
-  width: 26px;
-  height: 26px;
+  bottom: 0;
+  right: 0;
+  width: 24px;
+  height: 24px;
   border-radius: var(--radius-full);
   background: var(--surface-card);
   border: 2px solid var(--surface-card);
@@ -84,12 +83,30 @@
   pointer-events: none;  /* parent handles click */
 }
 
-.prof-hero-username {
-  font-size: 18px;
+/* Right column — name + secondary hint, fills remaining width */
+.prof-hero-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.prof-hero-name {
+  font-size: 22px;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   color: var(--label-primary);
-  margin-top: 2px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Secondary hint shown when no feedback is active */
+.prof-hero-hint {
+  font-size: 13px;
+  color: var(--label-tertiary);
 }
 
 /* Inline save feedback in hero */
@@ -503,8 +520,20 @@
   }
 
   .prof-hero {
-    padding: 28px 20px 24px;
+    padding: 16px 18px;
+    gap: 16px;
   }
+
+  .prof-hero-avatar,
+  .prof-hero-avatar img,
+  .prof-hero-avatar-initial {
+    width: 64px;
+    height: 64px;
+  }
+
+  .prof-hero-avatar-initial { font-size: 26px; }
+
+  .prof-hero-name { font-size: 20px; }
 
   /* Password actions stack full-width on mobile */
   .prof-pw-actions {
