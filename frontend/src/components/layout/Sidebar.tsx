@@ -61,6 +61,7 @@ export default function Sidebar({ isOpen, onClose, notificationCount = 0 }: Side
   const navItems: NavItem[] = [
     { to: '/dashboard',     icon: 'home',     label: 'Dashboard' },
     { to: '/journal',       icon: 'journal',  label: 'Journal' },
+    { to: '/media',         icon: 'image',    label: 'Media' },
     { to: '/calendar',      icon: 'calendar', label: 'Calendar' },
     { to: '/spaces',        icon: 'spaces',   label: 'Spaces' },
     {
@@ -87,14 +88,16 @@ export default function Sidebar({ isOpen, onClose, notificationCount = 0 }: Side
       <nav style={styles.nav}>
         <p style={styles.sectionLabel}>Personal</p>
         <ul style={styles.navList}>
-          {navItems.slice(0, 3).map(item => (
+          {/* Dashboard, Journal, Media, Calendar */}
+          {navItems.slice(0, 4).map(item => (
             <NavItem key={item.to} item={item} onClose={onClose} />
           ))}
         </ul>
 
         <p style={styles.sectionLabel}>Social</p>
         <ul style={styles.navList}>
-          {navItems.slice(3).map(item => (
+          {/* Spaces, Notifications */}
+          {navItems.slice(4).map(item => (
             <NavItem key={item.to} item={item} onClose={onClose} />
           ))}
         </ul>

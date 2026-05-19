@@ -23,11 +23,18 @@
   to   { opacity: 1; }
 }
 
-.lightbox-img {
+.lightbox-img,
+.lightbox-video {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
   border-radius: var(--radius-md);
+}
+
+/* Browser-native video controls; size constrained like images */
+.lightbox-video {
+  background: #000000;
+  outline: none;
 }
 
 /* Top-right close button */
@@ -82,7 +89,7 @@
 .lightbox-nav--prev { left: 16px; }
 .lightbox-nav--next { right: 16px; }
 
-/* Image counter e.g. "2 / 5" — bottom center */
+/* Image counter e.g. "2 / 5" — bottom center, shown when no meta strip */
 .lightbox-counter {
   position: absolute;
   bottom: 20px;
@@ -91,6 +98,83 @@
   font-size: 13px;
   color: rgba(255, 255, 255, 0.65);
   pointer-events: none;
+}
+
+/* Bottom meta strip — date / title left, counter + "View entry" right.
+   Shown only when caller passes metas. Frosted glass over the dim backdrop. */
+.lightbox-meta {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 24px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  color: #ffffff;
+  font-family: var(--font-sans);
+}
+
+.lightbox-meta-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.lightbox-meta-date {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.70);
+  letter-spacing: 0.02em;
+}
+
+.lightbox-meta-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.96);
+  /* truncate long titles cleanly */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.lightbox-meta-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.lightbox-meta-counter {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.lightbox-meta-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  cursor: pointer;
+  transition: background var(--ease-micro);
+}
+
+.lightbox-meta-link:hover {
+  background: rgba(255, 255, 255, 0.28);
 }
 
 /* Mobile — tighter padding + smaller nav button offsets */
@@ -104,6 +188,13 @@
   .lightbox-nav {
     opacity: 1;
   }
+  /* Compact meta strip on mobile — drop padding, smaller text */
+  .lightbox-meta {
+    padding: 12px 16px;
+    gap: 10px;
+  }
+  .lightbox-meta-title { font-size: 13px; }
+  .lightbox-meta-link  { height: 30px; padding: 0 10px; }
 }
 
 /* Coarse pointer (touch) — always show nav */

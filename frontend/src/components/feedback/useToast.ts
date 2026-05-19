@@ -1,10 +1,15 @@
-import { useContext } from 'react'
+import { useContext, useMemo } from 'react'
 import { ToastContext } from './ToastProvider'
 
 // ─────────────────────────────────────────────────────────
 // useToast — convenience hook over ToastContext.
 // Returns three shorthand methods + raw `show` for custom calls.
 // Throws if used outside <ToastProvider>.
+//
+// The returned object is memoized on showToast (which is itself
+// stable via useCallback in ToastProvider), so callers can safely
+// use the result as a useEffect/useCallback dependency without
+// triggering infinite re-render loops.
 // ─────────────────────────────────────────────────────────
 
 export function useToast() {
@@ -13,13 +18,15 @@ export function useToast() {
     throw new Error('useToast must be used inside <ToastProvider>')
   }
 
-  return {
+  const { showToast } = ctx
+
+  return useMemo(() => ({
     success: (message: string, durationMs?: number) =>
-      ctx.showToast({ message, variant: 'success', durationMs }),
+      showToast({ message, variant: 'success', durationMs }),
     error: (message: string, durationMs?: number) =>
-      ctx.showToast({ message, variant: 'error', durationMs }),
+      showToast({ message, variant: 'error', durationMs }),
     info: (message: string, durationMs?: number) =>
-      ctx.showToast({ message, variant: 'info', durationMs }),
-    show: ctx.showToast,
-  }
+      showToast({ message, variant: 'info', durationMs }),
+    show: showToast,
+  }), [showToast])
 }

@@ -27,8 +27,16 @@ public class JournalService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private MediaSyncService mediaSyncService;
+
     public JournalEntry createEntry(JournalEntry journalEntry) {
-        return journalRepository.save(journalEntry);
+        JournalEntry saved = journalRepository.save(journalEntry);
+        // Keep the denormalized media library in sync. createEntry is also the
+        // update path (controller passes the existing entity back in), so this
+        // covers both new entries and edits to images.
+        mediaSyncService.syncJournalEntry(saved);
+        return saved;
     }
 
     public List<JournalEntry> getEntriesByUser(User user) {
@@ -51,6 +59,12 @@ public class JournalService {
     }
 
     public void deleteEntry(Integer id) {
+        // Clear media rows for this entry first so the library page can't
+        // surface dangling thumbnails after the source entry is gone.
+        mediaSyncService.clearForSource(
+                com.myjourney.model.Media.SourceType.JOURNAL,
+                id.longValue()
+        );
         journalRepository.deleteById(id);
     }
 

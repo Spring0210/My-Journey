@@ -172,6 +172,27 @@ export interface HeatmapPoint {
   count: number
 }
 
+// ── Media library ────────────────────────────────────────
+
+// A single tile on the /media page. sourceTitle is the journal entry title
+// for JOURNAL items, or a 60-char snippet of post content for SPACE_POST.
+export interface MediaResponse {
+  id: number
+  type: 'IMAGE' | 'VIDEO'
+  url: string
+  sourceType: 'JOURNAL' | 'SPACE_POST'
+  sourceId: number
+  sourceDate: string      // "YYYY-MM-DD"
+  sourceTitle: string
+}
+
+export interface MediaPageResponse {
+  items: MediaResponse[]
+  nextCursor: string | null  // opaque "YYYY-MM-DD_id" — pass back to /api/media
+}
+
+export type MediaTypeFilter = 'ALL' | 'IMAGE' | 'VIDEO'
+
 // ── Generic API error ─────────────────────────────────────
 
 export interface ApiError {

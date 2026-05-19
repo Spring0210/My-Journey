@@ -54,6 +54,9 @@ public class SpacePostService {
     @Autowired
     private CloudStorageService cloudStorageService;
 
+    @Autowired
+    private MediaSyncService mediaSyncService;
+
     // Create a post in a space — members only
     @Transactional
     public PostResponse createPost(Integer spaceId, Integer userId, String content, List<String> imageUrls, List<String> videoUrls) {
@@ -80,6 +83,9 @@ public class SpacePostService {
         post.setImagePathList(imageUrls);
         post.setVideoPathList(videoUrls);
         spacePostRepository.save(post);
+
+        // Sync the denormalized media table for the Media library page
+        mediaSyncService.syncSpacePost(post);
 
         // Notify all other space members about the new post
         notificationService.notifyNewPost(post);
@@ -124,7 +130,11 @@ public class SpacePostService {
         }
 
         post.setContent(content.trim());
-        return toDto(spacePostRepository.save(post), userId);
+        SpacePost saved = spacePostRepository.save(post);
+        // editPost currently only touches content, but sync defensively so any
+        // future media-editing path through this service stays in sync.
+        mediaSyncService.syncSpacePost(saved);
+        return toDto(saved, userId);
     }
 
     // Delete a post — author or space owner only; also deletes images from Cloudinary
@@ -143,6 +153,13 @@ public class SpacePostService {
         // Delete child records first to avoid foreign key constraint violations
         reactionRepository.deleteByPost(post);
         commentRepository.deleteByPost(post);
+
+        // Drop media library rows for this post so the gallery page can't show
+        // dangling thumbnails after deletion.
+        mediaSyncService.clearForSource(
+                com.myjourney.model.Media.SourceType.SPACE_POST,
+                post.getId().longValue()
+        );
 
         // Clean up images and videos from Cloudinary before deleting the post record
         List<String> imageUrls = post.getImagePathList();

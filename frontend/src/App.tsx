@@ -13,6 +13,7 @@ import OAuth2CallbackPage from '@/pages/auth/OAuth2CallbackPage'
 import JournalListPage   from '@/pages/journal/JournalListPage'
 import JournalDetailPage from '@/pages/journal/JournalDetailPage'
 import CalendarPage      from '@/pages/journal/CalendarPage'
+import MediaPage         from '@/pages/media/MediaPage'
 import SpacesListPage      from '@/pages/spaces/SpacesListPage'
 import SpaceDetailPage     from '@/pages/spaces/SpaceDetailPage'
 import NotificationsPage   from '@/pages/notifications/NotificationsPage'
@@ -59,6 +60,7 @@ function AppRoutes() {
         <Route path="/journal"       element={<JournalListPage />} />
         <Route path="/journal/new"   element={<JournalDetailPage />} />
         <Route path="/journal/:id"   element={<JournalDetailPage />} />
+        <Route path="/media"         element={<MediaPage />} />
         <Route path="/calendar"      element={<CalendarPage />} />
         <Route path="/spaces"        element={<SpacesListPage />} />
         <Route path="/spaces/:id"    element={<SpaceDetailPage />} />

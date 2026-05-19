@@ -1,0 +1,264 @@
+/* ─────────────────────────────────────────────────────────
+   Media library page — month-grouped grid + filter chips.
+   All values reference tokens from tokens.css.
+   ───────────────────────────────────────────────────────── */
+
+.media-page {
+  min-height: 100%;
+  background: var(--page-bg);
+  padding-bottom: 60px;
+}
+
+.media-inner {
+  max-width: var(--content-std);
+  margin: 0 auto;
+  padding: 20px 24px 0;
+}
+
+/* ── Filter chips in PageTopBar actions slot ─────────────── */
+.media-chips {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--fill-quaternary);
+}
+
+.media-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 12px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--label-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--ease-micro), color var(--ease-micro);
+}
+
+.media-chip:hover { color: var(--label-primary); }
+
+.media-chip--active {
+  background: var(--surface-card);
+  color: var(--label-primary);
+  /* Subtle ring so the active chip reads in both themes */
+  border-color: var(--separator);
+  box-shadow: var(--shadow-raised);
+}
+
+/* ── Month section ───────────────────────────────────────── */
+.media-month {
+  margin-bottom: 28px;
+}
+
+/* Sticky month header — pinned flush under the PageTopBar.
+   Top = topbar's true bottom (52px + safe-area). Solid background so
+   content scrolling underneath doesn't bleed through. */
+.media-month-title {
+  position: sticky;
+  top: calc(52px + env(safe-area-inset-top));
+  z-index: 10;
+  margin: 0 -24px 12px;   /* full-bleed inside .media-inner */
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--label-secondary);
+  background: var(--page-bg);
+}
+
+/* ── Grid ────────────────────────────────────────────────── */
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+/* ── Tile ────────────────────────────────────────────────── */
+.media-tile {
+  position: relative;
+  display: block;
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  border: none;
+  background: var(--fill-tertiary);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  /* Subtle resting transform so hover feels alive on desktop */
+  transition: transform var(--ease-micro), box-shadow var(--ease-micro);
+}
+
+.media-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-raised);
+}
+
+.media-tile:active { transform: scale(0.98); }
+
+.media-tile-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* If the source image / thumbnail fails to load, hide the broken icon and let
+   the tile's fill-tertiary background show through as a neutral placeholder. */
+.media-tile-img--broken {
+  opacity: 0;
+}
+
+/* Play-icon badge on video tiles — bottom-right frosted disc */
+.media-tile-play {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: rgba(0, 0, 0, 0.55);
+  color: #ffffff;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  pointer-events: none;
+}
+
+/* ── Skeleton tiles (initial load) ───────────────────────── */
+.media-tile-skeleton {
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    100deg,
+    var(--fill-quaternary) 30%,
+    var(--fill-tertiary) 50%,
+    var(--fill-quaternary) 70%
+  );
+  background-size: 200% 100%;
+  animation: media-skeleton-shimmer 1400ms ease-in-out infinite;
+}
+
+@keyframes media-skeleton-shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+/* ── Infinite scroll sentinel + spinner ──────────────────── */
+.media-sentinel {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.media-spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--separator);
+  border-top-color: var(--accent);
+  animation: media-spin 800ms linear infinite;
+}
+
+@keyframes media-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Empty / error states ────────────────────────────────── */
+.media-filter-empty {
+  margin-top: 60px;
+  text-align: center;
+  color: var(--label-tertiary);
+  font-size: 15px;
+}
+
+.media-empty-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.media-error {
+  margin-top: 80px;
+  text-align: center;
+  color: var(--label-secondary);
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ── Buttons (matches existing page button style) ────────── */
+.media-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--label-primary);
+  background: var(--surface-card);
+  border: 1px solid var(--separator);
+  cursor: pointer;
+  transition: background var(--ease-micro);
+}
+
+.media-btn:hover { background: var(--surface-tertiary); }
+
+.media-btn--primary {
+  color: #ffffff;
+  background: var(--accent);
+  border-color: transparent;
+  box-shadow: var(--shadow-btn-accent);
+}
+
+.media-btn--primary:hover { background: var(--accent-hover); }
+
+/* ── Responsive — tablet (≤1068px) ───────────────────────── */
+@media (max-width: 1068px) {
+  /* keep 3 cols on tablets — tiles stay sensibly sized */
+}
+
+/* ── Responsive — mobile (≤768px) ───────────────────────── */
+@media (max-width: 768px) {
+  .media-inner {
+    padding: 16px 16px 0;
+  }
+
+  .media-month-title {
+    margin: 0 -16px 10px;
+    padding: 10px 16px;
+  }
+
+  .media-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  /* PageTopBar gets crowded — make the chip group hug tighter */
+  .media-chips { padding: 2px; gap: 2px; }
+  .media-chip  { height: 26px; padding: 0 10px; font-size: 12px; }
+}
+
+/* ── Responsive — very narrow (≤390px) ───────────────────── */
+@media (max-width: 390px) {
+  /* Chips squeeze further to keep them on one line */
+  .media-chip  { padding: 0 8px; font-size: 11px; }
+}

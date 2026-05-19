@@ -1,4 +1,4 @@
-import { createContext, useCallback, useEffect, useRef, useState } from 'react'
+import { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import Icon from '@/components/ui/Icon'
 import './Feedback.css'
@@ -113,8 +113,12 @@ export default function ToastProvider({ children }: Props) {
     ? 'feedback-toast-stack feedback-toast-stack--mobile'
     : 'feedback-toast-stack feedback-toast-stack--desktop'
 
+  // Memoize the context value so consumers don't re-render on every provider
+  // re-render. showToast is itself stable via useCallback above.
+  const ctxValue = useMemo(() => ({ showToast }), [showToast])
+
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={ctxValue}>
       {children}
       <div className={stackClass} role="region" aria-live="polite" aria-label="Notifications">
         {toasts.map(t => (
