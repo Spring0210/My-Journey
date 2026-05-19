@@ -12,16 +12,18 @@ import './Spaces.css'
 // Allows creating a new space or joining one via invite code.
 // ─────────────────────────────────────────────────────────
 
-// Muted single-hue gradient palette for space covers without an image (cycles by id).
-// Two-stop, lower saturation than vibrant system colors so cards feel calm in a grid.
+// Titanium-inspired deep duo-tone gradients for space covers without an image
+// (cycles by id). Each is a single-hue dark gradient — sophisticated, low
+// saturation, paired with a frosted-glass disc behind the initial letter
+// for Apple Pro / iPhone Titanium feel.
 const COVER_GRADIENTS = [
-  'linear-gradient(135deg, #5b8def 0%, #3d6ad6 100%)',   // sky blue
-  'linear-gradient(135deg, #9b87c4 0%, #6e5ba0 100%)',   // soft violet
-  'linear-gradient(135deg, #d49a6a 0%, #a77544 100%)',   // warm sand
-  'linear-gradient(135deg, #6fa893 0%, #4d8a73 100%)',   // sage green
-  'linear-gradient(135deg, #c47788 0%, #95586a 100%)',   // dusty rose
-  'linear-gradient(135deg, #7995a8 0%, #54718a 100%)',   // dusty teal
-  'linear-gradient(135deg, #a08e7a 0%, #75644f 100%)',   // taupe
+  'linear-gradient(135deg, #1e2a3f 0%, #3a4e6f 100%)',   // midnight navy
+  'linear-gradient(135deg, #2d2a3f 0%, #4d4565 100%)',   // deep purple
+  'linear-gradient(135deg, #3a2f2a 0%, #5d4a40 100%)',   // espresso
+  'linear-gradient(135deg, #2a3a35 0%, #4a5e55 100%)',   // forest sage
+  'linear-gradient(135deg, #3a2f3f 0%, #5d4a5e 100%)',   // dusk mauve
+  'linear-gradient(135deg, #2f3a3f 0%, #4f5e65 100%)',   // pacific gray
+  'linear-gradient(135deg, #3a3530 0%, #5d5448 100%)',   // graphite warm
 ]
 
 export default function SpacesListPage() {

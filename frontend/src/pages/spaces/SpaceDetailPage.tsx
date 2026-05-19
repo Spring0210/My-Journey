@@ -24,15 +24,15 @@ import './SpaceDetail.css'
 // Emoji reactions available on every post
 const EMOJIS = ['❤️', '👍', '😂', '🐮', '🥲', '😭', '😮']
 
-// Same muted gradient palette as SpacesListPage (cycles by space id)
+// Titanium-inspired palette — shared with SpacesListPage (cycles by space id)
 const COVER_GRADIENTS = [
-  'linear-gradient(135deg, #5b8def 0%, #3d6ad6 100%)',
-  'linear-gradient(135deg, #9b87c4 0%, #6e5ba0 100%)',
-  'linear-gradient(135deg, #d49a6a 0%, #a77544 100%)',
-  'linear-gradient(135deg, #6fa893 0%, #4d8a73 100%)',
-  'linear-gradient(135deg, #c47788 0%, #95586a 100%)',
-  'linear-gradient(135deg, #7995a8 0%, #54718a 100%)',
-  'linear-gradient(135deg, #a08e7a 0%, #75644f 100%)',
+  'linear-gradient(135deg, #1e2a3f 0%, #3a4e6f 100%)',
+  'linear-gradient(135deg, #2d2a3f 0%, #4d4565 100%)',
+  'linear-gradient(135deg, #3a2f2a 0%, #5d4a40 100%)',
+  'linear-gradient(135deg, #2a3a35 0%, #4a5e55 100%)',
+  'linear-gradient(135deg, #3a2f3f 0%, #5d4a5e 100%)',
+  'linear-gradient(135deg, #2f3a3f 0%, #4f5e65 100%)',
+  'linear-gradient(135deg, #3a3530 0%, #5d5448 100%)',
 ]
 
 // Format ISO timestamp to a human-readable relative string
