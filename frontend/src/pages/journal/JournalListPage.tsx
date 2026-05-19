@@ -7,6 +7,10 @@ import {
 import type { JournalEntry } from '@/types/api'
 import Icon from '@/components/ui/Icon'
 import PageTopBar from '@/components/ui/PageTopBar'
+import { Skeleton } from '@/components/ui/Skeleton'
+import EmptyState from '@/components/ui/EmptyState'
+import EmptyJournal from '@/components/ui/illustrations/EmptyJournal'
+import EmptySearchResult from '@/components/ui/illustrations/EmptySearchResult'
 import './JournalList.css'
 
 // ─────────────────────────────────────────────────────────
@@ -324,11 +328,36 @@ export default function JournalListPage() {
 
         {/* Entry grid */}
         {loading ? (
-          <div className="jlist-empty">Loading...</div>
-        ) : entries.length === 0 ? (
-          <div className="jlist-empty">
-            {isSearchMode ? 'No entries found.' : 'No entries yet. Write your first one!'}
+          <div className="jlist-grid">
+            {Array.from({ length: 9 }).map((_, i) => (
+              <div key={i} className="jlist-card" style={{ pointerEvents: 'none' }}>
+                <Skeleton width={90} height={13} />
+                <Skeleton width="80%" height={17} style={{ marginTop: 8 }} />
+                <Skeleton width="100%" height={13} style={{ marginTop: 6 }} />
+                <Skeleton width="65%" height={13} style={{ marginTop: 4 }} />
+              </div>
+            ))}
           </div>
+        ) : entries.length === 0 ? (
+          isSearchMode ? (
+            <EmptyState
+              illustration={<EmptySearchResult />}
+              title="No entries found"
+              subtitle="Try a different keyword, date, or search query."
+            />
+          ) : (
+            <EmptyState
+              illustration={<EmptyJournal />}
+              title="No entries yet"
+              subtitle="Start your journal with a single thought."
+              action={
+                <NavLink to="/journal/new" className="jlist-btn jlist-btn--primary">
+                  <Icon name="plus" size={15} />
+                  Write your first entry
+                </NavLink>
+              }
+            />
+          )
         ) : (
           <div className="jlist-grid">
             {entries.map(entry => (

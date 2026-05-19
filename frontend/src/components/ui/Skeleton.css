@@ -1,0 +1,39 @@
+/* ─────────────────────────────────────────────────────────
+   Skeleton — shimmer placeholder used while content loads.
+   ───────────────────────────────────────────────────────── */
+
+.skeleton {
+  display: inline-block;
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-secondary);
+  vertical-align: middle;
+}
+
+/* Shimmer overlay sweeps across the block */
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--surface-tertiary) 50%,
+    transparent 100%
+  );
+  animation: skeleton-shimmer 1.2s linear infinite;
+  transform: translateX(-100%);
+}
+
+@keyframes skeleton-shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%);  }
+}
+
+/* Respect reduced motion preference — keep the dim block, drop the sweep */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+    display: none;
+  }
+}

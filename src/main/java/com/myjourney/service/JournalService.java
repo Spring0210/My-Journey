@@ -1,5 +1,6 @@
 package com.myjourney.service;
 
+import com.myjourney.dto.HeatmapPoint;
 import com.myjourney.dto.PageResponse;
 import com.myjourney.model.JournalEntry;
 import com.myjourney.model.User;
@@ -56,6 +57,13 @@ public class JournalService {
     // Fetch entries within a month range for AI recap
     public List<JournalEntry> getEntriesByUserAndDateRange(User user, LocalDate start, LocalDate end) {
         return journalRepository.findByUserAndEntryDateBetweenOrderByEntryDateAsc(user, start, end);
+    }
+
+    // Aggregated entry counts per day within a year — feeds the year heatmap.
+    public List<HeatmapPoint> getHeatmap(User user, int year) {
+        LocalDate start = LocalDate.of(year, 1, 1);
+        LocalDate end   = LocalDate.of(year, 12, 31);
+        return journalRepository.countEntriesPerDay(user, start, end);
     }
 
     // AI search: OR across keywords using DB LIKE — deduped by id, sorted newest first

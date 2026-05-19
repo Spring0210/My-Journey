@@ -1,0 +1,112 @@
+/* ─────────────────────────────────────────────────────────
+   Lightbox — full-screen image viewer styles.
+   ───────────────────────────────────────────────────────── */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.90);
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  animation: lightbox-in 200ms ease;
+  /* Prevent the page underneath from scrolling while open */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+@keyframes lightbox-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.lightbox-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+}
+
+/* Top-right close button */
+.lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--ease-micro);
+}
+
+.lightbox-close:hover { background: rgba(255, 255, 255, 0.25); }
+
+/* Prev / Next nav buttons */
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--ease-micro), opacity var(--ease-micro);
+  /* Hidden until hovered on desktop pointer devices; always shown on coarse pointers */
+  opacity: 0.5;
+}
+
+.lightbox-nav:hover {
+  background: rgba(255, 255, 255, 0.25);
+  opacity: 1;
+}
+
+.lightbox:hover .lightbox-nav {
+  opacity: 1;
+}
+
+.lightbox-nav--prev { left: 16px; }
+.lightbox-nav--next { right: 16px; }
+
+/* Image counter e.g. "2 / 5" — bottom center */
+.lightbox-counter {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.65);
+  pointer-events: none;
+}
+
+/* Mobile — tighter padding + smaller nav button offsets */
+@media (max-width: 768px) {
+  .lightbox {
+    padding: 20px 8px;
+  }
+  .lightbox-nav--prev { left: 8px; }
+  .lightbox-nav--next { right: 8px; }
+  /* Always visible on touch devices (no hover) */
+  .lightbox-nav {
+    opacity: 1;
+  }
+}
+
+/* Coarse pointer (touch) — always show nav */
+@media (pointer: coarse) {
+  .lightbox-nav { opacity: 1; }
+}

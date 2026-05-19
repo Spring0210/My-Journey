@@ -5,6 +5,9 @@ import { useAuth } from '@/context/AuthContext'
 import type { JournalEntry } from '@/types/api'
 import Icon from '@/components/ui/Icon'
 import PageTopBar from '@/components/ui/PageTopBar'
+import { Skeleton } from '@/components/ui/Skeleton'
+import EmptyState from '@/components/ui/EmptyState'
+import EmptyJournal from '@/components/ui/illustrations/EmptyJournal'
 import './Dashboard.css'
 
 // ─────────────────────────────────────────────────────────
@@ -68,7 +71,7 @@ export default function DashboardPage() {
 
       <div className="dash-inner">
         {loading ? (
-          <div className="dash-loading">Loading...</div>
+          <DashboardSkeleton />
         ) : (
           <>
             {/* Greeting */}
@@ -198,24 +201,75 @@ export default function DashboardPage() {
 
             {/* First-time empty state */}
             {entries.length === 0 && (
-              <div className="dash-empty">
-                <div className="dash-empty-icon">
-                  <Icon name="journal" size={32} />
-                </div>
-                <p className="dash-empty-title">Your journal is empty</p>
-                <p className="dash-empty-sub">Write your first entry to get started.</p>
-                <button
-                  className="dash-empty-btn"
-                  onClick={() => navigate('/journal/new')}
-                >
-                  <Icon name="edit" size={15} />
-                  Write first entry
-                </button>
-              </div>
+              <EmptyState
+                illustration={<EmptyJournal />}
+                title="Your journal is empty"
+                subtitle="Write your first entry to get started."
+                action={
+                  <button
+                    className="dash-empty-btn"
+                    onClick={() => navigate('/journal/new')}
+                  >
+                    <Icon name="edit" size={15} />
+                    Write first entry
+                  </button>
+                }
+              />
             )}
           </>
         )}
       </div>
     </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────
+// DashboardSkeleton — placeholder shapes that mirror the
+// loaded layout: greeting, today card, explore grid, recent rows.
+// ─────────────────────────────────────────────────────────
+function DashboardSkeleton() {
+  return (
+    <>
+      {/* Greeting */}
+      <div className="dash-greeting">
+        <Skeleton width={260} height={28} radius={8} />
+        <Skeleton width={180} height={15} style={{ marginTop: 4 }} />
+      </div>
+
+      {/* Today card */}
+      <Skeleton width="100%" height={120} radius={22} />
+
+      {/* Explore section */}
+      <div className="dash-explore">
+        <Skeleton width={80} height={13} />
+        <div className="dash-explore-grid" style={{ marginTop: 12 }}>
+          <Skeleton height={100} radius={18} />
+          <Skeleton height={100} radius={18} />
+        </div>
+      </div>
+
+      {/* Recent rows */}
+      <div className="dash-recent">
+        <div className="dash-recent-header">
+          <Skeleton width={70} height={13} />
+          <Skeleton width={60} height={13} />
+        </div>
+        <div className="dash-entry-list" style={{ marginTop: 12 }}>
+          {[0, 1, 2, 3].map(i => (
+            <div
+              key={i}
+              className={`dash-entry-row${i < 3 ? ' dash-entry-row--border' : ''}`}
+              style={{ pointerEvents: 'none' }}
+            >
+              <Skeleton width={48} height={56} radius={12} />
+              <div style={{ flex: 1, marginLeft: 12 }}>
+                <Skeleton width="70%" height={15} />
+                <Skeleton width="90%" height={13} style={{ marginTop: 6 }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
   )
 }

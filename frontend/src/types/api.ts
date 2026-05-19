@@ -162,7 +162,14 @@ export interface SearchResponse {
 export interface CalendarEvent {
   id: number
   title: string
-  start: string  // ISO date string "YYYY-MM-DD"
+  start: string     // ISO date string "YYYY-MM-DD"
+  hasImage: boolean // true if the entry has at least one photo
+}
+
+// One day of the year heatmap — count of entries on that date.
+export interface HeatmapPoint {
+  date: string   // ISO "YYYY-MM-DD"
+  count: number
 }
 
 // ── Generic API error ─────────────────────────────────────

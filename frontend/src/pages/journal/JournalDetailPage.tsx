@@ -1,10 +1,13 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { getEntry, createEntry, editEntry, deleteEntry, deleteImage } from '@/api/journal'
 import type { JournalEntry } from '@/types/api'
 import Icon from '@/components/ui/Icon'
 import PageTopBar from '@/components/ui/PageTopBar'
+import Lightbox from '@/components/ui/Lightbox'
+import { useToast, useConfirm } from '@/components/feedback'
+import { Skeleton } from '@/components/ui/Skeleton'
 import './JournalDetail.css'
 
 // ─────────────────────────────────────────────────────────
@@ -25,6 +28,8 @@ export default function JournalDetailPage() {
   const isNew = !id   // /journal/new has no :id param, so id is undefined when creating
   const { userId } = useAuth()
   const navigate = useNavigate()
+  const toast = useToast()
+  const confirm = useConfirm()
   const [searchParams] = useSearchParams()
 
   // ── Form state ────────────────────────────────────────
@@ -36,13 +41,30 @@ export default function JournalDetailPage() {
   // ── Photo state ───────────────────────────────────────
   const [existingPhotos, setExistingPhotos] = useState<string[]>([])
   const [pendingFiles, setPendingFiles]     = useState<File[]>([])
-  const [lightboxSrc, setLightboxSrc]       = useState<string | null>(null)
+  const [lightboxIndex, setLightboxIndex]   = useState<number | null>(null)
+
+  // Build blob URLs for pending file previews; revoke them when the file list changes
+  const pendingUrls = useMemo(
+    () => pendingFiles.map(f => URL.createObjectURL(f)),
+    [pendingFiles],
+  )
+  useEffect(() => {
+    return () => { pendingUrls.forEach(URL.revokeObjectURL) }
+  }, [pendingUrls])
+
+  // Combined image list — used by both the photo grid and the lightbox
+  const allImages = useMemo(
+    () => [...existingPhotos, ...pendingUrls],
+    [existingPhotos, pendingUrls],
+  )
 
   // ── UI state ──────────────────────────────────────────
   const [saveStatus, setSaveStatus]   = useState('')
   const [saving, setSaving]           = useState(false)
   const [menuOpen, setMenuOpen]       = useState(false)
   const [loadError, setLoadError]     = useState('')
+  // Show skeleton while the entry is being fetched (edit mode only — create starts empty)
+  const [loading, setLoading]         = useState(!isNew)
   const menuRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -65,6 +87,7 @@ export default function JournalDetailPage() {
         setExistingPhotos(entry.imagePathList ?? [])
       })
       .catch(() => setLoadError('Failed to load entry.'))
+      .finally(() => setLoading(false))
   }, [id, isNew]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Close menu on outside click
@@ -96,12 +119,12 @@ export default function JournalDetailPage() {
 
   // Delete an already-saved photo (immediate API call)
   async function handleDeleteExisting(url: string) {
-    if (!window.confirm('Delete this photo?')) return
+    if (!await confirm({ title: 'Delete photo?', confirmLabel: 'Delete', danger: true })) return
     try {
       await deleteImage(Number(id), url)
       setExistingPhotos(prev => prev.filter(u => u !== url))
     } catch {
-      alert('Failed to delete photo.')
+      toast.error('Failed to delete photo.')
     }
   }
 
@@ -112,8 +135,8 @@ export default function JournalDetailPage() {
 
   // ── Save / Create ─────────────────────────────────────
   async function handleSave() {
-    if (!title.trim()) { alert('Title is required.'); return }
-    if (!entryDate)    { alert('Date is required.');  return }
+    if (!title.trim()) { toast.error('Title is required.'); return }
+    if (!entryDate)    { toast.error('Date is required.');  return }
     if (!userId) return
 
     setSaving(true)
@@ -130,7 +153,7 @@ export default function JournalDetailPage() {
         setTimeout(() => setSaveStatus(''), 2500)
       }
     } catch (e) {
-      alert(`Save failed: ${e instanceof Error ? e.message : 'Please try again.'}`)
+      toast.error(`Save failed: ${e instanceof Error ? e.message : 'Please try again.'}`)
     } finally {
       setSaving(false)
     }
@@ -139,12 +162,18 @@ export default function JournalDetailPage() {
   // ── Delete entry ──────────────────────────────────────
   async function handleDelete() {
     setMenuOpen(false)
-    if (!window.confirm('Delete this entry? This cannot be undone.')) return
+    const ok = await confirm({
+      title: 'Delete entry?',
+      message: 'This cannot be undone.',
+      confirmLabel: 'Delete',
+      danger: true,
+    })
+    if (!ok) return
     try {
       await deleteEntry(Number(id))
       navigate('/journal', { replace: true })
     } catch {
-      alert('Delete failed.')
+      toast.error('Delete failed.')
     }
   }
 
@@ -156,6 +185,35 @@ export default function JournalDetailPage() {
         <PageTopBar title="Entry" backTo="/journal" />
         <div className="jdetail-inner">
           <p style={{ color: 'var(--label-secondary)', fontSize: 15 }}>{loadError}</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="jdetail-page">
+        <PageTopBar title="Entry" backTo="/journal" />
+        <div className="jdetail-inner">
+          <div className="jdetail-card">
+            <Skeleton width="60%" height={28} radius={8} />
+            <Skeleton width={200} height={15} style={{ marginTop: 12 }} />
+            <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <Skeleton width="100%" height={14} />
+              <Skeleton width="96%" height={14} />
+              <Skeleton width="92%" height={14} />
+              <Skeleton width="88%" height={14} />
+              <Skeleton width="60%" height={14} />
+            </div>
+          </div>
+          <div className="jdetail-photos-card">
+            <Skeleton width={80} height={13} />
+            <div className="jdetail-photo-grid" style={{ marginTop: 12 }}>
+              {[0, 1, 2].map(i => (
+                <Skeleton key={i} height={100} radius={8} />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -253,9 +311,9 @@ export default function JournalDetailPage() {
 
           <div className="jdetail-photo-grid">
             {/* Existing saved photos */}
-            {existingPhotos.map(url => (
+            {existingPhotos.map((url, i) => (
               <div key={url} className="jdetail-photo-cell">
-                <img src={url} alt="Entry photo" onClick={() => setLightboxSrc(url)} />
+                <img src={url} alt="Entry photo" onClick={() => setLightboxIndex(i)} />
                 <button
                   className="jdetail-photo-del"
                   onClick={() => handleDeleteExisting(url)}
@@ -267,9 +325,13 @@ export default function JournalDetailPage() {
             ))}
 
             {/* Pending (not yet saved) photos */}
-            {pendingFiles.map((file, i) => (
+            {pendingFiles.map((_, i) => (
               <div key={i} className="jdetail-photo-cell jdetail-photo-cell--pending">
-                <img src={URL.createObjectURL(file)} alt="Preview" />
+                <img
+                  src={pendingUrls[i]}
+                  alt="Preview"
+                  onClick={() => setLightboxIndex(existingPhotos.length + i)}
+                />
                 <button
                   className="jdetail-photo-del"
                   onClick={() => handleRemovePending(i)}
@@ -304,15 +366,14 @@ export default function JournalDetailPage() {
         </div>
       </div>
 
-      {/* Lightbox */}
-      {lightboxSrc && (
-        <div className="jdetail-lightbox" onClick={() => setLightboxSrc(null)}>
-          <button className="jdetail-lightbox-close" onClick={() => setLightboxSrc(null)} aria-label="Close">
-            <Icon name="close" size={20} />
-          </button>
-          <img src={lightboxSrc} alt="Full size" onClick={e => e.stopPropagation()} />
-        </div>
-      )}
+      {/* Lightbox — shared with SpaceDetailPage */}
+      <Lightbox
+        images={allImages}
+        index={lightboxIndex ?? 0}
+        open={lightboxIndex !== null}
+        onClose={() => setLightboxIndex(null)}
+        onIndexChange={setLightboxIndex}
+      />
     </div>
   )
 }

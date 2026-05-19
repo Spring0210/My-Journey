@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import { apiRequest } from '@/api/client'
 import { AppLayoutContext } from '@/context/AppLayoutContext'
+import { ToastProvider, ConfirmProvider } from '@/components/feedback'
 
 // ─────────────────────────────────────────────────────────
 // AppLayout — shell for all authenticated pages.
@@ -39,37 +40,41 @@ export default function AppLayout() {
   useEffect(() => { fetchNotifCount() }, [])
 
   return (
-    <AppLayoutContext.Provider value={{
-      openSidebar: () => setSidebarOpen(true),
-      refreshNotifCount: fetchNotifCount,
-    }}>
-      <div style={styles.shell}>
-        {/* Desktop sidebar — always visible */}
-        {!isMobile && (
-          <Sidebar
-            isOpen={false}
-            onClose={() => {}}
-            notificationCount={notifCount}
-          />
-        )}
+    <ToastProvider>
+      <ConfirmProvider>
+        <AppLayoutContext.Provider value={{
+          openSidebar: () => setSidebarOpen(true),
+          refreshNotifCount: fetchNotifCount,
+        }}>
+          <div style={styles.shell}>
+            {/* Desktop sidebar — always visible */}
+            {!isMobile && (
+              <Sidebar
+                isOpen={false}
+                onClose={() => {}}
+                notificationCount={notifCount}
+              />
+            )}
 
-        {/* Mobile drawer overlay */}
-        {isMobile && (
-          <Sidebar
-            isOpen={sidebarOpen}
-            onClose={() => setSidebarOpen(false)}
-            notificationCount={notifCount}
-          />
-        )}
+            {/* Mobile drawer overlay */}
+            {isMobile && (
+              <Sidebar
+                isOpen={sidebarOpen}
+                onClose={() => setSidebarOpen(false)}
+                notificationCount={notifCount}
+              />
+            )}
 
-        {/* Main content area — PageTopBar inside each page handles the top bar */}
-        <div style={styles.main}>
-          <main style={styles.content}>
-            <Outlet />
-          </main>
-        </div>
-      </div>
-    </AppLayoutContext.Provider>
+            {/* Main content area — PageTopBar inside each page handles the top bar */}
+            <div style={styles.main}>
+              <main style={styles.content}>
+                <Outlet />
+              </main>
+            </div>
+          </div>
+        </AppLayoutContext.Provider>
+      </ConfirmProvider>
+    </ToastProvider>
   )
 }
 

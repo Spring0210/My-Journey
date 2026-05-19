@@ -1,0 +1,173 @@
+/* ─────────────────────────────────────────────────────────
+   YearHeatmap — GitHub-style contribution grid.
+   ───────────────────────────────────────────────────────── */
+
+.heatmap {
+  font-family: var(--font-sans);
+  color: var(--label-primary);
+}
+
+/* Header: title + year navigation */
+.heatmap-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.heatmap-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--label-primary);
+}
+
+.heatmap-year-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.heatmap-year-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--separator);
+  background: var(--surface-secondary);
+  color: var(--label-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--ease-micro);
+}
+
+.heatmap-year-btn:hover { background: var(--surface-tertiary); }
+.heatmap-year-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.heatmap-year-label {
+  font-size: 15px;
+  font-weight: 500;
+  min-width: 56px;
+  text-align: center;
+}
+
+/* Horizontal scroll wrapper — grid is too wide for most mobile widths */
+.heatmap-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+
+.heatmap-grid-wrap {
+  display: inline-flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Month label row — positioned above the grid */
+.heatmap-month-row {
+  position: relative;
+  height: 18px;
+  margin-left: 28px;   /* match weekday-col width */
+  font-size: 11px;
+  color: var(--label-tertiary);
+}
+
+.heatmap-month-label {
+  position: absolute;
+  top: 0;
+  white-space: nowrap;
+}
+
+/* Grid body — weekday rail + columns */
+.heatmap-body {
+  display: flex;
+  gap: 4px;
+}
+
+.heatmap-weekday-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 24px;
+  font-size: 10px;
+  color: var(--label-tertiary);
+}
+
+.heatmap-weekday-label {
+  height: 12px;
+  line-height: 12px;
+}
+
+.heatmap-grid {
+  display: flex;
+  gap: 2px;
+}
+
+.heatmap-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.heatmap-cell {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--surface-secondary);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: outline var(--ease-micro);
+}
+
+.heatmap-cell:hover {
+  outline: 1px solid var(--label-tertiary);
+  outline-offset: 1px;
+}
+
+/* Level color scale — softer in light mode, brighter in dark */
+.heatmap-cell--level-0 { background: var(--surface-secondary); cursor: default; }
+.heatmap-cell--level-1 { background: color-mix(in srgb, var(--accent) 25%, var(--surface-secondary)); }
+.heatmap-cell--level-2 { background: color-mix(in srgb, var(--accent) 45%, var(--surface-secondary)); }
+.heatmap-cell--level-3 { background: color-mix(in srgb, var(--accent) 70%, transparent); }
+.heatmap-cell--level-4 { background: var(--accent); }
+
+/* Disable hover outline on empty cells */
+.heatmap-cell--level-0:hover {
+  outline: none;
+}
+
+/* Legend at the bottom */
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--label-tertiary);
+  justify-content: flex-end;
+}
+
+.heatmap-legend-label {
+  margin: 0 4px;
+}
+
+.heatmap-legend .heatmap-cell {
+  cursor: default;
+}
+
+.heatmap-legend .heatmap-cell:hover {
+  outline: none;
+}
+
+/* Mobile — slightly tighter cells */
+@media (max-width: 480px) {
+  .heatmap-cell { width: 10px; height: 10px; }
+}

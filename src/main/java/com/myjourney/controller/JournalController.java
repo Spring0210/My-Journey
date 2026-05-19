@@ -1,6 +1,7 @@
 package com.myjourney.controller;
 
 import com.myjourney.dto.CalendarEventResponse;
+import com.myjourney.dto.HeatmapPoint;
 import com.myjourney.dto.PageResponse;
 import com.myjourney.model.JournalEntry;
 import com.myjourney.model.User;
@@ -150,6 +151,22 @@ public class JournalController {
         return ResponseEntity.ok(journalService.searchEntries(userId, keyword, date));
     }
 
+    // GET /api/entries/heatmap — entry counts per day for the year heatmap view.
+    // Only days with at least one entry are returned; the frontend fills zeros.
+    @GetMapping("/heatmap")
+    public ResponseEntity<List<HeatmapPoint>> getHeatmap(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestParam Integer userId,
+            @RequestParam int year
+    ) {
+        Integer jwtUserId = jwtUtil.extractUserIdFromHeader(authHeader);
+        if (jwtUserId == null || !jwtUserId.equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+        User user = userRepository.findById(userId).orElseThrow();
+        return ResponseEntity.ok(journalService.getHeatmap(user, year));
+    }
+
     @GetMapping("/calendar/{userId}")
     public ResponseEntity<List<CalendarEventResponse>> getCalendarEntries(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
@@ -162,7 +179,12 @@ public class JournalController {
 
         User user = userRepository.findById(userId).orElseThrow();
         List<CalendarEventResponse> events = journalService.getEntriesByUser(user).stream()
-                .map(e -> new CalendarEventResponse(e.getId(), e.getTitle(), e.getEntryDate().toString()))
+                .map(e -> new CalendarEventResponse(
+                        e.getId(),
+                        e.getTitle(),
+                        e.getEntryDate().toString(),
+                        !e.getImagePathList().isEmpty()
+                ))
                 .toList();
 
         return ResponseEntity.ok(events);

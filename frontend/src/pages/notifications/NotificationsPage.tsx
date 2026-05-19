@@ -9,7 +9,11 @@ import {
 import type { Notification } from '@/types/api'
 import Icon from '@/components/ui/Icon'
 import PageTopBar from '@/components/ui/PageTopBar'
+import { Skeleton, SkeletonCircle } from '@/components/ui/Skeleton'
+import EmptyState from '@/components/ui/EmptyState'
+import EmptyNotifications from '@/components/ui/illustrations/EmptyNotifications'
 import { useAppLayout } from '@/context/AppLayoutContext'
+import { useConfirm } from '@/components/feedback'
 import './Notifications.css'
 
 // ─────────────────────────────────────────────────────────
@@ -39,6 +43,7 @@ function formatTime(iso: string): string {
 export default function NotificationsPage() {
   const navigate = useNavigate()
   const { refreshNotifCount } = useAppLayout()
+  const confirm = useConfirm()
 
   const [notifs, setNotifs]   = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
@@ -79,7 +84,12 @@ export default function NotificationsPage() {
 
   // ── Delete all notifications ───────────────────────────
   async function handleDeleteAll() {
-    if (!confirm('Clear all notifications?')) return
+    const ok = await confirm({
+      title: 'Clear all notifications?',
+      confirmLabel: 'Clear all',
+      danger: true,
+    })
+    if (!ok) return
     try {
       await deleteAllNotifications()
       setNotifs([])
@@ -131,15 +141,26 @@ export default function NotificationsPage() {
 
         {/* Notification list */}
         {loading ? (
-          <div className="notif-empty">Loading...</div>
+          <ul className="notif-list">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <li key={i} className="notif-item" style={{ pointerEvents: 'none' }}>
+                <div className="notif-row" style={{ pointerEvents: 'none' }}>
+                  <span className="notif-dot" style={{ visibility: 'hidden' }} />
+                  <SkeletonCircle size={40} />
+                  <div className="notif-body">
+                    <Skeleton width="70%" height={14} />
+                    <Skeleton width={60} height={12} style={{ marginTop: 6 }} />
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
         ) : notifs.length === 0 ? (
-          <div className="notif-empty">
-            <div className="notif-empty-icon">
-              <Icon name="bell" size={36} />
-            </div>
-            <p className="notif-empty-title">No notifications</p>
-            <p className="notif-empty-sub">You're all caught up.</p>
-          </div>
+          <EmptyState
+            illustration={<EmptyNotifications />}
+            title="No notifications"
+            subtitle="You're all caught up."
+          />
         ) : (
           <ul className="notif-list">
             {notifs.map(notif => (

@@ -5,6 +5,7 @@ import { apiRequest } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
 import Icon from '@/components/ui/Icon'
 import PageTopBar from '@/components/ui/PageTopBar'
+import { useToast } from '@/components/feedback'
 import './Profile.css'
 
 // ─────────────────────────────────────────────────────────
@@ -31,6 +32,7 @@ const STRENGTH_CLASS = ['', 'prof-pw-bar--weak', 'prof-pw-bar--fair', 'prof-pw-b
 export default function ProfilePage() {
   const { userId, username, avatarUrl, updateUsername, updateAvatar, logout } = useAuth()
   const navigate = useNavigate()
+  const toast = useToast()
 
   // ── Avatar state ──────────────────────────────────────
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
@@ -89,8 +91,7 @@ export default function ProfilePage() {
       updateUsername(result.username)
       setEditingUsername(false)
     } catch (err) {
-      // Show error directly in the row (no toast needed)
-      alert(err instanceof Error ? err.message : 'Failed to save username.')
+      toast.error(err instanceof Error ? err.message : 'Failed to save username.')
     } finally {
       setNameSaving(false)
     }

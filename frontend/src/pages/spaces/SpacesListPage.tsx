@@ -4,6 +4,7 @@ import { getMySpaces, createSpace, joinSpace } from '@/api/spaces'
 import type { SpaceSummaryResponse } from '@/types/api'
 import Icon from '@/components/ui/Icon'
 import PageTopBar from '@/components/ui/PageTopBar'
+import { Skeleton } from '@/components/ui/Skeleton'
 import './Spaces.css'
 
 // ─────────────────────────────────────────────────────────
@@ -110,7 +111,18 @@ export default function SpacesListPage() {
 
         {/* Content */}
         {loading ? (
-          <div className="slist-empty">Loading...</div>
+          <div className="slist-grid">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="slist-card" style={{ pointerEvents: 'none' }}>
+                <Skeleton width="100%" height={140} radius={0} />
+                <div className="slist-card-body">
+                  <Skeleton width="65%" height={17} />
+                  <Skeleton width="90%" height={13} style={{ marginTop: 8 }} />
+                  <Skeleton width="40%" height={12} style={{ marginTop: 8 }} />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : spaces.length === 0 ? (
           <div className="slist-empty">
             <p>You haven't joined any spaces yet.</p>

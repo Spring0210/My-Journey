@@ -351,46 +351,6 @@
   background: color-mix(in srgb, var(--accent) 5%, transparent);
 }
 
-/* ── Lightbox ────────────────────────────────────────────── */
-.jdetail-lightbox {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.90);
-  z-index: 300;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.jdetail-lightbox img {
-  max-width: 100%;
-  max-height: 90vh;
-  border-radius: var(--radius-sm);
-  object-fit: contain;
-}
-
-.jdetail-lightbox-close {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-full);
-  background: var(--fill-secondary);
-  color: #ffffff;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background var(--ease-micro);
-}
-
-.jdetail-lightbox-close:hover {
-  background: var(--fill-primary);
-}
-
 /* ── Responsive — mobile (≤768px) ───────────────────────── */
 @media (max-width: 768px) {
   .jdetail-page {

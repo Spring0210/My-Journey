@@ -1,0 +1,270 @@
+/* ─────────────────────────────────────────────────────────
+   Feedback — Toast + ConfirmDialog styles.
+   All values reference tokens from tokens.css.
+   ───────────────────────────────────────────────────────── */
+
+
+/* ══════════════════════════════════════════════════════════
+   TOAST STACK
+   Desktop: bottom-right.  Mobile: top.
+   ══════════════════════════════════════════════════════════ */
+
+.feedback-toast-stack {
+  position: fixed;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column-reverse;  /* newest at the bottom on desktop */
+  gap: 8px;
+  pointer-events: none;            /* let clicks pass through gaps */
+}
+
+/* Desktop: anchor to bottom-right */
+.feedback-toast-stack--desktop {
+  right: 24px;
+  bottom: 24px;
+  max-width: calc(100vw - 48px);
+}
+
+/* Mobile: anchor to top-center, newest on top */
+.feedback-toast-stack--mobile {
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  flex-direction: column;
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   SINGLE TOAST CARD
+   ══════════════════════════════════════════════════════════ */
+
+.feedback-toast {
+  pointer-events: auto;            /* card itself is clickable */
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 280px;
+  max-width: 380px;
+  padding: 12px 14px;
+  background: var(--surface-card);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-elevated);
+  font-family: var(--font-sans);
+  color: var(--label-primary);
+
+  /* Enter animation */
+  animation: feedback-toast-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Exiting toast — fade + slight slide */
+.feedback-toast--leaving {
+  animation: feedback-toast-out 180ms ease-in forwards;
+}
+
+@keyframes feedback-toast-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+
+@keyframes feedback-toast-out {
+  from { opacity: 1; transform: translateY(0)    scale(1);    }
+  to   { opacity: 0; transform: translateY(-4px) scale(0.98); }
+}
+
+/* Variant icon color — icon only, not whole background */
+.feedback-toast-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+.feedback-toast--success .feedback-toast-icon { color: var(--system-green); }
+.feedback-toast--error   .feedback-toast-icon { color: var(--system-red); }
+.feedback-toast--info    .feedback-toast-icon { color: var(--accent); }
+
+.feedback-toast-body {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  word-wrap: break-word;
+}
+
+.feedback-toast-close {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--label-tertiary);
+  transition: background var(--ease-micro), color var(--ease-micro);
+}
+.feedback-toast-close:hover {
+  background: var(--fill-tertiary);
+  color: var(--label-primary);
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   CONFIRM DIALOG
+   ══════════════════════════════════════════════════════════ */
+
+.feedback-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;                /* above toasts */
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+
+  animation: feedback-overlay-in 180ms ease-out;
+}
+
+.feedback-confirm-overlay--leaving {
+  animation: feedback-overlay-out 160ms ease-in forwards;
+}
+
+@keyframes feedback-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes feedback-overlay-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+.feedback-confirm {
+  background: var(--surface-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--separator);
+  box-shadow: var(--shadow-floating);
+  width: 100%;
+  max-width: 380px;
+  padding: 24px;
+
+  animation: feedback-confirm-in 220ms var(--ease-spring);
+}
+
+.feedback-confirm--leaving {
+  animation: feedback-confirm-out 160ms ease-in forwards;
+}
+
+@keyframes feedback-confirm-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1);    }
+}
+
+@keyframes feedback-confirm-out {
+  from { opacity: 1; transform: scale(1);    }
+  to   { opacity: 0; transform: scale(0.96); }
+}
+
+.feedback-confirm-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--label-primary);
+  margin-bottom: 8px;
+}
+
+.feedback-confirm-message {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--label-secondary);
+  margin-bottom: 20px;
+}
+
+.feedback-confirm-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.feedback-confirm-btn {
+  height: 36px;
+  padding: 0 16px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  transition: background var(--ease-micro), opacity var(--ease-micro);
+  border: 1px solid transparent;
+}
+
+/* Cancel — neutral ghost */
+.feedback-confirm-btn--cancel {
+  background: var(--surface-secondary);
+  color: var(--label-primary);
+  border-color: var(--separator);
+}
+.feedback-confirm-btn--cancel:hover {
+  background: var(--surface-tertiary);
+}
+
+/* Confirm — accent */
+.feedback-confirm-btn--confirm {
+  background: var(--accent);
+  color: #ffffff;
+}
+.feedback-confirm-btn--confirm:hover {
+  background: var(--accent-hover);
+}
+
+/* Confirm — destructive red */
+.feedback-confirm-btn--danger {
+  background: var(--system-red);
+  color: #ffffff;
+}
+.feedback-confirm-btn--danger:hover {
+  opacity: 0.9;
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   MOBILE — ConfirmDialog slides up from bottom (bottom sheet)
+   ══════════════════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .feedback-confirm-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .feedback-confirm {
+    max-width: none;
+    width: 100%;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    border-bottom: none;
+    padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+    animation: feedback-confirm-sheet-in 240ms var(--ease-spring);
+  }
+
+  .feedback-confirm--leaving {
+    animation: feedback-confirm-sheet-out 180ms ease-in forwards;
+  }
+
+  @keyframes feedback-confirm-sheet-in {
+    from { opacity: 0; transform: translateY(100%); }
+    to   { opacity: 1; transform: translateY(0);    }
+  }
+
+  @keyframes feedback-confirm-sheet-out {
+    from { opacity: 1; transform: translateY(0);    }
+    to   { opacity: 0; transform: translateY(100%); }
+  }
+
+  .feedback-confirm-actions {
+    flex-direction: column-reverse;  /* primary action on top on mobile */
+  }
+  .feedback-confirm-btn {
+    width: 100%;
+    height: 44px;                    /* hit target */
+  }
+}

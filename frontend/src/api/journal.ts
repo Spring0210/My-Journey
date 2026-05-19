@@ -4,7 +4,7 @@
 // ─────────────────────────────────────────────────────────
 
 import { apiRequest, apiRequestWithFile } from './client'
-import type { JournalEntry, PageResponse, CalendarEvent } from '@/types/api'
+import type { JournalEntry, PageResponse, CalendarEvent, HeatmapPoint } from '@/types/api'
 
 // GET /api/entries/:userId?page=&size=
 export function getEntries(
@@ -80,6 +80,12 @@ export function searchEntries(
 // GET /api/entries/calendar/:userId
 export function getCalendarEntries(userId: number): Promise<CalendarEvent[]> {
   return apiRequest(`/entries/calendar/${userId}`)
+}
+
+// GET /api/entries/heatmap?userId=&year=
+// Returns one HeatmapPoint per day that has at least one entry.
+export function getHeatmap(userId: number, year: number): Promise<HeatmapPoint[]> {
+  return apiRequest(`/entries/heatmap?userId=${userId}&year=${year}`)
 }
 
 // POST /api/entries/ai-search

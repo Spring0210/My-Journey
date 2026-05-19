@@ -10,6 +10,9 @@ import type { SpaceDetailResponse, PostResponse, MemberInfo } from '@/types/api'
 import { useAuth } from '@/context/AuthContext'
 import Icon from '@/components/ui/Icon'
 import PageTopBar from '@/components/ui/PageTopBar'
+import Lightbox from '@/components/ui/Lightbox'
+import { useToast, useConfirm } from '@/components/feedback'
+import { Skeleton, SkeletonCircle } from '@/components/ui/Skeleton'
 import './SpaceDetail.css'
 
 // ─────────────────────────────────────────────────────────
@@ -50,6 +53,8 @@ export default function SpaceDetailPage() {
   const spaceId  = Number(id)
   const navigate = useNavigate()
   const { userId, username } = useAuth()
+  const toast = useToast()
+  const confirm = useConfirm()
 
   // ── Space & posts ─────────────────────────────────────
   const [space, setSpace]           = useState<SpaceDetailResponse | null>(null)
@@ -149,7 +154,7 @@ export default function SpaceDetailPage() {
       setVideo(null)
       setImagePreviews([])
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Failed to post.')
+      toast.error(e instanceof Error ? e.message : 'Failed to post.')
     } finally {
       setPosting(false)
     }
@@ -195,7 +200,7 @@ export default function SpaceDetailPage() {
       setPosts(prev => prev.map(p => p.id === postId ? updated : p))
       setEditingPostId(null)
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Failed to save edit.')
+      toast.error(e instanceof Error ? e.message : 'Failed to save edit.')
     } finally {
       setSavingEdit(false)
     }
@@ -203,12 +208,12 @@ export default function SpaceDetailPage() {
 
   // ── Delete post ───────────────────────────────────────
   async function handleDeletePost(postId: number) {
-    if (!confirm('Delete this post?')) return
+    if (!await confirm({ title: 'Delete post?', confirmLabel: 'Delete', danger: true })) return
     try {
       await deletePost(spaceId, postId)
       setPosts(prev => prev.filter(p => p.id !== postId))
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Failed to delete post.')
+      toast.error(e instanceof Error ? e.message : 'Failed to delete post.')
     }
   }
 
@@ -275,7 +280,7 @@ export default function SpaceDetailPage() {
       ))
       setCommentInputs(prev => ({ ...prev, [postId]: '' }))
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Failed to add comment.')
+      toast.error(e instanceof Error ? e.message : 'Failed to add comment.')
     } finally {
       setAddingComment(null)
     }
@@ -289,7 +294,7 @@ export default function SpaceDetailPage() {
         : p
       ))
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Failed to delete comment.')
+      toast.error(e instanceof Error ? e.message : 'Failed to delete comment.')
     }
   }
 
@@ -366,7 +371,12 @@ export default function SpaceDetailPage() {
 
   // ── Kick member ───────────────────────────────────────
   async function handleKick(member: MemberInfo) {
-    if (!confirm(`Remove ${member.username} from this space?`)) return
+    if (!await confirm({
+      title: 'Remove member?',
+      message: `${member.username} will be removed from this space.`,
+      confirmLabel: 'Remove',
+      danger: true,
+    })) return
     try {
       await kickMember(spaceId, member.userId)
       setSpace(prev => prev
@@ -374,34 +384,44 @@ export default function SpaceDetailPage() {
         : prev
       )
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Failed to remove member.')
+      toast.error(e instanceof Error ? e.message : 'Failed to remove member.')
     }
   }
 
   // ── Leave space ───────────────────────────────────────
   async function handleLeave() {
-    if (!confirm('Leave this space? You can rejoin with an invite code.')) return
+    if (!await confirm({
+      title: 'Leave space?',
+      message: 'You can rejoin later with an invite code.',
+      confirmLabel: 'Leave',
+      danger: true,
+    })) return
     try {
       await leaveSpace(spaceId)
       navigate('/spaces')
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Failed to leave space.')
+      toast.error(e instanceof Error ? e.message : 'Failed to leave space.')
     }
   }
 
   // ── Delete space ──────────────────────────────────────
   async function handleDelete() {
-    if (!confirm('Delete this space permanently? All posts will be lost.')) return
+    if (!await confirm({
+      title: 'Delete space?',
+      message: 'All posts will be permanently lost. This cannot be undone.',
+      confirmLabel: 'Delete',
+      danger: true,
+    })) return
     try {
       await deleteSpace(spaceId)
       navigate('/spaces')
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Failed to delete space.')
+      toast.error(e instanceof Error ? e.message : 'Failed to delete space.')
     }
   }
 
   if (loading) {
-    return <div className="sdetail-loading">Loading...</div>
+    return <SpaceDetailSkeleton />
   }
 
   if (!space) return null
@@ -870,47 +890,14 @@ export default function SpaceDetailPage() {
         </div>
       )}
 
-      {/* ── Image Lightbox ──────────────────────────────── */}
-      {lightboxOpen && (
-        <div className="sdetail-lightbox" onClick={() => setLightboxOpen(false)}>
-          <button
-            className="sdetail-lightbox-close"
-            onClick={() => setLightboxOpen(false)}
-            aria-label="Close"
-          >
-            <Icon name="close" size={20} />
-          </button>
-          {lightboxIndex > 0 && (
-            <button
-              className="sdetail-lightbox-nav sdetail-lightbox-nav--prev"
-              onClick={e => { e.stopPropagation(); setLightboxIndex(i => i - 1) }}
-              aria-label="Previous image"
-            >
-              <Icon name="chevron-left" size={24} />
-            </button>
-          )}
-          <img
-            src={lightboxImages[lightboxIndex]}
-            alt=""
-            className="sdetail-lightbox-img"
-            onClick={e => e.stopPropagation()}
-          />
-          {lightboxIndex < lightboxImages.length - 1 && (
-            <button
-              className="sdetail-lightbox-nav sdetail-lightbox-nav--next"
-              onClick={e => { e.stopPropagation(); setLightboxIndex(i => i + 1) }}
-              aria-label="Next image"
-            >
-              <Icon name="chevron-right" size={24} />
-            </button>
-          )}
-          {lightboxImages.length > 1 && (
-            <p className="sdetail-lightbox-counter">
-              {lightboxIndex + 1} / {lightboxImages.length}
-            </p>
-          )}
-        </div>
-      )}
+      {/* ── Image Lightbox — shared with JournalDetailPage ── */}
+      <Lightbox
+        images={lightboxImages}
+        index={lightboxIndex}
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        onIndexChange={setLightboxIndex}
+      />
     </div>
   )
 }
@@ -1212,5 +1199,48 @@ function PostCard({
         </div>
       )}
     </article>
+  )
+}
+
+// ─────────────────────────────────────────────────────────
+// SpaceDetailSkeleton — placeholder for space cover, info,
+// and three posts while data loads.
+// ─────────────────────────────────────────────────────────
+function SpaceDetailSkeleton() {
+  return (
+    <div className="sdetail-page">
+      {/* Cover band */}
+      <Skeleton width="100%" height={180} radius={0} />
+
+      <div className="sdetail-inner">
+        {/* Title + meta */}
+        <div style={{ padding: '20px 0' }}>
+          <Skeleton width="40%" height={24} />
+          <Skeleton width="60%" height={14} style={{ marginTop: 8 }} />
+        </div>
+
+        {/* Three post placeholders */}
+        {[0, 1, 2].map(i => (
+          <div
+            key={i}
+            className="sdetail-post"
+            style={{ pointerEvents: 'none', marginBottom: 12 }}
+          >
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: 16 }}>
+              <SkeletonCircle size={40} />
+              <div style={{ flex: 1 }}>
+                <Skeleton width={100} height={13} />
+                <Skeleton width={60} height={11} style={{ marginTop: 6 }} />
+              </div>
+            </div>
+            <div style={{ padding: '0 16px 16px' }}>
+              <Skeleton width="100%" height={14} />
+              <Skeleton width="92%" height={14} style={{ marginTop: 6 }} />
+              <Skeleton width="68%" height={14} style={{ marginTop: 6 }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
