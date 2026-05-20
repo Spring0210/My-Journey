@@ -3,26 +3,26 @@ import { useParams, useNavigate } from 'react-router-dom'
 import {
   getSpaceDetail, updateSpace, uploadSpaceCover,
   leaveSpace, deleteSpace, kickMember, generateAiSummary,
-  getPosts, createPost, editPost, deletePost,
-  addReaction, removeReaction, addComment, deleteComment,
 } from '@/api/spaces'
-import type { SpaceDetailResponse, PostResponse, MemberInfo } from '@/types/api'
+import { listDocuments } from '@/api/documents'
+import type {
+  SpaceDetailResponse, MemberInfo, DocumentSummaryResponse,
+} from '@/types/api'
 import { useAuth } from '@/context/AuthContext'
 import Icon from '@/components/ui/Icon'
 import PageTopBar from '@/components/ui/PageTopBar'
-import Lightbox from '@/components/ui/Lightbox'
 import { useToast, useConfirm } from '@/components/feedback'
 import { Skeleton, SkeletonCircle } from '@/components/ui/Skeleton'
 import './SpaceDetail.css'
 
 // ─────────────────────────────────────────────────────────
-// SpaceDetailPage — full space feed, composer, and sidebar.
-// Desktop: two-column (feed + sidebar).
-// Mobile: single column, sidebar sections stacked below feed.
+// SpaceDetailPage — space landing page after the team-KB pivot.
+// Feed column now lists Documents (unified model) instead of
+// the legacy SpacePost timeline. Sidebar (info / members / AI
+// summary) and the edit-space modal are unchanged.
+// Desktop: two-column (doc list + sidebar).
+// Mobile: single column, info opens in a bottom sheet.
 // ─────────────────────────────────────────────────────────
-
-// Emoji reactions available on every post
-const EMOJIS = ['❤️', '👍', '😂', '🐮', '🥲', '😭', '😮']
 
 // Apple-tinted cover variants — shared palette with SpacesListPage.
 // Tint classes (.slist-cover-N) are defined in Spaces.css and adapt to theme.
@@ -45,43 +45,17 @@ export default function SpaceDetailPage() {
   const { id }   = useParams<{ id: string }>()
   const spaceId  = Number(id)
   const navigate = useNavigate()
-  const { userId, username } = useAuth()
+  const { username } = useAuth()
   const toast = useToast()
   const confirm = useConfirm()
 
-  // ── Space & posts ─────────────────────────────────────
+  // ── Space & documents ─────────────────────────────────
   const [space, setSpace]           = useState<SpaceDetailResponse | null>(null)
-  const [posts, setPosts]           = useState<PostResponse[]>([])
+  const [docs, setDocs]             = useState<DocumentSummaryResponse[]>([])
   const [page, setPage]             = useState(0)
   const [totalPages, setTotalPages] = useState(0)
   const [loading, setLoading]       = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
-
-  // ── Composer ──────────────────────────────────────────
-  const [content, setContent]           = useState('')
-  const [images, setImages]             = useState<File[]>([])
-  const [video, setVideo]               = useState<File | null>(null)
-  const [imagePreviews, setImagePreviews] = useState<string[]>([])
-  const [posting, setPosting]           = useState(false)
-  const imageInputRef = useRef<HTMLInputElement>(null)
-  const videoInputRef = useRef<HTMLInputElement>(null)
-
-  // ── Post editing ──────────────────────────────────────
-  const [editingPostId, setEditingPostId] = useState<number | null>(null)
-  const [editContent, setEditContent]     = useState('')
-  const [savingEdit, setSavingEdit]       = useState(false)
-
-  // ── Comments ──────────────────────────────────────────
-  // Set of post ids with comment section expanded
-  const [expandedComments, setExpandedComments] = useState<Set<number>>(new Set())
-  // Per-post comment input text
-  const [commentInputs, setCommentInputs] = useState<Record<number, string>>({})
-  const [addingComment, setAddingComment] = useState<number | null>(null)
-
-  // ── Lightbox ──────────────────────────────────────────
-  const [lightboxImages, setLightboxImages] = useState<string[]>([])
-  const [lightboxIndex, setLightboxIndex]   = useState(0)
-  const [lightboxOpen, setLightboxOpen]     = useState(false)
 
   // ── Sidebar modals ────────────────────────────────────
   const [showEditSpace, setShowEditSpace]   = useState(false)
@@ -105,197 +79,34 @@ export default function SpaceDetailPage() {
 
   const isOwner = space?.ownerUsername === username
 
-  // ── Load space detail + first page of posts ───────────
+  // ── Load space detail + first page of docs ────────────
   useEffect(() => {
     setLoading(true)
     Promise.all([
       getSpaceDetail(spaceId),
-      getPosts(spaceId, 0),
+      listDocuments(spaceId, { page: 0 }),
     ])
-      .then(([spaceData, postsData]) => {
+      .then(([spaceData, docsPage]) => {
         setSpace(spaceData)
-        setPosts(postsData.content)
-        setTotalPages(postsData.totalPages)
-        setPage(postsData.currentPage)
+        setDocs(docsPage.content)
+        setTotalPages(docsPage.totalPages)
+        setPage(docsPage.currentPage)
       })
       .catch(() => navigate('/spaces'))
       .finally(() => setLoading(false))
   }, [spaceId])
 
-  // ── Load next page of posts ───────────────────────────
+  // ── Load next page of docs ────────────────────────────
   async function loadMore() {
     if (loadingMore || page + 1 >= totalPages) return
     setLoadingMore(true)
     try {
-      const data = await getPosts(spaceId, page + 1)
-      setPosts(prev => [...prev, ...data.content])
+      const data = await listDocuments(spaceId, { page: page + 1 })
+      setDocs(prev => [...prev, ...data.content])
       setPage(data.currentPage)
     } finally {
       setLoadingMore(false)
     }
-  }
-
-  // ── Create post ───────────────────────────────────────
-  async function handlePost() {
-    if (!content.trim() && images.length === 0 && !video) return
-    setPosting(true)
-    try {
-      const newPost = await createPost(spaceId, content, images, video)
-      setPosts(prev => [newPost, ...prev])
-      setContent('')
-      setImages([])
-      setVideo(null)
-      setImagePreviews([])
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Failed to post.')
-    } finally {
-      setPosting(false)
-    }
-  }
-
-  // Select images from file input
-  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? [])
-    if (!files.length) return
-    setImages(prev => [...prev, ...files])
-    files.forEach(f => {
-      const url = URL.createObjectURL(f)
-      setImagePreviews(prev => [...prev, url])
-    })
-    // Reset input so same files can be re-selected if removed
-    e.target.value = ''
-  }
-
-  function removeImage(index: number) {
-    setImages(prev => prev.filter((_, i) => i !== index))
-    setImagePreviews(prev => {
-      URL.revokeObjectURL(prev[index])
-      return prev.filter((_, i) => i !== index)
-    })
-  }
-
-  function handleVideoSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0] ?? null
-    setVideo(file)
-    e.target.value = ''
-  }
-
-  // ── Edit post ─────────────────────────────────────────
-  function startEdit(post: PostResponse) {
-    setEditingPostId(post.id)
-    setEditContent(post.content ?? '')
-  }
-
-  async function saveEdit(postId: number) {
-    setSavingEdit(true)
-    try {
-      const updated = await editPost(spaceId, postId, editContent)
-      setPosts(prev => prev.map(p => p.id === postId ? updated : p))
-      setEditingPostId(null)
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Failed to save edit.')
-    } finally {
-      setSavingEdit(false)
-    }
-  }
-
-  // ── Delete post ───────────────────────────────────────
-  async function handleDeletePost(postId: number) {
-    if (!await confirm({ title: 'Delete post?', confirmLabel: 'Delete', danger: true })) return
-    try {
-      await deletePost(spaceId, postId)
-      setPosts(prev => prev.filter(p => p.id !== postId))
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Failed to delete post.')
-    }
-  }
-
-  // ── Reactions (optimistic update) ─────────────────────
-  async function handleReaction(post: PostResponse, emoji: string) {
-    const current = post.reactions.myReaction
-    // Optimistically update UI before API call
-    const newCounts = { ...post.reactions.counts }
-
-    if (current === emoji) {
-      // Toggle off: remove the reaction
-      newCounts[emoji] = (newCounts[emoji] ?? 1) - 1
-      if (newCounts[emoji] <= 0) delete newCounts[emoji]
-      setPosts(prev => prev.map(p => p.id === post.id
-        ? { ...p, reactions: { counts: newCounts, myReaction: null } }
-        : p
-      ))
-      try {
-        const result = await removeReaction(spaceId, post.id)
-        setPosts(prev => prev.map(p => p.id === post.id ? { ...p, reactions: result } : p))
-      } catch {
-        // Revert on failure
-        setPosts(prev => prev.map(p => p.id === post.id ? { ...p, reactions: post.reactions } : p))
-      }
-    } else {
-      // Switch or add reaction
-      if (current) {
-        // Remove old
-        newCounts[current] = (newCounts[current] ?? 1) - 1
-        if (newCounts[current] <= 0) delete newCounts[current]
-      }
-      newCounts[emoji] = (newCounts[emoji] ?? 0) + 1
-      setPosts(prev => prev.map(p => p.id === post.id
-        ? { ...p, reactions: { counts: newCounts, myReaction: emoji } }
-        : p
-      ))
-      try {
-        const result = await addReaction(spaceId, post.id, emoji)
-        setPosts(prev => prev.map(p => p.id === post.id ? { ...p, reactions: result } : p))
-      } catch {
-        setPosts(prev => prev.map(p => p.id === post.id ? { ...p, reactions: post.reactions } : p))
-      }
-    }
-  }
-
-  // ── Comments ──────────────────────────────────────────
-  function toggleComments(postId: number) {
-    setExpandedComments(prev => {
-      const next = new Set(prev)
-      next.has(postId) ? next.delete(postId) : next.add(postId)
-      return next
-    })
-  }
-
-  async function handleAddComment(postId: number) {
-    const text = (commentInputs[postId] ?? '').trim()
-    if (!text) return
-    setAddingComment(postId)
-    try {
-      const comment = await addComment(spaceId, postId, text)
-      setPosts(prev => prev.map(p => p.id === postId
-        ? { ...p, comments: [...p.comments, comment] }
-        : p
-      ))
-      setCommentInputs(prev => ({ ...prev, [postId]: '' }))
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Failed to add comment.')
-    } finally {
-      setAddingComment(null)
-    }
-  }
-
-  async function handleDeleteComment(postId: number, commentId: number) {
-    try {
-      await deleteComment(spaceId, postId, commentId)
-      setPosts(prev => prev.map(p => p.id === postId
-        ? { ...p, comments: p.comments.filter(c => c.id !== commentId) }
-        : p
-      ))
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Failed to delete comment.')
-    }
-  }
-
-  // ── Lightbox ──────────────────────────────────────────
-  function openLightbox(images: string[], index: number) {
-    setLightboxImages(images)
-    setLightboxIndex(index)
-    setLightboxOpen(true)
   }
 
   // ── Edit space ────────────────────────────────────────
@@ -401,7 +212,7 @@ export default function SpaceDetailPage() {
   async function handleDelete() {
     if (!await confirm({
       title: 'Delete space?',
-      message: 'All posts will be permanently lost. This cannot be undone.',
+      message: 'All documents will be permanently lost. This cannot be undone.',
       confirmLabel: 'Delete',
       danger: true,
     })) return
@@ -464,136 +275,32 @@ export default function SpaceDetailPage() {
       <div className="sdetail-inner">
         <div className="sdetail-body">
 
-          {/* ── Feed column ─────────────────────────────── */}
+          {/* ── Feed column — document list ─────────────── */}
           <div className="sdetail-feed">
 
-            {/* Post composer */}
-            <div className="sdetail-composer">
-              <textarea
-                className="sdetail-composer-input"
-                placeholder="Share a moment with this space..."
-                value={content}
-                onChange={e => setContent(e.target.value)}
-                rows={3}
-              />
+            <button
+              className="sdetail-newdoc-btn"
+              onClick={() => navigate(`/spaces/${spaceId}/documents/new`)}
+            >
+              <Icon name="plus" size={16} />
+              New document
+            </button>
 
-              {/* Image preview strip */}
-              {imagePreviews.length > 0 && (
-                <div className="sdetail-preview-strip">
-                  {imagePreviews.map((url, i) => (
-                    <div key={i} className="sdetail-preview-item">
-                      <img src={url} alt="" className="sdetail-preview-thumb" />
-                      <button
-                        className="sdetail-preview-remove"
-                        onClick={() => removeImage(i)}
-                        aria-label="Remove image"
-                      >
-                        <Icon name="close" size={10} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Video preview */}
-              {video && (
-                <div className="sdetail-video-preview">
-                  <Icon name="video" size={14} />
-                  <span className="sdetail-video-name">{video.name}</span>
-                  <button
-                    className="sdetail-preview-remove sdetail-preview-remove--inline"
-                    onClick={() => setVideo(null)}
-                    aria-label="Remove video"
-                  >
-                    <Icon name="close" size={12} />
-                  </button>
-                </div>
-              )}
-
-              {/* Composer action bar */}
-              <div className="sdetail-composer-bar">
-                <div className="sdetail-composer-media">
-                  {/* Image picker */}
-                  <input
-                    ref={imageInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    style={{ display: 'none' }}
-                    onChange={handleImageSelect}
-                  />
-                  <button
-                    className="sdetail-media-btn"
-                    onClick={() => imageInputRef.current?.click()}
-                    title="Add images"
-                  >
-                    <Icon name="image" size={16} />
-                    Photo
-                  </button>
-
-                  {/* Video picker — only if no video selected yet */}
-                  {!video && (
-                    <>
-                      <input
-                        ref={videoInputRef}
-                        type="file"
-                        accept="video/*"
-                        style={{ display: 'none' }}
-                        onChange={handleVideoSelect}
-                      />
-                      <button
-                        className="sdetail-media-btn"
-                        onClick={() => videoInputRef.current?.click()}
-                        title="Add video"
-                      >
-                        <Icon name="video" size={16} />
-                        Video
-                      </button>
-                    </>
-                  )}
-                </div>
-
-                <button
-                  className="sdetail-post-btn"
-                  onClick={handlePost}
-                  disabled={posting || (!content.trim() && images.length === 0 && !video)}
-                >
-                  {posting ? 'Posting...' : 'Post'}
-                </button>
+            {docs.length === 0 ? (
+              <div className="sdetail-empty">
+                No documents yet. Create the first one!
               </div>
-            </div>
-
-            {/* Posts list */}
-            {posts.length === 0 ? (
-              <div className="sdetail-empty">No posts yet. Be the first to share!</div>
             ) : (
-              posts.map(post => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  currentUserId={userId}
-                  isOwner={isOwner}
-                  editingPostId={editingPostId}
-                  editContent={editContent}
-                  savingEdit={savingEdit}
-                  expandedComments={expandedComments}
-                  commentInputs={commentInputs}
-                  addingComment={addingComment}
-                  onEdit={startEdit}
-                  onCancelEdit={() => setEditingPostId(null)}
-                  onSaveEdit={saveEdit}
-                  onEditContentChange={setEditContent}
-                  onDelete={handleDeletePost}
-                  onReaction={handleReaction}
-                  onToggleComments={toggleComments}
-                  onCommentInputChange={(postId, text) =>
-                    setCommentInputs(prev => ({ ...prev, [postId]: text }))
-                  }
-                  onAddComment={handleAddComment}
-                  onDeleteComment={handleDeleteComment}
-                  onOpenLightbox={openLightbox}
-                />
-              ))
+              <div className="sdetail-doc-list">
+                {docs.map(doc => (
+                  <DocCard
+                    key={doc.id}
+                    doc={doc}
+                    spaceId={spaceId}
+                    onOpen={() => navigate(`/spaces/${spaceId}/documents/${doc.id}`)}
+                  />
+                ))}
+              </div>
             )}
 
             {/* Load more button */}
@@ -603,7 +310,7 @@ export default function SpaceDetailPage() {
                 onClick={loadMore}
                 disabled={loadingMore}
               >
-                {loadingMore ? 'Loading...' : 'Load more posts'}
+                {loadingMore ? 'Loading...' : 'Load more documents'}
               </button>
             )}
           </div>
@@ -884,354 +591,106 @@ export default function SpaceDetailPage() {
           </div>
         </div>
       )}
-
-      {/* ── Image Lightbox — shared with JournalDetailPage ── */}
-      <Lightbox
-        images={lightboxImages}
-        index={lightboxIndex}
-        open={lightboxOpen}
-        onClose={() => setLightboxOpen(false)}
-        onIndexChange={setLightboxIndex}
-      />
     </div>
   )
 }
 
 // ─────────────────────────────────────────────────────────
-// PostCard — extracted to keep SpaceDetailPage readable.
-// Renders a single post with reactions, editing, and comments.
+// DocCard — single document tile in the feed.
+// Clicking (or Enter/Space) opens the doc detail page.
 // ─────────────────────────────────────────────────────────
 
-interface PostCardProps {
-  post: PostResponse
-  currentUserId: number | null
-  isOwner: boolean
-  editingPostId: number | null
-  editContent: string
-  savingEdit: boolean
-  expandedComments: Set<number>
-  commentInputs: Record<number, string>
-  addingComment: number | null
-  onEdit: (post: PostResponse) => void
-  onCancelEdit: () => void
-  onSaveEdit: (postId: number) => void
-  onEditContentChange: (text: string) => void
-  onDelete: (postId: number) => void
-  onReaction: (post: PostResponse, emoji: string) => void
-  onToggleComments: (postId: number) => void
-  onCommentInputChange: (postId: number, text: string) => void
-  onAddComment: (postId: number) => void
-  onDeleteComment: (postId: number, commentId: number) => void
-  onOpenLightbox: (images: string[], index: number) => void
+interface DocCardProps {
+  doc: DocumentSummaryResponse
+  spaceId: number
+  onOpen: () => void
 }
 
-function PostCard({
-  post, currentUserId, isOwner,
-  editingPostId, editContent, savingEdit,
-  expandedComments, commentInputs, addingComment,
-  onEdit, onCancelEdit, onSaveEdit, onEditContentChange,
-  onDelete, onReaction, onToggleComments,
-  onCommentInputChange, onAddComment, onDeleteComment,
-  onOpenLightbox,
-}: PostCardProps) {
-  const isEditing    = editingPostId === post.id
-  const commentsOpen = expandedComments.has(post.id)
-  const canModify    = post.authorId === currentUserId || isOwner
-
-  // Local emoji picker state — one picker per card
-  const [showPicker, setShowPicker] = useState(false)
-  const pickerRef = useRef<HTMLDivElement>(null)
-
-  // Close picker when clicking outside the picker wrapper
-  useEffect(() => {
-    if (!showPicker) return
-    function onMouseDown(e: MouseEvent) {
-      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
-        setShowPicker(false)
-      }
-    }
-    document.addEventListener('mousedown', onMouseDown)
-    return () => document.removeEventListener('mousedown', onMouseDown)
-  }, [showPicker])
-
-  // Post action menu (...) state
-  const [showMenu, setShowMenu] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    if (!showMenu) return
-    function onMouseDown(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setShowMenu(false)
-      }
-    }
-    document.addEventListener('mousedown', onMouseDown)
-    return () => document.removeEventListener('mousedown', onMouseDown)
-  }, [showMenu])
-
-  // Build image grid layout class
-  const imgCount = post.images.length
-  const imgClass = imgCount === 1 ? 'sdetail-img-grid--1'
-                 : imgCount === 2 ? 'sdetail-img-grid--2'
-                 : imgCount === 3 ? 'sdetail-img-grid--3'
-                 : 'sdetail-img-grid--4'
-
+function DocCard({ doc, onOpen }: DocCardProps) {
+  // Snippet hits 200 chars in the backend; show "…" if it likely got cut off.
+  const truncated = doc.snippet.length >= 200
   return (
-    <article className="sdetail-post">
-      {/* Post header: avatar + author + time + actions */}
-      <div className="sdetail-post-header">
-        <div className="sdetail-post-avatar">
-          {post.authorAvatar
-            ? <img src={post.authorAvatar} alt="" />
-            : post.authorUsername.charAt(0).toUpperCase()
+    <article
+      className="sdetail-doc-card"
+      onClick={onOpen}
+      role="link"
+      tabIndex={0}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onOpen()
+        }
+      }}
+    >
+      <div className="sdetail-doc-head">
+        {doc.docType === 'JOURNAL' && (
+          <span className="sdetail-doc-badge">
+            <Icon name="calendar" size={11} />
+            {doc.entryDate ?? 'Journal'}
+          </span>
+        )}
+        <h3 className="sdetail-doc-title">{doc.title}</h3>
+      </div>
+
+      {doc.snippet.trim() && (
+        <p className="sdetail-doc-snippet">
+          {doc.snippet}{truncated ? '…' : ''}
+        </p>
+      )}
+
+      {doc.tags.length > 0 && (
+        <div className="sdetail-doc-tags">
+          {doc.tags.slice(0, 6).map(t => (
+            <span key={t} className="sdetail-doc-tag">#{t}</span>
+          ))}
+          {doc.tags.length > 6 && (
+            <span className="sdetail-doc-tag sdetail-doc-tag--more">
+              +{doc.tags.length - 6}
+            </span>
+          )}
+        </div>
+      )}
+
+      <div className="sdetail-doc-meta">
+        <div className="sdetail-doc-avatar">
+          {doc.authorAvatar
+            ? <img src={doc.authorAvatar} alt="" />
+            : doc.authorUsername.charAt(0).toUpperCase()
           }
         </div>
-        <div className="sdetail-post-meta">
-          <span className="sdetail-post-author">@{post.authorUsername}</span>
-          <span className="sdetail-post-time">{formatTime(post.createdAt)}</span>
-          {post.updatedAt !== post.createdAt && (
-            <span className="sdetail-post-edited">(edited)</span>
-          )}
-        </div>
-        {canModify && !isEditing && (
-          /* Single ... button with dropdown menu */
-          <div className="sdetail-post-menu-wrap" ref={menuRef}>
-            <button
-              className="sdetail-post-action-btn"
-              onClick={() => setShowMenu(v => !v)}
-              aria-label="More options"
-            >
-              <Icon name="more" size={16} strokeWidth={2} />
-            </button>
-            {showMenu && (
-              <div className="sdetail-post-menu">
-                {post.authorId === currentUserId && (
-                  <button
-                    className="sdetail-post-menu-item"
-                    onClick={() => { onEdit(post); setShowMenu(false) }}
-                  >
-                    <Icon name="edit" size={14} />
-                    Edit
-                  </button>
-                )}
-                <button
-                  className="sdetail-post-menu-item sdetail-post-menu-item--danger"
-                  onClick={() => { onDelete(post.id); setShowMenu(false) }}
-                >
-                  <Icon name="trash" size={14} />
-                  Delete
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+        <span className="sdetail-doc-author">@{doc.authorUsername}</span>
+        <span className="sdetail-doc-dot">·</span>
+        <span className="sdetail-doc-time">{formatTime(doc.createdAt)}</span>
       </div>
-
-      {/* Post body — edit mode or read mode */}
-      {isEditing ? (
-        <div className="sdetail-edit-area">
-          <textarea
-            className="sdetail-edit-input"
-            value={editContent}
-            onChange={e => onEditContentChange(e.target.value)}
-            autoFocus
-            rows={3}
-          />
-          <div className="sdetail-edit-btns">
-            <button className="sdetail-btn" onClick={onCancelEdit}>Cancel</button>
-            <button
-              className="sdetail-btn sdetail-btn--accent"
-              onClick={() => onSaveEdit(post.id)}
-              disabled={savingEdit}
-            >
-              {savingEdit ? 'Saving...' : 'Save'}
-            </button>
-          </div>
-        </div>
-      ) : (
-        <>
-          {post.content && (
-            <p className="sdetail-post-content">{post.content}</p>
-          )}
-
-          {/* Image grid */}
-          {post.images.length > 0 && (
-            <div className={`sdetail-img-grid ${imgClass}`}>
-              {post.images.slice(0, 4).map((url, i) => {
-                const isLast  = i === 3
-                const hasMore = post.images.length > 4
-                return (
-                  <button
-                    key={i}
-                    className="sdetail-img-cell"
-                    onClick={() => onOpenLightbox(post.images, i)}
-                    aria-label={`View image ${i + 1}`}
-                  >
-                    <img src={url} alt="" />
-                    {isLast && hasMore && (
-                      <div className="sdetail-img-more">+{post.images.length - 4}</div>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-          )}
-
-          {/* Video */}
-          {post.videos.length > 0 && (
-            <video
-              className="sdetail-post-video"
-              src={post.videos[0]}
-              controls
-              playsInline
-            />
-          )}
-        </>
-      )}
-
-      {/* Reaction bar: only show emoji pills that have been used, plus picker trigger */}
-      <div className="sdetail-reactions">
-        {EMOJIS.filter(emoji =>
-          (post.reactions.counts[emoji] ?? 0) > 0 || post.reactions.myReaction === emoji
-        ).map(emoji => {
-          const count = post.reactions.counts[emoji] ?? 0
-          const active = post.reactions.myReaction === emoji
-          return (
-            <button
-              key={emoji}
-              className={`sdetail-reaction-btn${active ? ' sdetail-reaction-btn--active' : ''}`}
-              onClick={() => onReaction(post, emoji)}
-            >
-              <span>{emoji}</span>
-              {count > 0 && <span className="sdetail-reaction-count">{count}</span>}
-            </button>
-          )
-        })}
-        {/* Emoji picker trigger */}
-        <div className="sdetail-emoji-picker-wrap" ref={pickerRef}>
-          <button
-            className="sdetail-add-reaction-btn"
-            onClick={() => setShowPicker(v => !v)}
-            aria-label="Add reaction"
-          >
-            <Icon name="smile" size={14} />
-          </button>
-          {showPicker && (
-            <div className="sdetail-emoji-picker">
-              {EMOJIS.map(emoji => (
-                <button
-                  key={emoji}
-                  className="sdetail-emoji-option"
-                  onClick={() => { onReaction(post, emoji); setShowPicker(false) }}
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Comments toggle */}
-      <button
-        className="sdetail-comments-toggle"
-        onClick={() => onToggleComments(post.id)}
-      >
-        <Icon name={commentsOpen ? 'chevron-down' : 'chevron-right'} size={13} />
-        {post.comments.length > 0
-          ? `${post.comments.length} comment${post.comments.length !== 1 ? 's' : ''}`
-          : 'Add a comment'
-        }
-      </button>
-
-      {/* Comments section */}
-      {commentsOpen && (
-        <div className="sdetail-comments">
-          {post.comments.map(comment => (
-            <div key={comment.id} className="sdetail-comment">
-              <div className="sdetail-comment-avatar">
-                {comment.authorAvatar
-                  ? <img src={comment.authorAvatar} alt="" />
-                  : comment.authorUsername.charAt(0).toUpperCase()
-                }
-              </div>
-              <div className="sdetail-comment-body">
-                <span className="sdetail-comment-author">@{comment.authorUsername}</span>
-                <span className="sdetail-comment-text">{comment.content}</span>
-              </div>
-              {/* Delete comment: author or space owner */}
-              {(comment.authorId === currentUserId || isOwner) && (
-                <button
-                  className="sdetail-comment-del"
-                  onClick={() => onDeleteComment(post.id, comment.id)}
-                  title="Delete comment"
-                >
-                  <Icon name="close" size={11} />
-                </button>
-              )}
-            </div>
-          ))}
-
-          {/* Add comment input */}
-          <div className="sdetail-comment-add">
-            <input
-              className="sdetail-comment-input"
-              type="text"
-              placeholder="Write a comment..."
-              value={commentInputs[post.id] ?? ''}
-              onChange={e => onCommentInputChange(post.id, e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && onAddComment(post.id)}
-            />
-            <button
-              className="sdetail-comment-send"
-              onClick={() => onAddComment(post.id)}
-              disabled={addingComment === post.id || !(commentInputs[post.id] ?? '').trim()}
-            >
-              <Icon name="send" size={14} />
-            </button>
-          </div>
-        </div>
-      )}
     </article>
   )
 }
 
 // ─────────────────────────────────────────────────────────
-// SpaceDetailSkeleton — placeholder for space cover, info,
-// and three posts while data loads.
+// SpaceDetailSkeleton — three doc-card placeholders while
+// the space + first page of docs load.
 // ─────────────────────────────────────────────────────────
 function SpaceDetailSkeleton() {
   return (
     <div className="sdetail-page">
-      {/* Cover band */}
-      <Skeleton width="100%" height={180} radius={0} />
-
       <div className="sdetail-inner">
-        {/* Title + meta */}
         <div style={{ padding: '20px 0' }}>
           <Skeleton width="40%" height={24} />
           <Skeleton width="60%" height={14} style={{ marginTop: 8 }} />
         </div>
 
-        {/* Three post placeholders */}
         {[0, 1, 2].map(i => (
           <div
             key={i}
-            className="sdetail-post"
+            className="sdetail-doc-card"
             style={{ pointerEvents: 'none', marginBottom: 12 }}
           >
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: 16 }}>
-              <SkeletonCircle size={40} />
-              <div style={{ flex: 1 }}>
-                <Skeleton width={100} height={13} />
-                <Skeleton width={60} height={11} style={{ marginTop: 6 }} />
-              </div>
-            </div>
-            <div style={{ padding: '0 16px 16px' }}>
-              <Skeleton width="100%" height={14} />
-              <Skeleton width="92%" height={14} style={{ marginTop: 6 }} />
-              <Skeleton width="68%" height={14} style={{ marginTop: 6 }} />
+            <Skeleton width="60%" height={18} />
+            <Skeleton width="100%" height={13} style={{ marginTop: 10 }} />
+            <Skeleton width="90%" height={13} style={{ marginTop: 6 }} />
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 14 }}>
+              <SkeletonCircle size={24} />
+              <Skeleton width={100} height={11} />
             </div>
           </div>
         ))}

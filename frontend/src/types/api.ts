@@ -193,6 +193,81 @@ export interface MediaPageResponse {
 
 export type MediaTypeFilter = 'ALL' | 'IMAGE' | 'VIDEO'
 
+// ── Documents (team-KB pivot) ─────────────────────────────
+
+export type DocType = 'JOURNAL' | 'NOTE'
+
+// Attachment on a Document — image / PDF / video / file.
+export interface DocumentAttachmentResponse {
+  id: number
+  fileUrl: string
+  originalName: string | null
+  mimeType: string | null
+  sizeBytes: number | null
+  position: number | null
+  uploadedAt: string   // ISO datetime from LocalDateTime
+}
+
+// A comment on a Document (any space member can post).
+export interface DocumentCommentResponse {
+  id: number
+  content: string
+  authorId: number
+  authorUsername: string
+  authorAvatar: string | null
+  createdAt: string
+}
+
+// Compact list-card view — first ~200 chars of body as snippet.
+export interface DocumentSummaryResponse {
+  id: number
+  title: string
+  snippet: string
+  docType: DocType
+  entryDate: string | null    // "YYYY-MM-DD", only set when docType=JOURNAL
+  tags: string[]
+  spaceId: number
+  authorId: number
+  authorUsername: string
+  authorAvatar: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+// Full detail — content (markdown), attachments, comments.
+export interface DocumentResponse {
+  id: number
+  title: string
+  content: string
+  docType: DocType
+  entryDate: string | null
+  tags: string[]
+  spaceId: number
+  spaceName: string
+  authorId: number
+  authorUsername: string
+  authorAvatar: string | null
+  createdAt: string
+  updatedAt: string
+  attachments: DocumentAttachmentResponse[]
+  comments: DocumentCommentResponse[]
+}
+
+// Request bodies — used in PR 2 onward, declared now so the API wrapper compiles.
+export interface CreateDocumentRequest {
+  title: string
+  content: string
+  docType?: DocType            // server defaults to NOTE
+  entryDate?: string | null    // required when docType=JOURNAL
+  tags?: string[]
+}
+
+export interface UpdateDocumentRequest {
+  title?: string
+  content?: string
+  tags?: string[]
+}
+
 // ── Generic API error ─────────────────────────────────────
 
 export interface ApiError {
