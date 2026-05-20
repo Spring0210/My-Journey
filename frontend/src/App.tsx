@@ -59,9 +59,19 @@ function AppRoutes() {
       {/* ── App pages (Sidebar layout, require auth) ──────── */}
       <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
         <Route path="/dashboard"     element={<DashboardPage />} />
-        <Route path="/journal"       element={<JournalListPage />} />
-        <Route path="/journal/new"   element={<JournalDetailPage />} />
-        <Route path="/journal/:id"   element={<JournalDetailPage />} />
+
+        {/* Journal — personal-space docs get their own URL family so the
+            sidebar highlights "Journal" naturally and the URL bar doesn't
+            leak the "personal space" implementation detail. The /legacy
+            child still serves the pre-migration journal_entry table for
+            search / AI-search hits until those endpoints migrate to the
+            document model. */}
+        <Route path="/journal"                element={<JournalListPage />} />
+        <Route path="/journal/new"            element={<DocumentEditPage />} />
+        <Route path="/journal/legacy/:id"     element={<JournalDetailPage />} />
+        <Route path="/journal/:docId"         element={<DocumentDetailPage />} />
+        <Route path="/journal/:docId/edit"    element={<DocumentEditPage />} />
+
         <Route path="/media"         element={<MediaPage />} />
         <Route path="/calendar"      element={<CalendarPage />} />
         <Route path="/spaces"        element={<SpacesListPage />} />
