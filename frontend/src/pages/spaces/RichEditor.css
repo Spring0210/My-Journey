@@ -1,0 +1,87 @@
+/* RichEditor — TipTap WYSIWYG. Editable area inherits markdown
+   typography from .ddetail-content so authoring looks like reading. */
+
+.re-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Toolbar ──────────────────────────────────────────── */
+.re-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--separator);
+  position: sticky;
+  top: 0;
+  background: var(--surface-card);
+  z-index: 1;
+}
+
+.re-tb-btn {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xs);
+  color: var(--label-secondary);
+  background: transparent;
+  transition: background var(--ease-micro), color var(--ease-micro);
+}
+.re-tb-btn:hover:not(:disabled) {
+  background: var(--fill-tertiary);
+  color: var(--label-primary);
+}
+.re-tb-btn--active {
+  background: var(--fill-tertiary);
+  color: var(--accent);
+}
+.re-tb-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.re-tb-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--separator);
+  margin: 0 4px;
+}
+
+/* ── Editable area ────────────────────────────────────── */
+.re-editable {
+  min-height: 360px;
+  padding: 16px 2px;
+  outline: none;
+}
+.re-editable:focus-visible {
+  outline: none;
+}
+
+/* Tighten the first/last child margin so the editable area
+   doesn't feel like it has weird extra space at the top. */
+.re-editable > *:first-child { margin-top: 0; }
+.re-editable > *:last-child  { margin-bottom: 0; }
+
+/* ProseMirror's empty-line caret (single empty <p>) shows nothing
+   without explicit min-height. Match the typography line-height. */
+.re-editable p:empty::before,
+.re-editable p > br:only-child::before {
+  content: '';
+  display: inline-block;
+}
+
+.re-loading {
+  font-size: 14px;
+  color: var(--label-tertiary);
+  padding: 24px 0;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .re-editable { min-height: 280px; }
+  .re-tb-btn { width: 32px; height: 32px; }
+}

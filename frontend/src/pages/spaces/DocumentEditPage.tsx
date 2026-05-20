@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 import { useAuth } from '@/context/AuthContext'
 import { getSpaceDetail } from '@/api/spaces'
 import {
@@ -12,7 +10,8 @@ import PageTopBar from '@/components/ui/PageTopBar'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useToast } from '@/components/feedback'
 import AttachmentUploader from './AttachmentUploader'
-import './DocumentDetail.css'   // reuse .ddetail-content markdown styles for preview
+import RichEditor from './RichEditor'
+import './DocumentDetail.css'   // .ddetail-content typography is shared with the editor
 import './DocumentEdit.css'
 
 // ─────────────────────────────────────────────────────────
@@ -62,7 +61,6 @@ export default function DocumentEditPage() {
   const [tagsInput, setTagsInput] = useState('')
   const [docType, setDocType]     = useState<DocType>('NOTE')
   const [entryDate, setEntryDate] = useState(TODAY)
-  const [tab, setTab]             = useState<'write' | 'preview'>('write')
 
   // ── Attachments ───────────────────────────────────────
   // /edit mode: pre-filled from doc.attachments, mutated in place by uploader.
@@ -230,44 +228,8 @@ export default function DocumentEditPage() {
             onChange={e => setTagsInput(e.target.value)}
           />
 
-          {/* Write / Preview tabs */}
-          <div className="dedit-tabs" role="tablist">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={tab === 'write'}
-              className={tab === 'write' ? 'active' : ''}
-              onClick={() => setTab('write')}
-            >
-              Write
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={tab === 'preview'}
-              className={tab === 'preview' ? 'active' : ''}
-              onClick={() => setTab('preview')}
-            >
-              Preview
-            </button>
-          </div>
-
-          {tab === 'write' ? (
-            <textarea
-              className="dedit-body"
-              placeholder="Write your document in markdown..."
-              value={content}
-              onChange={e => setContent(e.target.value)}
-            />
-          ) : (
-            <div className="dedit-preview ddetail-content">
-              {content.trim() ? (
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
-              ) : (
-                <p className="dedit-preview-empty">Nothing to preview yet.</p>
-              )}
-            </div>
-          )}
+          {/* Rich body — WYSIWYG that serializes to markdown on every change. */}
+          <RichEditor defaultContent={content} onChange={setContent} />
 
           <AttachmentUploader
             documentId={isNew ? null : documentId}
