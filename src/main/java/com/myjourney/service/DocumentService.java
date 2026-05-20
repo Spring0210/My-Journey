@@ -221,6 +221,36 @@ public class DocumentService {
         return new ArrayList<>(seen.values());
     }
 
+    // Cross-space keyword search used by the agent toolset's searchDocuments
+    // when spaceId is null. Restricted to spaces the caller is a member of.
+    // Tag filtering is applied in-memory because tags live in a JSON column;
+    // the result set is already capped by `limit` so the post-filter is cheap.
+    public List<Document> searchAccessibleDocuments(Integer userId,
+                                                     String keyword,
+                                                     LocalDate from,
+                                                     LocalDate to,
+                                                     List<String> tagsAndMatch,
+                                                     int limit) {
+        User user = loadUser(userId);
+        List<Integer> spaceIds = spaceMemberRepository.findSpaceIdsByUser(user);
+        if (spaceIds.isEmpty()) return List.of();
+        String kw = keyword == null ? "" : keyword.trim();
+        if (kw.isEmpty()) return List.of();
+
+        int capped = Math.min(Math.max(limit, 1), 25);
+        List<Document> hits = documentRepository.searchAcrossSpaces(
+                spaceIds, kw, from, to, PageRequest.of(0, capped));
+
+        if (tagsAndMatch == null || tagsAndMatch.isEmpty()) return hits;
+        List<String> normalized = tagsAndMatch.stream()
+                .filter(t -> t != null && !t.isBlank())
+                .map(t -> t.trim().toLowerCase(Locale.ROOT))
+                .toList();
+        return hits.stream()
+                .filter(d -> d.getTags() != null && d.getTags().containsAll(normalized))
+                .toList();
+    }
+
     // Calendar feed for the /journal page — JOURNAL docs in the given space
     // that have an entry_date. hasImage is computed in a single side query so
     // we don't blow up to N+1 lookups on a year of entries.
