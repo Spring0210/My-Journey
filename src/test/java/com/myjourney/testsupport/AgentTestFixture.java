@@ -1,9 +1,11 @@
 package com.myjourney.testsupport;
 
+import com.myjourney.model.AgentConversation;
 import com.myjourney.model.Document;
 import com.myjourney.model.Space;
 import com.myjourney.model.SpaceMember;
 import com.myjourney.model.User;
+import com.myjourney.repository.AgentConversationRepository;
 import com.myjourney.repository.DocumentRepository;
 import com.myjourney.repository.SpaceMemberRepository;
 import com.myjourney.repository.SpaceRepository;
@@ -85,6 +87,15 @@ public final class AgentTestFixture {
         m.setUser(user);
         m.setRole(SpaceMember.Role.OWNER);
         repo.save(m);
+    }
+
+    public static AgentConversation saveConversation(AgentConversationRepository repo,
+                                                      User user, Space space, String title) {
+        AgentConversation c = new AgentConversation();
+        c.setUser(user);
+        c.setSpace(space);
+        c.setTitle(title);
+        return repo.save(c);
     }
 
     public static Document saveDoc(DocumentRepository repo, Space space, User author, String title) {

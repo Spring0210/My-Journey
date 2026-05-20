@@ -1,0 +1,189 @@
+package com.myjourney.agent;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.myjourney.agent.dto.ToolSearchResult;
+import com.myjourney.model.AgentConversation;
+import com.myjourney.model.AgentMessage;
+import com.myjourney.model.Space;
+import com.myjourney.model.User;
+import com.myjourney.repository.AgentConversationRepository;
+import com.myjourney.repository.AgentMessageRepository;
+import com.myjourney.repository.SpaceMemberRepository;
+import com.myjourney.repository.SpaceRepository;
+import com.myjourney.repository.UserRepository;
+import com.myjourney.testsupport.AgentTestFixture;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+// End-to-end test of the tool-use loop. AnthropicChatClient and DocumentToolset
+// are mocked so the test never hits the network or the underlying services --
+// every behavioural assertion is about how AgentService orchestrates the loop.
+@SpringBootTest
+@Transactional
+class AgentServiceLoopTest {
+
+    @Autowired AgentService service;
+    @Autowired UserRepository userRepository;
+    @Autowired SpaceRepository spaceRepository;
+    @Autowired SpaceMemberRepository memberRepository;
+    @Autowired AgentConversationRepository convRepo;
+    @Autowired AgentMessageRepository msgRepo;
+
+    @MockitoBean AnthropicChatClient anthropic;
+    @MockitoBean DocumentToolset toolset;
+
+    private final ObjectMapper mapper = new ObjectMapper();
+    private AgentConversation conv;
+
+    @BeforeEach
+    void setup() {
+        reset(anthropic, toolset);
+
+        User u = AgentTestFixture.saveUser(userRepository, "alice");
+        Space s = AgentTestFixture.savePersonalSpace(spaceRepository, u);
+        AgentTestFixture.saveOwnerMember(memberRepository, s, u);
+        conv = AgentTestFixture.saveConversation(convRepo, u, s, "Untitled");
+    }
+
+    @Test
+    void runTurn_callsTool_thenReturnsTextAnswer() throws Exception {
+        JsonNode toolUseResp = mapper.readTree("""
+                {
+                  "stop_reason": "tool_use",
+                  "content": [
+                    {"type":"tool_use","id":"t1","name":"search_documents",
+                     "input":{"query":"onboarding","limit":5}}
+                  ]
+                }
+                """);
+        JsonNode finalResp = mapper.readTree("""
+                {
+                  "stop_reason": "end_turn",
+                  "content": [
+                    {"type":"text","text":"Here is what I found: ..."}
+                  ]
+                }
+                """);
+        when(anthropic.complete(anyString(), anyList(), any()))
+                .thenReturn(toolUseResp, finalResp);
+        when(toolset.searchDocuments(any(), eq("onboarding"), any(), any(), any(), any(), eq(5)))
+                .thenReturn(new ToolSearchResult(List.of()));
+
+        StringBuilder out = new StringBuilder();
+        service.runTurn(conv, "what about onboarding?", List.of(), out::append);
+
+        assertThat(out.toString()).contains("Here is what I found");
+        verify(anthropic, times(2)).complete(anyString(), anyList(), any());
+        verify(toolset).searchDocuments(any(), eq("onboarding"), any(), any(), any(), any(), eq(5));
+
+        // Persistence: USER + ASSISTANT(tool_use) + TOOL(result) + ASSISTANT(text) = 4 turns.
+        List<AgentMessage> turns = msgRepo.findByConversationOrderByCreatedAtAsc(conv);
+        assertThat(turns).hasSize(4);
+        assertThat(turns.get(0).getRole()).isEqualTo(AgentMessage.Role.USER);
+        assertThat(turns.get(1).getRole()).isEqualTo(AgentMessage.Role.ASSISTANT);
+        assertThat(turns.get(2).getRole()).isEqualTo(AgentMessage.Role.TOOL);
+        assertThat(turns.get(3).getRole()).isEqualTo(AgentMessage.Role.ASSISTANT);
+    }
+
+    @Test
+    void runTurn_returnsImmediately_whenAnthropicEndsWithoutTools() throws Exception {
+        JsonNode finalResp = mapper.readTree("""
+                {
+                  "stop_reason": "end_turn",
+                  "content": [
+                    {"type":"text","text":"hi back"}
+                  ]
+                }
+                """);
+        when(anthropic.complete(anyString(), anyList(), any())).thenReturn(finalResp);
+
+        StringBuilder out = new StringBuilder();
+        service.runTurn(conv, "hi", List.of(), out::append);
+
+        assertThat(out.toString()).isEqualTo("hi back");
+        verify(anthropic, times(1)).complete(anyString(), anyList(), any());
+        // USER + ASSISTANT only.
+        assertThat(msgRepo.findByConversationOrderByCreatedAtAsc(conv)).hasSize(2);
+    }
+
+    @Test
+    void runTurn_capsAtMaxToolIterations_andEmitsGracefulMessage() throws Exception {
+        // Always responds with tool_use so the loop never reaches stop_reason=end_turn.
+        JsonNode toolUseResp = mapper.readTree("""
+                {
+                  "stop_reason": "tool_use",
+                  "content": [
+                    {"type":"tool_use","id":"t","name":"list_spaces","input":{}}
+                  ]
+                }
+                """);
+        when(anthropic.complete(anyString(), anyList(), any())).thenReturn(toolUseResp);
+        when(toolset.listSpaces(any())).thenReturn(List.of());
+
+        StringBuilder out = new StringBuilder();
+        service.runTurn(conv, "loop forever", List.of(), out::append);
+
+        assertThat(out.toString()).contains("had to stop");
+        // Exactly MAX_TOOL_ITERATIONS Anthropic calls before the cap kicked in.
+        verify(anthropic, times(AgentService.MAX_TOOL_ITERATIONS))
+                .complete(anyString(), anyList(), any());
+    }
+
+    @Test
+    void runTurn_propagatesToolError_intoToolResultBlock() throws Exception {
+        JsonNode toolUseResp = mapper.readTree("""
+                {
+                  "stop_reason": "tool_use",
+                  "content": [
+                    {"type":"tool_use","id":"t1","name":"get_document",
+                     "input":{"document_id":42}}
+                  ]
+                }
+                """);
+        JsonNode finalResp = mapper.readTree("""
+                {
+                  "stop_reason": "end_turn",
+                  "content": [
+                    {"type":"text","text":"sorry, that doc is unavailable"}
+                  ]
+                }
+                """);
+        when(anthropic.complete(anyString(), anyList(), any()))
+                .thenReturn(toolUseResp, finalResp);
+        when(toolset.getDocument(any(), eq(42L)))
+                .thenThrow(new RuntimeException("doc missing"));
+
+        StringBuilder out = new StringBuilder();
+        service.runTurn(conv, "show me doc 42", List.of(), out::append);
+
+        // The loop swallows the toolset exception into an is_error tool_result;
+        // the test verifies persistence captured the error block.
+        List<AgentMessage> turns = msgRepo.findByConversationOrderByCreatedAtAsc(conv);
+        AgentMessage toolTurn = turns.stream()
+                .filter(m -> m.getRole() == AgentMessage.Role.TOOL)
+                .findFirst()
+                .orElseThrow();
+        JsonNode result = toolTurn.getContent().get(0);
+        assertThat(result.get("is_error").asBoolean()).isTrue();
+        assertThat(result.get("content").asText()).contains("doc missing");
+        verify(anthropic, atLeastOnce()).complete(anyString(), anyList(), any());
+    }
+}
