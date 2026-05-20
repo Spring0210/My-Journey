@@ -2,10 +2,66 @@ name: Build and Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
 
 jobs:
+  # Run the JUnit suite against a real MySQL 8 service. This guards both
+  # branches: dev pushes test-only, main pushes test-then-deploy. The deploy
+  # job is gated on test success so a red suite stops a release before the
+  # Docker image is even built.
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+          MYSQL_DATABASE: my_journey
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Wait for MySQL
+        run: |
+          for i in $(seq 1 30); do
+            if mysqladmin ping -h 127.0.0.1 -uroot --silent; then
+              echo "MySQL is up"; exit 0
+            fi
+            sleep 2
+          done
+          echo "MySQL failed to become healthy"; exit 1
+
+      - name: Run tests
+        env:
+          # On a fresh CI MySQL there is no schema yet, so V1 must actually
+          # execute (the production default baselines V1 to fit existing
+          # ddl-auto-created prod DBs). Forcing baseline-on-migrate=false
+          # here lets Flyway create the schema from scratch.
+          SPRING_FLYWAY_BASELINE_ON_MIGRATE: "false"
+          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/my_journey?useSSL=false&serverTimezone=UTC
+          SPRING_DATASOURCE_USERNAME: root
+          SPRING_DATASOURCE_PASSWORD: ""
+        run: ./mvnw test --no-transfer-progress -B
+
   build-and-deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     permissions:
