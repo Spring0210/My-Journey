@@ -147,6 +147,50 @@ class AgentServiceTest {
     }
 
     @Test
+    void toAnthropicMessage_stringifiesLegacyObjectToolResults() throws Exception {
+        // Rows persisted before the tool_result.content fix stored the tool
+        // output as an object, which Anthropic rejects with 400 on replay.
+        // toAnthropicMessage must rewrite those legacy blocks to string
+        // content on the way out.
+        AgentMessage legacy = new AgentMessage();
+        legacy.setRole(AgentMessage.Role.TOOL);
+        legacy.setContent(mapper.readTree("""
+                [
+                  {"type":"tool_result","tool_use_id":"t1",
+                   "content":{"id":7,"title":"hello"},
+                   "is_error":false}
+                ]
+                """));
+
+        JsonNode out = agentService.toAnthropicMessage(legacy);
+
+        JsonNode result = out.get("content").get(0);
+        assertThat(result.get("content").isTextual()).isTrue();
+        JsonNode parsed = mapper.readTree(result.get("content").asText());
+        assertThat(parsed.get("title").asText()).isEqualTo("hello");
+    }
+
+    @Test
+    void toAnthropicMessage_leavesStringToolResultsUntouched() throws Exception {
+        AgentMessage modern = new AgentMessage();
+        modern.setRole(AgentMessage.Role.TOOL);
+        modern.setContent(mapper.readTree("""
+                [
+                  {"type":"tool_result","tool_use_id":"t1",
+                   "content":"{\\\"id\\\":7,\\\"title\\\":\\\"hello\\\"}",
+                   "is_error":false}
+                ]
+                """));
+
+        JsonNode out = agentService.toAnthropicMessage(modern);
+
+        // Content is already a string -- pass-through unchanged.
+        JsonNode result = out.get("content").get(0);
+        assertThat(result.get("content").isTextual()).isTrue();
+        assertThat(result.get("content").asText()).contains("\"title\":\"hello\"");
+    }
+
+    @Test
     void toAnthropicMessage_mapsRoles_andEmbedsContentVerbatim() throws Exception {
         JsonNode content = mapper.readTree("[{\"type\":\"text\",\"text\":\"hi\"}]");
         AgentMessage user = new AgentMessage();

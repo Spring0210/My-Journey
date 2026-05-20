@@ -134,6 +134,12 @@ public class AgentService {
     // stored `content` JSON already matches Anthropic's content-block shape;
     // role is mapped one-to-one EXCEPT for TOOL turns, which Anthropic
     // represents as user-role messages carrying tool_result blocks.
+    //
+    // Legacy-row safeguard: rows persisted before the tool_result.content
+    // fix carry the tool output as a JSON object instead of a string.
+    // Anthropic 400s on object content, so we stringify any non-string
+    // content on the way out. New rows already store a string and skip
+    // the conversion.
     public JsonNode toAnthropicMessage(AgentMessage m) {
         ObjectNode node = mapper.createObjectNode();
         if (m.getRole() == AgentMessage.Role.ASSISTANT) {
@@ -142,8 +148,37 @@ public class AgentService {
             // USER and TOOL both serialize as role=user per Anthropic's API.
             node.put("role", "user");
         }
-        node.set("content", m.getContent());
+        JsonNode content = m.getContent();
+        if (m.getRole() == AgentMessage.Role.TOOL) {
+            content = sanitizeToolResultContent(content);
+        }
+        node.set("content", content);
         return node;
+    }
+
+    // Walk a TOOL turn's content array and normalize any tool_result block
+    // whose `content` field is an object (legacy row) into a JSON-stringified
+    // form. Anthropic requires string-or-content-block-array.
+    private JsonNode sanitizeToolResultContent(JsonNode content) {
+        if (content == null || !content.isArray()) return content;
+        ArrayNode out = mapper.createArrayNode();
+        for (JsonNode block : content) {
+            if (!"tool_result".equals(block.path("type").asText())
+                    || !block.has("content")
+                    || !block.get("content").isObject()) {
+                out.add(block);
+                continue;
+            }
+            ObjectNode rewritten = block.deepCopy();
+            try {
+                rewritten.put("content", mapper.writeValueAsString(block.get("content")));
+            } catch (Exception e) {
+                // Fall back to a placeholder string so the turn isn't dropped.
+                rewritten.put("content", "(legacy tool result -- could not stringify)");
+            }
+            out.add(rewritten);
+        }
+        return out;
     }
 
     ObjectMapper mapper() { return mapper; }
