@@ -594,51 +594,11 @@ export default function SpaceDetailPage() {
 }
 
 // ─────────────────────────────────────────────────────────
-// ThumbStrip — Apple Notes-style horizontal thumbnail row.
-// Shows up to 3 image thumbnails. When the doc has additional
-// images or videos beyond those 3, the 4th slot becomes a "+N"
-// overflow tile. Videos themselves are not rendered as thumbs;
-// they're counted into the overflow total.
-// ─────────────────────────────────────────────────────────
-
-const MAX_VISIBLE_THUMBS = 3
-
-function ThumbStrip({
-  imageUrls,
-  imageCount,
-  videoCount,
-}: {
-  imageUrls: string[]
-  imageCount: number
-  videoCount: number
-}) {
-  // Backends with imageCount send the true image total; older backends only
-  // send imageUrls (capped). Fall back to imageUrls.length during a rolling
-  // upgrade where one side is ahead of the other. videoCount may be missing
-  // on the older payload — default to 0.
-  const imageTotal    = imageCount && imageCount > 0 ? imageCount : imageUrls.length
-  const total         = imageTotal + (videoCount ?? 0)
-  const visibleThumbs = imageUrls.slice(0, MAX_VISIBLE_THUMBS)
-  const overflows     = total > visibleThumbs.length
-  const overflowN     = total - visibleThumbs.length
-  return (
-    <div className="sdetail-doc-thumbs">
-      {visibleThumbs.map((url, i) => (
-        <div key={i} className="sdetail-doc-thumb">
-          <img src={url} alt="" loading="lazy" />
-        </div>
-      ))}
-      {overflows && (
-        <div className="sdetail-doc-thumb sdetail-doc-thumb--more">
-          +{overflowN}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────
 // DocCard — single document tile in the feed.
+// Content-first card in the spirit of Apple Notes: typography
+// carries the hierarchy, no cover imagery, restrained chrome.
+// A flex spacer pins the meta row to the bottom edge so every
+// tile in the grid is the same height.
 // Clicking (or Enter/Space) opens the doc detail page.
 // ─────────────────────────────────────────────────────────
 
@@ -654,10 +614,25 @@ function DocCard({ doc, onOpen }: DocCardProps) {
   const truncated    = doc.snippet.length >= 200
   // JOURNAL cards show the entry date (the day being journaled about);
   // NOTE cards show relative createdAt (the day the doc was written).
-  // Both render in the same meta-row slot for consistent card geometry.
   const dateLabel = doc.docType === 'JOURNAL' && doc.entryDate
     ? formatEntryDate(doc.entryDate)
     : formatRelativeTime(doc.createdAt)
+
+  // Total media count — backends with imageCount/videoCount send the true
+  // values; older payloads only carry imageUrls. Fall back during a rolling
+  // deploy where one side ships ahead of the other.
+  const imageTotal = doc.imageCount && doc.imageCount > 0 ? doc.imageCount : doc.imageUrls.length
+  const videoTotal = doc.videoCount ?? 0
+  const totalMedia = imageTotal + videoTotal
+  // First image (if any) takes the visible thumb slot. If there's no image
+  // but the doc has video(s), a video placeholder tile fills the slot so
+  // video-only docs still show an icon instead of bare "+N". Everything
+  // else collapses into a single "+N" overflow square.
+  const thumbUrl    = doc.imageUrls[0]
+  const showVideoTile = !thumbUrl && videoTotal > 0
+  const hasLeadTile = !!thumbUrl || showVideoTile
+  const overflowN   = hasLeadTile ? totalMedia - 1 : 0
+
   return (
     <article
       className="sdetail-doc-card"
@@ -679,28 +654,44 @@ function DocCard({ doc, onOpen }: DocCardProps) {
         </p>
       )}
 
-      {((doc.imageCount && doc.imageCount > 0)
-          || (doc.videoCount && doc.videoCount > 0)
-          || doc.imageUrls.length > 0) && (
-        <ThumbStrip
-          imageUrls={doc.imageUrls}
-          imageCount={doc.imageCount}
-          videoCount={doc.videoCount ?? 0}
-        />
+      {totalMedia > 0 && (
+        <div className="sdetail-doc-thumbs">
+          {thumbUrl && (
+            <img
+              className="sdetail-doc-thumb"
+              src={thumbUrl}
+              alt=""
+              loading="lazy"
+            />
+          )}
+          {showVideoTile && (
+            <div
+              className="sdetail-doc-thumb sdetail-doc-thumb--video"
+              aria-label="Video"
+            >
+              <Icon name="video" size={22} />
+            </div>
+          )}
+          {overflowN > 0 && (
+            <div className="sdetail-doc-thumb-more">+{overflowN}</div>
+          )}
+        </div>
       )}
 
       {doc.tags.length > 0 && (
         <div className="sdetail-doc-tags">
-          {doc.tags.slice(0, 6).map(t => (
+          {doc.tags.slice(0, 3).map(t => (
             <span key={t} className="sdetail-doc-tag">#{t}</span>
           ))}
-          {doc.tags.length > 6 && (
+          {doc.tags.length > 3 && (
             <span className="sdetail-doc-tag sdetail-doc-tag--more">
-              +{doc.tags.length - 6}
+              +{doc.tags.length - 3}
             </span>
           )}
         </div>
       )}
+
+      <div className="sdetail-doc-spacer" />
 
       <div className="sdetail-doc-meta">
         <div className="sdetail-doc-avatar">
@@ -718,33 +709,33 @@ function DocCard({ doc, onOpen }: DocCardProps) {
 }
 
 // ─────────────────────────────────────────────────────────
-// SpaceDetailSkeleton — three doc-card placeholders while
-// the space + first page of docs load.
+// SpaceDetailSkeleton — grid of doc-card placeholders that match
+// the real card geometry (title + snippet + meta) while the space
+// and first page of docs load.
 // ─────────────────────────────────────────────────────────
 function SpaceDetailSkeleton() {
   return (
     <div className="sdetail-page">
       <div className="sdetail-inner">
-        <div style={{ padding: '20px 0' }}>
-          <Skeleton width="40%" height={24} />
-          <Skeleton width="60%" height={14} style={{ marginTop: 8 }} />
-        </div>
-
-        {[0, 1, 2].map(i => (
-          <div
-            key={i}
-            className="sdetail-doc-card"
-            style={{ pointerEvents: 'none', marginBottom: 12 }}
-          >
-            <Skeleton width="60%" height={18} />
-            <Skeleton width="100%" height={13} style={{ marginTop: 10 }} />
-            <Skeleton width="90%" height={13} style={{ marginTop: 6 }} />
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 14 }}>
-              <SkeletonCircle size={24} />
-              <Skeleton width={100} height={11} />
+        <div className="sdetail-doc-list">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="sdetail-doc-card"
+              style={{ pointerEvents: 'none' }}
+            >
+              <Skeleton width="70%" height={17} />
+              <Skeleton width="100%" height={13} style={{ marginTop: 10 }} />
+              <Skeleton width="100%" height={13} style={{ marginTop: 4 }} />
+              <Skeleton width="80%" height={13} style={{ marginTop: 4 }} />
+              <div className="sdetail-doc-spacer" />
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <SkeletonCircle size={22} />
+                <Skeleton width={110} height={11} />
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   )
