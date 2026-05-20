@@ -15,8 +15,12 @@
 -- A single Media URL can correspond to exactly one DocumentAttachment in this
 -- single-tenant setup (Cloudinary public IDs are unique), so this is safe.
 
+-- COLLATE: media.url was created by Hibernate ddl-auto (utf8mb4_0900_ai_ci,
+-- MySQL 8's default) while document_attachment.file_url was created by V2
+-- with utf8mb4_unicode_ci. Comparing them directly raises error 1267
+-- "Illegal mix of collations" — force m.url to the V2 collation here.
 UPDATE media m
-JOIN document_attachment da ON da.file_url = m.url
+JOIN document_attachment da ON da.file_url = m.url COLLATE utf8mb4_unicode_ci
 SET
     m.source_type = 'DOCUMENT',
     m.source_id   = da.document_id
