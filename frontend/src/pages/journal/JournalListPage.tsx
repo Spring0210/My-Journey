@@ -183,6 +183,16 @@ export default function JournalListPage() {
                     </p>
                   )}
 
+                  {doc.imageUrls.length > 0 && (
+                    <div className="sdetail-doc-thumbs">
+                      {doc.imageUrls.map((url, i) => (
+                        <div key={i} className="sdetail-doc-thumb">
+                          <img src={url} alt="" loading="lazy" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   {doc.tags.length > 0 && (
                     <div className="sdetail-doc-tags">
                       {doc.tags.slice(0, 6).map(t => (

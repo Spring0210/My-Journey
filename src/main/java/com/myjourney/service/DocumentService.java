@@ -23,10 +23,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
@@ -156,6 +158,41 @@ public class DocumentService {
                         d.getEntryDate().toString(),
                         withAttachment.contains(d.getId())))
                 .toList();
+    }
+
+    // Up to this many image attachments per doc are surfaced in the list view
+    // thumbnail strip. Anything beyond shows as a "+N" overflow chip in the UI.
+    private static final int MAX_THUMBS_PER_DOC = 4;
+
+    // Batch-fetch image attachment URLs for a list of documents, transformed
+    // into ~200px Cloudinary thumbnails so card lists don't pull the full-res
+    // originals. Returns a map keyed by document id.
+    public Map<Long, List<String>> findImageUrlsByDocIds(List<Long> docIds) {
+        if (docIds == null || docIds.isEmpty()) return Map.of();
+        List<DocumentAttachment> all = attachmentRepository
+                .findImageAttachmentsByDocumentIds(docIds);
+        Map<Long, List<String>> grouped = new LinkedHashMap<>();
+        for (DocumentAttachment a : all) {
+            Long docId = a.getDocument().getId();
+            List<String> list = grouped.computeIfAbsent(docId, k -> new ArrayList<>());
+            if (list.size() < MAX_THUMBS_PER_DOC) {
+                list.add(toCloudinaryThumb(a.getFileUrl()));
+            }
+        }
+        return grouped;
+    }
+
+    // Inserts a Cloudinary delivery transform so the browser pulls a 200x200
+    // thumbnail instead of the full-res original. f_auto serves WebP/AVIF on
+    // supporting browsers; q_auto picks a quality level. No-op on non-Cloudinary
+    // URLs (legacy /uploads/... entries) so they keep working as-is.
+    private static String toCloudinaryThumb(String url) {
+        if (url == null) return null;
+        int idx = url.indexOf("/image/upload/");
+        if (idx == -1) return url;
+        return url.replaceFirst(
+                "/image/upload/",
+                "/image/upload/c_fill,w_200,h_200,q_auto,f_auto/");
     }
 
     public List<HeatmapPoint> getJournalHeatmap(Integer userId, Integer spaceId, int year) {
