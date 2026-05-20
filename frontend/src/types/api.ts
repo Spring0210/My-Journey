@@ -89,6 +89,8 @@ export interface SpaceDetailResponse {
   coverImage: string | null
   inviteCode: string
   ownerUsername: string
+  // True for the auto-created per-user Personal Space. Drives new-doc default type.
+  isPersonal: boolean
   members: MemberInfo[]
 }
 
