@@ -59,8 +59,36 @@ jobs:
           SPRING_DATASOURCE_PASSWORD: ""
         run: ./mvnw test --no-transfer-progress -B
 
+  # Run the Vitest suite + a TypeScript build. Runs in parallel with the
+  # Java test job since the two share no state.
+  frontend-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Type-check
+        run: npx tsc -b
+
+      - name: Run vitest
+        run: npm test
+
   build-and-deploy:
-    needs: test
+    needs: [test, frontend-test]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
