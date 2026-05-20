@@ -8,7 +8,7 @@ import type { EventClickArg, EventContentArg } from '@fullcalendar/core'
 import type { DateClickArg } from '@fullcalendar/interaction'
 import { getPersonalSpace } from '@/api/spaces'
 import { getDocCalendar } from '@/api/documents'
-import type { CalendarEvent, SpaceSummaryResponse } from '@/types/api'
+import type { CalendarEvent } from '@/types/api'
 import PageTopBar from '@/components/ui/PageTopBar'
 import { Skeleton } from '@/components/ui/Skeleton'
 import Icon from '@/components/ui/Icon'
@@ -26,18 +26,17 @@ type CalView = 'month' | 'list' | 'year'
 
 export default function CalendarPage() {
   const navigate = useNavigate()
-  const [personalSpace, setPersonalSpace] = useState<SpaceSummaryResponse | null>(null)
   const [events, setEvents]   = useState<CalendarEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [view, setView]       = useState<CalView>('month')
 
   useEffect(() => {
     setLoading(true)
+    // Resolve the personal space, then load its calendar feed. The space id
+    // itself is only needed for the calendar fetch — the event-click navigation
+    // uses /journal/:docId, so the personal-space id never leaves this hook.
     getPersonalSpace()
-      .then(space => {
-        setPersonalSpace(space)
-        return getDocCalendar(space.id)
-      })
+      .then(space => getDocCalendar(space.id))
       .then(data => setEvents(data))
       .catch(() => setEvents([]))
       .finally(() => setLoading(false))
@@ -50,8 +49,9 @@ export default function CalendarPage() {
 
   function handleEventClick(info: EventClickArg) {
     info.jsEvent.preventDefault()
-    if (!personalSpace) return
-    navigate(`/spaces/${personalSpace.id}/documents/${info.event.id}`)
+    // Calendar lists personal-space JOURNAL docs only, so the /journal/:docId
+    // route is always the right destination here.
+    navigate(`/journal/${info.event.id}`)
   }
 
   // Custom event pill — show a camera glyph when the entry has photos

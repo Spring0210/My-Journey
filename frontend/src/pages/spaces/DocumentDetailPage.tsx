@@ -46,8 +46,12 @@ function isImageMime(mimeType: string | null): boolean {
 }
 
 export default function DocumentDetailPage() {
-  const { id, docId } = useParams<{ id: string; docId: string }>()
-  const spaceId    = Number(id)
+  // Two URL families lead here:
+  //   /journal/:docId                        (personal-space docs)
+  //   /spaces/:id/documents/:docId           (team-space docs)
+  // The URL :id (when present) is just a hint; doc.spaceId / doc.spacePersonal
+  // from the API response are the authoritative source after load.
+  const { docId } = useParams<{ docId: string }>()
   const documentId = Number(docId)
   const navigate   = useNavigate()
   const { userId } = useAuth()
@@ -76,7 +80,7 @@ export default function DocumentDetailPage() {
       })
       .catch(() => {
         toast.error('Failed to load document.')
-        navigate(`/spaces/${spaceId}`)
+        navigate('/spaces')
       })
       .finally(() => setLoading(false))
   }, [documentId])
@@ -93,7 +97,7 @@ export default function DocumentDetailPage() {
       await deleteDocument(documentId)
       // Same destination as the back button — /journal for personal space docs,
       // the team space's detail page otherwise.
-      navigate(doc.spacePersonal ? '/journal' : `/spaces/${spaceId}`)
+      navigate(doc.spacePersonal ? '/journal' : `/spaces/${doc.spaceId}`)
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Failed to delete document.')
     }
@@ -137,10 +141,13 @@ export default function DocumentDetailPage() {
   const fileAttachments  = doc.attachments.filter(a => !isImageMime(a.mimeType))
   const imageUrls        = imageAttachments.map(a => a.fileUrl)
 
-  // Personal-space docs are user-facing as the /journal page; everywhere else
-  // is /spaces/{id}. The back button + post-delete nav both follow this rule.
-  const backTo    = doc.spacePersonal ? '/journal'  : `/spaces/${spaceId}`
+  // Personal-space docs live under /journal/*; team docs under /spaces/{id}/*.
+  // The back button + Edit button + post-delete nav all follow this split.
+  const backTo    = doc.spacePersonal ? '/journal'  : `/spaces/${doc.spaceId}`
   const backLabel = doc.spacePersonal ? 'Journal'   : doc.spaceName
+  const editPath  = doc.spacePersonal
+    ? `/journal/${documentId}/edit`
+    : `/spaces/${doc.spaceId}/documents/${documentId}/edit`
 
   return (
     <div className="ddetail-page">
@@ -153,7 +160,7 @@ export default function DocumentDetailPage() {
           <>
             <button
               className="ddetail-btn ddetail-btn--topbar"
-              onClick={() => navigate(`/spaces/${spaceId}/documents/${documentId}/edit`)}
+              onClick={() => navigate(editPath)}
             >
               <Icon name="edit" size={15} />
               <span className="ddetail-btn-label">Edit</span>

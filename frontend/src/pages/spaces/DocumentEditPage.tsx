@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
-import { getSpaceDetail } from '@/api/spaces'
+import { getSpaceDetail, getPersonalSpace } from '@/api/spaces'
 import {
   getDocument, createDocument, updateDocument, uploadAttachment,
 } from '@/api/documents'
@@ -43,13 +43,21 @@ function normalizeTags(input: string): string[] {
 const TODAY = new Date().toISOString().split('T')[0]
 
 export default function DocumentEditPage() {
-  const { id, docId } = useParams<{ id: string; docId?: string }>()
-  const spaceId    = Number(id)
-  const documentId = docId ? Number(docId) : null
-  const isNew      = !documentId
-  const navigate   = useNavigate()
-  const { userId } = useAuth()
-  const toast      = useToast()
+  // URL shape varies by mount path:
+  //   /journal/new                            (id undefined, docId undefined)
+  //   /journal/:docId/edit                    (id undefined, docId set)
+  //   /spaces/:id/documents/new               (id set,       docId undefined)
+  //   /spaces/:id/documents/:docId/edit       (id set,       docId set)
+  // The absence of :id is what tells us we're in the personal /journal flow;
+  // the corresponding spaceId is resolved by fetching the personal space.
+  const params      = useParams<{ id?: string; docId?: string }>()
+  const documentId  = params.docId ? Number(params.docId) : null
+  const isNew       = !documentId
+  const isPersonalRoute = !params.id
+  const navigate    = useNavigate()
+  const { userId }  = useAuth()
+  const toast       = useToast()
+  const [searchParams] = useSearchParams()
 
   // ── Form state ────────────────────────────────────────
   const [title, setTitle]         = useState('')
@@ -59,15 +67,25 @@ export default function DocumentEditPage() {
   const [entryDate, setEntryDate] = useState(TODAY)
   // Tracks whether this doc's space is the user's personal space. Drives
   // smart back navigation (-> /journal) and post-save / cancel destinations.
-  const [isPersonal, setIsPersonal] = useState(false)
+  const [isPersonal, setIsPersonal] = useState(isPersonalRoute)
+  // The doc's owning space. Known from the URL on team routes; resolved
+  // asynchronously on personal /new (fetch personal space) and on /edit
+  // (read doc.spaceId from the response).
+  const [spaceId, setSpaceId] = useState<number | null>(
+    params.id ? Number(params.id) : null,
+  )
+
+  // Path to the read-only detail view of the doc we're editing (used after
+  // save and as the Cancel target in /edit mode).
+  const detailPath = (id: number): string =>
+    isPersonal ? `/journal/${id}` : `/spaces/${spaceId}/documents/${id}`
 
   // Cancel / back destination:
   //  - editing existing doc: doc detail (which has its own correct back link)
-  //  - creating a new personal-space doc: /journal
-  //  - creating a new shared-space doc: /spaces/{id}
+  //  - creating new: list page for the right side of the personal/team split
   const back = documentId
-    ? `/spaces/${spaceId}/documents/${documentId}`
-    : (isPersonal ? '/journal' : `/spaces/${spaceId}`)
+    ? detailPath(documentId)
+    : (isPersonal ? '/journal' : `/spaces/${spaceId ?? ''}`)
 
   // ── Attachments ───────────────────────────────────────
   // /edit mode: pre-filled from doc.attachments, mutated in place by uploader.
@@ -86,22 +104,43 @@ export default function DocumentEditPage() {
   // ── Load on mount ─────────────────────────────────────
   useEffect(() => {
     setLoading(true)
+    // Optional pre-fill from a "?prompt=" query param (writing prompts feature).
     if (isNew) {
-      // Fetch space to default docType: JOURNAL on personal spaces, NOTE elsewhere.
-      getSpaceDetail(spaceId)
-        .then(s => {
-          setIsPersonal(s.isPersonal)
-          setDocType(s.isPersonal ? 'JOURNAL' : 'NOTE')
-        })
-        .catch(() => navigate('/spaces'))
-        .finally(() => setLoading(false))
+      const prompt = searchParams.get('prompt')
+      if (prompt) setContent(prompt)
+    }
+    if (isNew) {
+      if (isPersonalRoute) {
+        // /journal/new — resolve the user's personal space and default the
+        // type to JOURNAL (the only thing that lives there).
+        getPersonalSpace()
+          .then(s => {
+            setSpaceId(s.id)
+            setIsPersonal(true)
+            setDocType('JOURNAL')
+          })
+          .catch(() => navigate('/journal'))
+          .finally(() => setLoading(false))
+      } else {
+        // /spaces/:id/documents/new — fetch the team space to confirm
+        // membership and pick the default doc type.
+        getSpaceDetail(Number(params.id))
+          .then(s => {
+            setIsPersonal(s.isPersonal)
+            setDocType(s.isPersonal ? 'JOURNAL' : 'NOTE')
+          })
+          .catch(() => navigate('/spaces'))
+          .finally(() => setLoading(false))
+      }
     } else {
       getDocument(documentId!)
         .then(d => {
           // Author-only edit. Bounce non-authors to the read-only detail view.
           if (d.authorId !== userId) {
             toast.error('You can only edit your own documents.')
-            navigate(`/spaces/${spaceId}/documents/${documentId}`)
+            navigate(d.spacePersonal
+              ? `/journal/${documentId}`
+              : `/spaces/${d.spaceId}/documents/${documentId}`)
             return
           }
           setTitle(d.title)
@@ -109,16 +148,17 @@ export default function DocumentEditPage() {
           setTagsInput(d.tags.join(', '))
           setDocType(d.docType)
           setIsPersonal(d.spacePersonal)
+          setSpaceId(d.spaceId)
           if (d.entryDate) setEntryDate(d.entryDate)
           setExistingAttachments(d.attachments)
         })
         .catch(() => {
           toast.error('Failed to load document.')
-          navigate('/spaces')
+          navigate(isPersonalRoute ? '/journal' : '/spaces')
         })
         .finally(() => setLoading(false))
     }
-  }, [spaceId, documentId])
+  }, [params.id, documentId])
 
   async function handleSave() {
     if (!title.trim()) {
@@ -137,6 +177,11 @@ export default function DocumentEditPage() {
       let savedDocId: number
 
       if (isNew) {
+        if (spaceId == null) {
+          // Defensive — should never hit since we block save until loading
+          // finishes (which always sets spaceId).
+          throw new Error('Space not resolved')
+        }
         const created = await createDocument(spaceId, {
           title: title.trim(),
           content,
@@ -170,7 +215,7 @@ export default function DocumentEditPage() {
         }
       }
 
-      navigate(`/spaces/${spaceId}/documents/${savedDocId}`)
+      navigate(detailPath(savedDocId))
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save.')
     } finally {

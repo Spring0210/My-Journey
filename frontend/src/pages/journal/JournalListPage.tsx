@@ -1,99 +1,212 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useAuth } from '@/context/AuthContext'
+import {
+  searchEntries, aiSearch, aiRecap, aiPrompts,
+} from '@/api/journal'
 import { getPersonalSpace } from '@/api/spaces'
 import { listDocuments } from '@/api/documents'
 import type {
-  SpaceSummaryResponse, DocumentSummaryResponse,
+  SpaceSummaryResponse, DocumentSummaryResponse, JournalEntry,
 } from '@/types/api'
 import Icon from '@/components/ui/Icon'
 import PageTopBar from '@/components/ui/PageTopBar'
-import { Skeleton, SkeletonCircle } from '@/components/ui/Skeleton'
+import { Skeleton } from '@/components/ui/Skeleton'
 import EmptyState from '@/components/ui/EmptyState'
 import EmptyJournal from '@/components/ui/illustrations/EmptyJournal'
-import { formatEntryDate, stripMarkdown } from '@/pages/spaces/docCardUtils'
-import '@/pages/spaces/SpaceDetail.css'   // reuse .sdetail-doc-card styling
+import EmptySearchResult from '@/components/ui/illustrations/EmptySearchResult'
+import { stripMarkdown } from '@/pages/spaces/docCardUtils'
 import './JournalList.css'
 
 // ─────────────────────────────────────────────────────────
-// JournalListPage — the user's journal feed.
-// Backed by the unified Document model: lists JOURNAL docs
-// from the user's auto-created personal space. Date click
-// from Calendar / Heatmap drills in via ?date=YYYY-MM-DD.
+// JournalListPage — paginated journal feed with keyword/date
+// search, AI search, writing prompts, and monthly recap.
 //
-// Legacy search / AI search / recap / prompts UI was removed
-// with the doc model pivot — those features depend on the
-// /api/entries endpoints, which are scheduled to migrate to
-// the document model in a follow-up PR.
+// The default list reads from the unified Document model — JOURNAL
+// docs in the user's personal space. The search / AI / recap / prompts
+// tools still hit the legacy /api/entries endpoints, which operate on
+// the pre-migration journal_entry table. Search result cards therefore
+// navigate to /journal/legacy/:id (the legacy detail view); cards in
+// the default list navigate to /journal/:docId (the new doc detail).
+// Migrating the AI endpoints onto the document model is a follow-up.
 // ─────────────────────────────────────────────────────────
 
 const PAGE_SIZE = 9
+const MAX_VISIBLE_THUMBS = 4
+
+function formatDate(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', {
+    year: 'numeric', month: 'short', day: 'numeric',
+  })
+}
 
 export default function JournalListPage() {
+  const { userId } = useAuth()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const dateFilter = searchParams.get('date') || ''
 
+  // ── Personal space + default doc list ─────────────────
   const [personalSpace, setPersonalSpace] = useState<SpaceSummaryResponse | null>(null)
   const [docs, setDocs]                   = useState<DocumentSummaryResponse[]>([])
   const [currentPage, setCurrentPage]     = useState(0)
   const [totalPages, setTotalPages]       = useState(0)
   const [loading, setLoading]             = useState(true)
-  const [loadingMore, setLoadingMore]     = useState(false)
 
-  // Fetch the personal space once on mount; subsequent fetches reuse it.
+  // ── Search-mode (legacy) state ────────────────────────
+  // When in search mode, we display legacy entries instead of new docs.
+  const [searchEntriesList, setSearchEntriesList] = useState<JournalEntry[]>([])
+  const [isSearchMode, setIsSearchMode] = useState(false)
+
+  // ── Search inputs ─────────────────────────────────────
+  const [keyword, setKeyword] = useState('')
+  const [date, setDate]       = useState('')
+
+  // ── AI search state ───────────────────────────────────
+  const [aiQuery, setAiQuery]     = useState('')
+  const [aiMeta, setAiMeta]       = useState('')
+  const [aiLoading, setAiLoading] = useState(false)
+
+  // ── Desktop AI bar toggle ─────────────────────────────
+  const [showAiBar, setShowAiBar] = useState(false)
+
+  // ── Mobile bottom sheet states ────────────────────────
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [aiOpen, setAiOpen]         = useState(false)
+
+  // ── Modal state ───────────────────────────────────────
+  const [showPrompts, setShowPrompts]       = useState(false)
+  const [prompts, setPrompts]               = useState<string[]>([])
+  const [promptsLoading, setPromptsLoading] = useState(false)
+  const [promptsError, setPromptsError]     = useState('')
+
+  const [showRecap, setShowRecap]       = useState(false)
+  const [recapYear, setRecapYear]       = useState(new Date().getFullYear())
+  const [recapMonth, setRecapMonth]     = useState(new Date().getMonth() + 1)
+  const [recapText, setRecapText]       = useState('')
+  const [recapLoading, setRecapLoading] = useState(false)
+
+  // Personal space resolves once; reused for every doc-list fetch.
   useEffect(() => {
     getPersonalSpace()
       .then(setPersonalSpace)
       .catch(() => setPersonalSpace(null))
   }, [])
 
-  // (Re)load the doc list when the personal space resolves or the date filter changes.
-  useEffect(() => {
-    if (!personalSpace) return
+  // Load doc page from personal space.
+  const loadDocs = useCallback(async (spaceId: number, page: number, dateParam: string) => {
     setLoading(true)
-    listDocuments(personalSpace.id, {
-      type: 'JOURNAL',
-      date: dateFilter || undefined,
-      page: 0,
-      size: PAGE_SIZE,
-    })
-      .then(page => {
-        setDocs(page.content)
-        setCurrentPage(page.currentPage)
-        setTotalPages(page.totalPages)
-      })
-      .catch(() => setDocs([]))
-      .finally(() => setLoading(false))
-  }, [personalSpace?.id, dateFilter])
-
-  async function loadMore() {
-    if (!personalSpace || loadingMore || currentPage + 1 >= totalPages) return
-    setLoadingMore(true)
     try {
-      const next = await listDocuments(personalSpace.id, {
+      const res = await listDocuments(spaceId, {
         type: 'JOURNAL',
-        date: dateFilter || undefined,
-        page: currentPage + 1,
+        date: dateParam || undefined,
+        page,
         size: PAGE_SIZE,
       })
-      setDocs(prev => [...prev, ...next.content])
-      setCurrentPage(next.currentPage)
+      setDocs(res.content)
+      setCurrentPage(res.currentPage)
+      setTotalPages(res.totalPages)
+      setIsSearchMode(false)
+      setAiMeta('')
+    } catch {
+      setDocs([])
     } finally {
-      setLoadingMore(false)
+      setLoading(false)
+    }
+  }, [])
+
+  // Default load + react to ?date= URL param changes.
+  useEffect(() => {
+    if (!personalSpace) return
+    loadDocs(personalSpace.id, 0, dateFilter)
+  }, [personalSpace?.id, dateFilter, loadDocs])
+
+  // ── Keyword / date search (legacy /api/entries) ───────
+  function handleSearch() {
+    if (!userId) return
+    setIsSearchMode(true)
+    setAiMeta('')
+    setLoading(true)
+    searchEntries(userId, keyword, date)
+      .then(results => {
+        setSearchEntriesList(results)
+        setTotalPages(0)
+      })
+      .catch(() => setSearchEntriesList([]))
+      .finally(() => setLoading(false))
+  }
+
+  function handleClear() {
+    setKeyword('')
+    setDate('')
+    setAiQuery('')
+    setAiMeta('')
+    if (dateFilter) setSearchParams({})
+    if (personalSpace) loadDocs(personalSpace.id, 0, '')
+  }
+
+  // ── AI search (legacy /api/entries/ai-search) ─────────
+  async function handleAiSearch() {
+    if (!aiQuery.trim()) return
+    setAiLoading(true)
+    setIsSearchMode(true)
+    setAiMeta('')
+    setSearchEntriesList([])
+    try {
+      const data = await aiSearch(aiQuery.trim())
+      if (data.keywords?.length) {
+        setAiMeta(`Matched keywords: ${data.keywords.join(', ')}`)
+      }
+      setSearchEntriesList(data.entries ?? [])
+      setTotalPages(0)
+    } catch {
+      setSearchEntriesList([])
+    } finally {
+      setAiLoading(false)
     }
   }
 
-  function clearDateFilter() {
-    setSearchParams({})
+  // ── Writing prompts ───────────────────────────────────
+  async function openPrompts() {
+    setShowPrompts(true)
+    setPromptsError('')
+    setPrompts([])
+    setPromptsLoading(true)
+    try {
+      const data = await aiPrompts()
+      if (data.error) { setPromptsError(data.error); return }
+      setPrompts(data.prompts ?? [])
+    } catch {
+      setPromptsError('Failed to generate prompts. Please try again.')
+    } finally {
+      setPromptsLoading(false)
+    }
   }
 
-  function newEntryPath(): string | null {
-    return personalSpace ? `/spaces/${personalSpace.id}/documents/new` : null
+  // ── Monthly recap ─────────────────────────────────────
+  async function handleGenerateRecap() {
+    setRecapLoading(true)
+    setRecapText('Generating...')
+    try {
+      const data = await aiRecap(recapYear, recapMonth)
+      setRecapText(data.recap ?? data.error ?? 'Failed to generate.')
+    } catch {
+      setRecapText('Failed to generate recap. Please try again.')
+    } finally {
+      setRecapLoading(false)
+    }
   }
 
-  function entryPath(docId: number): string {
-    return `/spaces/${personalSpace!.id}/documents/${docId}`
+  function goToPage(p: number) {
+    if (!personalSpace) return
+    loadDocs(personalSpace.id, p, dateFilter)
   }
+
+  const years = Array.from(
+    { length: 5 },
+    (_, i) => new Date().getFullYear() - i,
+  )
 
   return (
     <div className="jlist-page">
@@ -103,11 +216,7 @@ export default function JournalListPage() {
         actions={
           <button
             className="jlist-btn jlist-btn--primary jlist-btn--topbar"
-            onClick={() => {
-              const path = newEntryPath()
-              if (path) navigate(path)
-            }}
-            disabled={!personalSpace}
+            onClick={() => navigate('/journal/new')}
           >
             <Icon name="plus" size={16} />
             New entry
@@ -117,150 +226,443 @@ export default function JournalListPage() {
 
       <div className="jlist-inner">
 
-        {dateFilter && (
-          <div className="jlist-filter-pill">
-            <Icon name="calendar" size={13} />
-            <span>Showing entries from {formatEntryDate(dateFilter)}</span>
+        {/* ── Desktop toolbar ─────────────────────────────── */}
+        <div className="jlist-desktop-bar">
+          <div className="jlist-search-card">
+
+            <div className="jlist-toolbar-row">
+
+              {/* Group 1: keyword + date + Search/Clear */}
+              <div className="jlist-toolbar-search">
+                <input
+                  className="jlist-input jlist-input--keyword"
+                  type="text"
+                  placeholder="Search by keyword..."
+                  value={keyword}
+                  onChange={e => setKeyword(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                />
+                <input
+                  className="jlist-input jlist-input--date"
+                  type="date"
+                  value={date}
+                  onChange={e => setDate(e.target.value)}
+                />
+                <button className="jlist-btn" onClick={handleClear}>Clear</button>
+                <button className="jlist-btn jlist-btn--primary" onClick={handleSearch}>
+                  <Icon name="search" size={14} />
+                  Search
+                </button>
+              </div>
+
+              {/* Group 2: AI Search + Recap + Prompts — right side */}
+              <div className="jlist-toolbar-tools">
+                <button
+                  className={`jlist-btn${showAiBar ? ' jlist-btn--active' : ''}`}
+                  onClick={() => setShowAiBar(v => !v)}
+                >
+                  <Icon name="ai" size={14} />
+                  AI Search
+                </button>
+                <button className="jlist-btn" onClick={() => { setShowRecap(true); setRecapText('') }}>
+                  <Icon name="calendar" size={14} />
+                  Recap
+                </button>
+                <button className="jlist-btn" onClick={openPrompts}>
+                  <Icon name="journal" size={14} />
+                  Prompts
+                </button>
+              </div>
+            </div>
+
+            {/* AI Search bar — expands below when toggled */}
+            {showAiBar && (
+              <div className="jlist-ai-bar">
+                <input
+                  className="jlist-ai-input"
+                  type="text"
+                  placeholder='Try "entries about my mom" or "times I felt proud"'
+                  value={aiQuery}
+                  onChange={e => setAiQuery(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleAiSearch()}
+                  autoFocus
+                />
+                <button
+                  className="jlist-btn jlist-btn--primary"
+                  onClick={handleAiSearch}
+                  disabled={aiLoading}
+                >
+                  <Icon name="ai" size={14} />
+                  {aiLoading ? 'Searching...' : 'Search'}
+                </button>
+              </div>
+            )}
+
+          </div>
+        </div>
+
+        {/* ── Mobile chip row ─────────────────────────────── */}
+        <div className="jlist-mobile-bar">
+          <div className="jlist-chip-row">
             <button
-              type="button"
-              className="jlist-filter-clear"
-              onClick={clearDateFilter}
-              aria-label="Clear date filter"
+              className={`jlist-chip${searchOpen ? ' jlist-chip--active' : ''}`}
+              onClick={() => { setSearchOpen(v => !v); setAiOpen(false) }}
             >
-              <Icon name="close" size={12} />
+              <Icon name="search" size={15} />
+              Search
+            </button>
+            <button
+              className={`jlist-chip${aiOpen ? ' jlist-chip--active' : ''}`}
+              onClick={() => { setAiOpen(v => !v); setSearchOpen(false) }}
+            >
+              <Icon name="ai" size={15} />
+              AI Search
+            </button>
+            <button
+              className="jlist-chip"
+              onClick={() => { setShowRecap(true); setRecapText('') }}
+            >
+              <Icon name="calendar" size={15} />
+              Recap
+            </button>
+            <button className="jlist-chip" onClick={openPrompts}>
+              <Icon name="journal" size={15} />
+              Prompts
+            </button>
+          </div>
+        </div>
+
+        {/* Active filter banner — shows for both search results and ?date= drill-in */}
+        {(isSearchMode || dateFilter) && (
+          <div className="jlist-filter-banner">
+            <Icon name={aiMeta ? 'ai' : 'search'} size={14} />
+            <span className="jlist-filter-banner-text">
+              {isSearchMode
+                ? (aiMeta
+                    ? `AI matched: ${aiQuery}`
+                    : keyword || date
+                      ? [keyword, date].filter(Boolean).join(' · ')
+                      : 'Search results')
+                : `Showing entries from ${formatDate(dateFilter)}`}
+            </span>
+            <button className="jlist-filter-banner-clear" onClick={handleClear}>
+              Clear
+              <Icon name="close" size={11} />
             </button>
           </div>
         )}
 
+        {/* ── Entry grid ──────────────────────────────────── */}
         {loading ? (
-          <JournalListSkeleton />
+          <JournalGridSkeleton />
+        ) : isSearchMode ? (
+          searchEntriesList.length === 0 ? (
+            <EmptyState
+              illustration={<EmptySearchResult />}
+              title="No entries found"
+              subtitle="Try a different keyword, date, or search query."
+            />
+          ) : (
+            <div className="jlist-grid">
+              {searchEntriesList.map(entry => (
+                <a
+                  key={entry.id}
+                  className="jlist-card"
+                  href={`/journal/legacy/${entry.id}`}
+                  onClick={e => {
+                    e.preventDefault()
+                    navigate(`/journal/legacy/${entry.id}`)
+                  }}
+                >
+                  <span className="jlist-card-date">{formatDate(entry.entryDate)}</span>
+                  <span className="jlist-card-title">{entry.title}</span>
+                  {entry.content && (
+                    <span className="jlist-card-excerpt">{entry.content}</span>
+                  )}
+                  {entry.imagePathList?.length > 0 && (
+                    <div className="jlist-card-thumbs">
+                      {entry.imagePathList.slice(0, 3).map((url, i) => (
+                        <img key={i} src={url} alt="" className="jlist-card-thumb" />
+                      ))}
+                      {entry.imagePathList.length > 3 && (
+                        <div className="jlist-card-thumb-more">
+                          +{entry.imagePathList.length - 3}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </a>
+              ))}
+            </div>
+          )
         ) : docs.length === 0 ? (
           <EmptyState
             illustration={<EmptyJournal />}
-            title={dateFilter ? 'No entries on this day' : 'No journal entries yet'}
+            title={dateFilter ? 'No entries on this day' : 'No entries yet'}
             subtitle={dateFilter
               ? 'Try a different date or clear the filter to see everything.'
-              : 'Start writing — the first entry is always the hardest.'}
+              : 'Start your journal with a single thought.'}
             action={dateFilter ? undefined : (
               <button
                 className="jlist-btn jlist-btn--primary"
-                onClick={() => {
-                  const path = newEntryPath()
-                  if (path) navigate(path)
-                }}
-                disabled={!personalSpace}
+                onClick={() => navigate('/journal/new')}
               >
-                <Icon name="plus" size={16} />
+                <Icon name="plus" size={15} />
                 Write your first entry
               </button>
             )}
           />
         ) : (
-          <div className="sdetail-doc-list">
+          <div className="jlist-grid">
             {docs.map(doc => {
-              const cleanSnippet = stripMarkdown(doc.snippet)
-              const truncated = doc.snippet.length >= 200
-              const dateLabel = doc.entryDate ? formatEntryDate(doc.entryDate) : ''
+              const excerpt = stripMarkdown(doc.snippet)
+              // Backends with imageCount tell us the true total; older
+              // backends only send imageUrls — fall back so the strip
+              // still renders during a rolling upgrade.
+              const total = doc.imageCount && doc.imageCount > 0
+                ? doc.imageCount
+                : doc.imageUrls.length
+              const overflows    = total > MAX_VISIBLE_THUMBS
+              const visibleCount = overflows ? MAX_VISIBLE_THUMBS - 1 : MAX_VISIBLE_THUMBS
+              const thumbs       = doc.imageUrls.slice(0, visibleCount)
               return (
-                <article
+                <a
                   key={doc.id}
-                  className="sdetail-doc-card"
-                  onClick={() => navigate(entryPath(doc.id))}
-                  role="link"
-                  tabIndex={0}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault()
-                      navigate(entryPath(doc.id))
-                    }
+                  className="jlist-card"
+                  href={`/journal/${doc.id}`}
+                  onClick={e => {
+                    e.preventDefault()
+                    navigate(`/journal/${doc.id}`)
                   }}
                 >
-                  <h3 className="sdetail-doc-title">{doc.title}</h3>
-
-                  {cleanSnippet && (
-                    <p className="sdetail-doc-snippet">
-                      {cleanSnippet}{truncated ? '…' : ''}
-                    </p>
+                  {doc.entryDate && (
+                    <span className="jlist-card-date">{formatDate(doc.entryDate)}</span>
                   )}
-
-                  {doc.imageUrls.length > 0 && (
-                    <div className="sdetail-doc-thumbs">
-                      {doc.imageUrls.map((url, i) => (
-                        <div key={i} className="sdetail-doc-thumb">
-                          <img src={url} alt="" loading="lazy" />
+                  <span className="jlist-card-title">{doc.title}</span>
+                  {excerpt && (
+                    <span className="jlist-card-excerpt">{excerpt}</span>
+                  )}
+                  {total > 0 && (
+                    <div className="jlist-card-thumbs">
+                      {thumbs.map((url, i) => (
+                        <img key={i} src={url} alt="" className="jlist-card-thumb" loading="lazy" />
+                      ))}
+                      {overflows && (
+                        <div className="jlist-card-thumb-more">
+                          +{total - visibleCount}
                         </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {doc.tags.length > 0 && (
-                    <div className="sdetail-doc-tags">
-                      {doc.tags.slice(0, 6).map(t => (
-                        <span key={t} className="sdetail-doc-tag">#{t}</span>
-                      ))}
-                      {doc.tags.length > 6 && (
-                        <span className="sdetail-doc-tag sdetail-doc-tag--more">
-                          +{doc.tags.length - 6}
-                        </span>
                       )}
                     </div>
                   )}
-
-                  <div className="sdetail-doc-meta">
-                    <div className="sdetail-doc-avatar">
-                      {doc.authorAvatar
-                        ? <img src={doc.authorAvatar} alt="" />
-                        : doc.authorUsername.charAt(0).toUpperCase()
-                      }
-                    </div>
-                    <span className="sdetail-doc-author">@{doc.authorUsername}</span>
-                    {dateLabel && (
-                      <>
-                        <span className="sdetail-doc-dot">·</span>
-                        <span className="sdetail-doc-time">{dateLabel}</span>
-                      </>
-                    )}
-                  </div>
-                </article>
+                </a>
               )
             })}
           </div>
         )}
 
-        {!loading && currentPage + 1 < totalPages && (
-          <button
-            className="jlist-load-more"
-            onClick={loadMore}
-            disabled={loadingMore}
-          >
-            {loadingMore ? 'Loading...' : 'Load more entries'}
-          </button>
+        {/* Pagination — only on the default doc list */}
+        {!loading && !isSearchMode && totalPages > 1 && (
+          <div className="jlist-pagination">
+            <button
+              className="jlist-btn"
+              disabled={currentPage === 0}
+              onClick={() => goToPage(currentPage - 1)}
+            >
+              Previous
+            </button>
+            <span className="jlist-page-info">
+              Page {currentPage + 1} of {totalPages}
+            </span>
+            <button
+              className="jlist-btn"
+              disabled={currentPage >= totalPages - 1}
+              onClick={() => goToPage(currentPage + 1)}
+            >
+              Next
+            </button>
+          </div>
         )}
       </div>
+
+      {/* ── Search bottom sheet (mobile) ──────────────────── */}
+      {searchOpen && (
+        <div className="jlist-modal-overlay" onClick={e => { if (e.target === e.currentTarget) setSearchOpen(false) }}>
+          <div className="jlist-modal">
+            <div className="jlist-modal-header">
+              <h2 className="jlist-modal-title">Search</h2>
+              <button className="jlist-modal-close" onClick={() => setSearchOpen(false)} aria-label="Close">
+                <Icon name="close" size={16} />
+              </button>
+            </div>
+            <div className="jlist-sheet-field">
+              <label className="jlist-sheet-label">Keyword</label>
+              <input
+                className="jlist-sheet-input"
+                type="text"
+                placeholder="Search entries..."
+                value={keyword}
+                onChange={e => setKeyword(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { handleSearch(); setSearchOpen(false) } }}
+                autoFocus
+              />
+            </div>
+            <div className="jlist-sheet-field">
+              <label className="jlist-sheet-label">Date</label>
+              <input
+                className="jlist-sheet-input jlist-sheet-date"
+                type="date"
+                value={date}
+                onChange={e => setDate(e.target.value)}
+              />
+            </div>
+            <button className="jlist-sheet-primary-btn" onClick={() => { handleSearch(); setSearchOpen(false) }}>
+              <Icon name="search" size={16} />
+              Search
+            </button>
+            <button className="jlist-sheet-clear-link" onClick={() => { handleClear(); setSearchOpen(false) }}>
+              Clear all
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── AI Search bottom sheet (mobile) ───────────────── */}
+      {aiOpen && (
+        <div className="jlist-modal-overlay" onClick={e => { if (e.target === e.currentTarget) setAiOpen(false) }}>
+          <div className="jlist-modal">
+            <div className="jlist-modal-header">
+              <h2 className="jlist-modal-title">AI Search</h2>
+              <button className="jlist-modal-close" onClick={() => setAiOpen(false)} aria-label="Close">
+                <Icon name="close" size={16} />
+              </button>
+            </div>
+            <div className="jlist-sheet-field">
+              <label className="jlist-sheet-label">Describe what you're looking for</label>
+              <textarea
+                className="jlist-sheet-input jlist-sheet-textarea"
+                placeholder={'e.g. "entries about my mom"'}
+                value={aiQuery}
+                onChange={e => setAiQuery(e.target.value)}
+                rows={3}
+                autoFocus
+              />
+            </div>
+            <button
+              className="jlist-sheet-primary-btn"
+              onClick={() => { handleAiSearch(); setAiOpen(false) }}
+              disabled={aiLoading}
+            >
+              <Icon name="ai" size={16} />
+              {aiLoading ? 'Searching...' : 'Search'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Writing Prompts Modal ─────────────────────────── */}
+      {showPrompts && (
+        <div className="jlist-modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowPrompts(false) }}>
+          <div className="jlist-modal">
+            <div className="jlist-modal-header">
+              <h2 className="jlist-modal-title">Writing Prompts</h2>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="jlist-btn" onClick={openPrompts} disabled={promptsLoading} style={{ height: 32, padding: '0 12px', fontSize: 13 }}>
+                  Refresh
+                </button>
+                <button className="jlist-modal-close" onClick={() => setShowPrompts(false)} aria-label="Close">
+                  <Icon name="close" size={16} />
+                </button>
+              </div>
+            </div>
+            {promptsLoading && <p style={{ color: 'var(--label-tertiary)', fontSize: 14 }}>Generating prompts...</p>}
+            {promptsError  && <p style={{ color: 'var(--label-tertiary)', fontSize: 14 }}>{promptsError}</p>}
+            {!promptsLoading && prompts.length > 0 && (
+              <div className="jlist-prompts-list">
+                {prompts.map((prompt, i) => (
+                  <a
+                    key={i}
+                    href={`/journal/new?prompt=${encodeURIComponent(prompt)}`}
+                    className="jlist-prompt-card"
+                    onClick={e => {
+                      e.preventDefault()
+                      setShowPrompts(false)
+                      navigate(`/journal/new?prompt=${encodeURIComponent(prompt)}`)
+                    }}
+                  >
+                    <span className="jlist-prompt-num">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <p className="jlist-prompt-text">{prompt}</p>
+                    <Icon name="chevron-right" size={16} className="jlist-prompt-chevron" />
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Monthly Recap Modal ───────────────────────────── */}
+      {showRecap && (
+        <div className="jlist-modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowRecap(false) }}>
+          <div className="jlist-modal">
+            <div className="jlist-modal-header">
+              <h2 className="jlist-modal-title">Monthly Recap</h2>
+              <button className="jlist-modal-close" onClick={() => setShowRecap(false)} aria-label="Close">
+                <Icon name="close" size={16} />
+              </button>
+            </div>
+            <div className="jlist-recap-controls">
+              <div className="jlist-recap-selects">
+                <select
+                  className="jlist-select"
+                  value={recapYear}
+                  onChange={e => setRecapYear(Number(e.target.value))}
+                >
+                  {years.map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+                <select
+                  className="jlist-select"
+                  value={recapMonth}
+                  onChange={e => setRecapMonth(Number(e.target.value))}
+                >
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                      {new Date(2000, i).toLocaleString('en-US', { month: 'long' })}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                className="jlist-btn jlist-btn--primary jlist-recap-generate"
+                onClick={handleGenerateRecap}
+                disabled={recapLoading}
+              >
+                <Icon name="ai" size={15} />
+                {recapLoading ? 'Generating...' : 'Generate Recap'}
+              </button>
+            </div>
+            {recapText && (
+              <p className="jlist-recap-text">{recapText}</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
-// ─────────────────────────────────────────────────────────
-// Three doc-card placeholders while the personal space + first
-// page of journal docs load.
-// ─────────────────────────────────────────────────────────
-function JournalListSkeleton() {
+// 9-card grid skeleton matching the entry card geometry while
+// the personal space + first page of journal docs load.
+function JournalGridSkeleton() {
   return (
-    <div className="sdetail-doc-list">
-      {[0, 1, 2].map(i => (
-        <div
-          key={i}
-          className="sdetail-doc-card"
-          style={{ pointerEvents: 'none' }}
-        >
-          <Skeleton width="60%" height={18} />
-          <Skeleton width="100%" height={13} style={{ marginTop: 10 }} />
-          <Skeleton width="90%" height={13} style={{ marginTop: 6 }} />
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 14 }}>
-            <SkeletonCircle size={24} />
-            <Skeleton width={100} height={11} />
-          </div>
+    <div className="jlist-grid">
+      {Array.from({ length: 9 }).map((_, i) => (
+        <div key={i} className="jlist-card" style={{ pointerEvents: 'none' }}>
+          <Skeleton width={90} height={13} />
+          <Skeleton width="80%" height={17} style={{ marginTop: 8 }} />
+          <Skeleton width="100%" height={13} style={{ marginTop: 6 }} />
+          <Skeleton width="65%" height={13} style={{ marginTop: 4 }} />
         </div>
       ))}
     </div>
