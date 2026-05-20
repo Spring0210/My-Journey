@@ -22,6 +22,12 @@ export default defineConfig({
     // Do not wipe the entire directory — old files coexist during migration
     emptyOutDir: false,
     sourcemap: false,
+    // Lightning CSS (Vite 8's default) over-eagerly drops the space between
+    // adjacent filter functions, turning "saturate(180%) blur(20px)" into
+    // "saturate(180%)blur(20px)" — which breaks -webkit-backdrop-filter
+    // parsing in Safari and silently disables our frosted-glass topbar /
+    // lightbox strip. esbuild is more conservative and preserves the space.
+    cssMinify: 'esbuild',
   },
 
   server: {

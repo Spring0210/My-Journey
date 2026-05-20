@@ -781,8 +781,8 @@
   right: 0;
   padding: 10px 14px 12px;
   background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(14px) saturate(160%);
-  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: var(--backdrop-soft);
+  -webkit-backdrop-filter: var(--backdrop-soft);
   border-top: 1px solid rgba(0, 0, 0, 0.06);
   z-index: 2;
 }

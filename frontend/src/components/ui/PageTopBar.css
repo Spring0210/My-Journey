@@ -15,8 +15,8 @@
   padding-top: env(safe-area-inset-top);
   height: calc(52px + env(safe-area-inset-top));
   background: var(--nav-bg);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: var(--backdrop-nav);
+  -webkit-backdrop-filter: var(--backdrop-nav);
   border-bottom: 1px solid var(--separator);
 }
 
