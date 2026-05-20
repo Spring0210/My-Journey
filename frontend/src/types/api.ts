@@ -179,15 +179,19 @@ export interface HeatmapPoint {
 // ── Media library ────────────────────────────────────────
 
 // A single tile on the /media page. sourceTitle is the journal entry title
-// for JOURNAL items, or a 60-char snippet of post content for SPACE_POST.
+// for JOURNAL/DOCUMENT items, or a 60-char snippet of post content for
+// SPACE_POST. sourceHref is the canonical client route back to the entry —
+// built server-side because DOCUMENT routing depends on doc type + the
+// space's personal flag.
 export interface MediaResponse {
   id: number
   type: 'IMAGE' | 'VIDEO'
   url: string
-  sourceType: 'JOURNAL' | 'SPACE_POST'
+  sourceType: 'JOURNAL' | 'SPACE_POST' | 'DOCUMENT'
   sourceId: number
   sourceDate: string      // "YYYY-MM-DD"
   sourceTitle: string
+  sourceHref: string
 }
 
 export interface MediaPageResponse {
@@ -232,9 +236,12 @@ export interface DocumentSummaryResponse {
   tags: string[]
   // Up to 4 Cloudinary-resized image thumbnail URLs for the list card strip.
   imageUrls: string[]
-  // Total image-attachment count; drives the "+N" overflow tile when > the
-  // thumbnails actually rendered.
+  // Total image-attachment count; combined with videoCount drives the "+N"
+  // overflow tile when the combined total exceeds the visible thumb slots.
   imageCount: number
+  // Total video-attachment count. Videos are not rendered as thumbs in the
+  // strip — they roll into the "+N" overflow tile alongside extra images.
+  videoCount: number
   spaceId: number
   authorId: number
   authorUsername: string

@@ -44,10 +44,13 @@ function formatFullDate(isoDate: string): string {
   })
 }
 
-// Build the route to a single media item's source entry.
+// The route back to a single media item's source entry. Server-provided so
+// DOCUMENT routing can pick between /journal/* and /spaces/*/documents/*.
+// Falls back to a best-effort path on older payloads that predate the field.
 function sourceHref(item: MediaResponse): string {
+  if (item.sourceHref) return item.sourceHref
   return item.sourceType === 'JOURNAL'
-    ? `/journal/${item.sourceId}`
+    ? `/journal/legacy/${item.sourceId}`
     : `/spaces/${item.sourceId}`
 }
 

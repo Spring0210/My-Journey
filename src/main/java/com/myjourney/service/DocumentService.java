@@ -14,6 +14,8 @@ import com.myjourney.repository.DocumentRepository;
 import com.myjourney.repository.SpaceMemberRepository;
 import com.myjourney.repository.SpaceRepository;
 import com.myjourney.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +28,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,6 +42,8 @@ import java.util.stream.Collectors;
 @Service
 public class DocumentService {
 
+    private static final Logger log = LoggerFactory.getLogger(DocumentService.class);
+
     @Autowired private DocumentRepository documentRepository;
     @Autowired private DocumentCommentRepository commentRepository;
     @Autowired private DocumentAttachmentRepository attachmentRepository;
@@ -46,6 +51,7 @@ public class DocumentService {
     @Autowired private SpaceMemberRepository spaceMemberRepository;
     @Autowired private UserRepository userRepository;
     @Autowired private CloudStorageService cloudStorageService;
+    @Autowired private MediaSyncService mediaSyncService;
 
     // ============================================================
     // Document CRUD
@@ -165,28 +171,47 @@ public class DocumentService {
     private static final int MAX_THUMBS_PER_DOC = 4;
 
     /** Per-doc payload for the list card thumbnail strip. */
-    public record ImagePreview(List<String> urls, int totalCount) {}
+    public record ImagePreview(List<String> urls, int imageCount, int videoCount) {}
 
-    // Batch-fetch image attachments for a list of documents. Returns the first
-    // MAX_THUMBS_PER_DOC URLs (Cloudinary-resized) plus the total image count
-    // so the card UI can render a "+N more" overflow tile when applicable.
+    // Batch-fetch image + video attachments for a list of documents. Returns the
+    // first MAX_THUMBS_PER_DOC image URLs (Cloudinary-resized), plus image and
+    // video counts so the card UI can render a "+N more" overflow tile that
+    // accounts for both media types.
     public Map<Long, ImagePreview> findImagePreviewsByDocIds(List<Long> docIds) {
         if (docIds == null || docIds.isEmpty()) return Map.of();
-        List<DocumentAttachment> all = attachmentRepository
+        // Pull image attachments (for thumb URLs) and video attachments
+        // (count-only) in two batched queries — cheaper than a single union
+        // and keeps the existing image query plan unchanged.
+        List<DocumentAttachment> images = attachmentRepository
                 .findImageAttachmentsByDocumentIds(docIds);
-        Map<Long, List<String>> urlsByDoc = new LinkedHashMap<>();
-        Map<Long, Integer>      counts    = new LinkedHashMap<>();
-        for (DocumentAttachment a : all) {
+        List<DocumentAttachment> videos = attachmentRepository
+                .findVideoAttachmentsByDocumentIds(docIds);
+
+        Map<Long, List<String>> urlsByDoc   = new LinkedHashMap<>();
+        Map<Long, Integer>      imageCounts = new LinkedHashMap<>();
+        Map<Long, Integer>      videoCounts = new LinkedHashMap<>();
+        for (DocumentAttachment a : images) {
             Long docId = a.getDocument().getId();
-            counts.merge(docId, 1, Integer::sum);
+            imageCounts.merge(docId, 1, Integer::sum);
             List<String> list = urlsByDoc.computeIfAbsent(docId, k -> new ArrayList<>());
             if (list.size() < MAX_THUMBS_PER_DOC) {
                 list.add(toCloudinaryThumb(a.getFileUrl()));
             }
         }
+        for (DocumentAttachment a : videos) {
+            videoCounts.merge(a.getDocument().getId(), 1, Integer::sum);
+        }
+
+        Set<Long> withMedia = new LinkedHashSet<>();
+        withMedia.addAll(imageCounts.keySet());
+        withMedia.addAll(videoCounts.keySet());
+
         Map<Long, ImagePreview> result = new LinkedHashMap<>();
-        for (Long docId : urlsByDoc.keySet()) {
-            result.put(docId, new ImagePreview(urlsByDoc.get(docId), counts.get(docId)));
+        for (Long docId : withMedia) {
+            result.put(docId, new ImagePreview(
+                    urlsByDoc.getOrDefault(docId, List.of()),
+                    imageCounts.getOrDefault(docId, 0),
+                    videoCounts.getOrDefault(docId, 0)));
         }
         return result;
     }
@@ -224,12 +249,17 @@ public class DocumentService {
                     "Only the author or space owner can delete this document");
         }
         // Snapshot Cloudinary URLs before the DB cascade removes the rows.
+        // String projection (NOT findByDocument...) so we don't pull
+        // DocumentAttachment entities into the persistence context — managed
+        // attachments still referencing the to-be-removed doc trip Hibernate's
+        // TransientObjectException check during flush ordering.
         // Legacy /uploads/* paths (pre-Cloudinary backfill) silently no-op
         // inside deleteFiles — they fail Cloudinary's publicId extraction.
-        List<String> urls = attachmentRepository.findByDocumentOrderByPositionAsc(doc)
-                .stream()
-                .map(DocumentAttachment::getFileUrl)
-                .toList();
+        List<String> urls = attachmentRepository.findFileUrlsByDocumentId(doc.getId());
+        // Clear Media rows tied to this document first — the FK cascade on
+        // document_attachment doesn't reach the denormalized media table.
+        mediaSyncService.clearForSource(
+                com.myjourney.model.Media.SourceType.DOCUMENT, doc.getId());
         // FK ON DELETE CASCADE in V2 takes care of attachments + comments rows.
         documentRepository.delete(doc);
         if (!urls.isEmpty()) cloudStorageService.deleteFiles(urls);
@@ -306,7 +336,11 @@ public class DocumentService {
         a.setMimeType(mimeType);
         a.setSizeBytes(sizeBytes);
         a.setPosition(nextPos);
-        return attachmentRepository.save(a);
+        DocumentAttachment saved = attachmentRepository.save(a);
+        // Mirror image/video uploads into the Media library so the /media
+        // gallery picks them up. Skipped for non-media attachments inside sync.
+        mediaSyncService.syncDocument(doc);
+        return saved;
     }
 
     public List<DocumentAttachment> getAttachments(Long docId) {
@@ -323,7 +357,11 @@ public class DocumentService {
                     "Only the document author can remove attachments");
         }
         String url = a.getFileUrl();
+        Document doc = a.getDocument();
         attachmentRepository.delete(a);
+        // Keep Media in lockstep with the remaining attachments. Resync uses
+        // the "wipe + rewrite" strategy so deletes are reflected immediately.
+        mediaSyncService.syncDocument(doc);
         if (url != null && !url.isBlank()) cloudStorageService.deleteFile(url);
     }
 

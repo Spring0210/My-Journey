@@ -595,22 +595,32 @@ export default function SpaceDetailPage() {
 
 // ─────────────────────────────────────────────────────────
 // ThumbStrip — Apple Notes-style horizontal thumbnail row.
-// Shows up to 3 actual images + a "+N" overflow tile when the
-// doc has more image attachments than fit. When the total fits
-// in 4, all 4 are shown as thumbnails.
+// Shows up to 3 image thumbnails. When the doc has additional
+// images or videos beyond those 3, the 4th slot becomes a "+N"
+// overflow tile. Videos themselves are not rendered as thumbs;
+// they're counted into the overflow total.
 // ─────────────────────────────────────────────────────────
 
-const MAX_VISIBLE_THUMBS = 4
+const MAX_VISIBLE_THUMBS = 3
 
-function ThumbStrip({ imageUrls, imageCount }: { imageUrls: string[]; imageCount: number }) {
-  // Backends with imageCount send the true total; older backends only send
-  // imageUrls (capped at 4). Fall back so the strip still renders during
-  // a rolling upgrade where one side is ahead of the other.
-  const total = imageCount && imageCount > 0 ? imageCount : imageUrls.length
-  const overflows     = total > MAX_VISIBLE_THUMBS
-  const visibleCount  = overflows ? MAX_VISIBLE_THUMBS - 1 : MAX_VISIBLE_THUMBS
-  const visibleThumbs = imageUrls.slice(0, visibleCount)
-  const overflowN     = total - visibleCount
+function ThumbStrip({
+  imageUrls,
+  imageCount,
+  videoCount,
+}: {
+  imageUrls: string[]
+  imageCount: number
+  videoCount: number
+}) {
+  // Backends with imageCount send the true image total; older backends only
+  // send imageUrls (capped). Fall back to imageUrls.length during a rolling
+  // upgrade where one side is ahead of the other. videoCount may be missing
+  // on the older payload — default to 0.
+  const imageTotal    = imageCount && imageCount > 0 ? imageCount : imageUrls.length
+  const total         = imageTotal + (videoCount ?? 0)
+  const visibleThumbs = imageUrls.slice(0, MAX_VISIBLE_THUMBS)
+  const overflows     = total > visibleThumbs.length
+  const overflowN     = total - visibleThumbs.length
   return (
     <div className="sdetail-doc-thumbs">
       {visibleThumbs.map((url, i) => (
@@ -669,8 +679,14 @@ function DocCard({ doc, onOpen }: DocCardProps) {
         </p>
       )}
 
-      {((doc.imageCount && doc.imageCount > 0) || doc.imageUrls.length > 0) && (
-        <ThumbStrip imageUrls={doc.imageUrls} imageCount={doc.imageCount} />
+      {((doc.imageCount && doc.imageCount > 0)
+          || (doc.videoCount && doc.videoCount > 0)
+          || doc.imageUrls.length > 0) && (
+        <ThumbStrip
+          imageUrls={doc.imageUrls}
+          imageCount={doc.imageCount}
+          videoCount={doc.videoCount ?? 0}
+        />
       )}
 
       {doc.tags.length > 0 && (

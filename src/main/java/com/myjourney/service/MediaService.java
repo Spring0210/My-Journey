@@ -2,9 +2,11 @@ package com.myjourney.service;
 
 import com.myjourney.dto.MediaPageResponse;
 import com.myjourney.dto.MediaResponse;
+import com.myjourney.model.Document;
 import com.myjourney.model.JournalEntry;
 import com.myjourney.model.Media;
 import com.myjourney.model.SpacePost;
+import com.myjourney.repository.DocumentRepository;
 import com.myjourney.repository.JournalRepository;
 import com.myjourney.repository.MediaRepository;
 import com.myjourney.repository.SpacePostRepository;
@@ -43,6 +45,9 @@ public class MediaService {
     @Autowired
     private SpacePostRepository spacePostRepository;
 
+    @Autowired
+    private DocumentRepository documentRepository;
+
     public MediaPageResponse fetchPage(Integer userId, String typeParam, String cursor, Integer limitParam) {
         Media.Type typeFilter = parseTypeFilter(typeParam);
 
@@ -73,16 +78,23 @@ public class MediaService {
         boolean hasMore = rows.size() > limit;
         if (hasMore) rows = rows.subList(0, limit);
 
-        // Batch-load source titles so we issue at most 2 extra queries regardless of page size.
-        Map<Long, String> journalTitles = loadJournalTitles(rows);
-        Map<Long, String> postSnippets  = loadPostSnippets(rows);
+        // Batch-load source metadata so we issue at most 3 extra queries
+        // regardless of page size — one per source type that appears.
+        Map<Long, String>   journalTitles = loadJournalTitles(rows);
+        Map<Long, String>   postSnippets  = loadPostSnippets(rows);
+        Map<Long, Document> documentsById = loadDocuments(rows);
 
         List<MediaResponse> items = new ArrayList<>(rows.size());
         for (Media m : rows) {
             String title = switch (m.getSourceType()) {
                 case JOURNAL    -> journalTitles.getOrDefault(m.getSourceId(), "");
                 case SPACE_POST -> postSnippets.getOrDefault(m.getSourceId(), "");
+                case DOCUMENT   -> {
+                    Document d = documentsById.get(m.getSourceId());
+                    yield d == null ? "" : (d.getTitle() == null ? "" : d.getTitle());
+                }
             };
+            String href = buildSourceHref(m, documentsById);
             items.add(new MediaResponse(
                     m.getId(),
                     m.getType().name(),
@@ -90,7 +102,8 @@ public class MediaService {
                     m.getSourceType().name(),
                     m.getSourceId(),
                     m.getSourceDate(),
-                    title
+                    title,
+                    href
             ));
         }
 
@@ -132,6 +145,44 @@ public class MediaService {
             out.put(p.getId().longValue(), snippet(p.getContent()));
         }
         return out;
+    }
+
+    // Document IDs are Long (not Integer like the legacy ids), so collect
+    // them directly into a Long set and load via findAllById.
+    private Map<Long, Document> loadDocuments(List<Media> rows) {
+        Set<Long> ids = new HashSet<>();
+        for (Media m : rows) {
+            if (m.getSourceType() == Media.SourceType.DOCUMENT) ids.add(m.getSourceId());
+        }
+        if (ids.isEmpty()) return Map.of();
+        Map<Long, Document> out = new HashMap<>();
+        for (Document d : documentRepository.findAllById(ids)) {
+            out.put(d.getId(), d);
+        }
+        return out;
+    }
+
+    // Where the Media library item should route on click. JOURNAL/SPACE_POST
+    // still point at their legacy URL families (V1 routes). DOCUMENT routes
+    // depend on docType + the space's personal flag so that JOURNAL-type docs
+    // in a user's personal space land on /journal/{id}, while team-space docs
+    // land on /spaces/{spaceId}/documents/{id}.
+    private static String buildSourceHref(Media m, Map<Long, Document> documentsById) {
+        return switch (m.getSourceType()) {
+            case JOURNAL    -> "/journal/legacy/" + m.getSourceId();
+            case SPACE_POST -> "/spaces/" + m.getSourceId();
+            case DOCUMENT   -> {
+                Document d = documentsById.get(m.getSourceId());
+                if (d == null) yield "/journal/" + m.getSourceId();
+                if (d.getSpace() != null && d.getSpace().isPersonal()) {
+                    yield "/journal/" + d.getId();
+                }
+                Integer spaceId = d.getSpace() != null ? d.getSpace().getId() : null;
+                yield spaceId == null
+                        ? "/journal/" + d.getId()
+                        : "/spaces/" + spaceId + "/documents/" + d.getId();
+            }
+        };
     }
 
     private static Set<Integer> collectSourceIds(List<Media> rows, Media.SourceType type) {

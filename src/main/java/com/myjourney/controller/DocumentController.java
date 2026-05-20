@@ -92,7 +92,8 @@ public class DocumentController {
                     DocumentService.ImagePreview p = imageByDoc.get(d.getId());
                     return toSummaryResponse(d,
                             p == null ? List.of() : p.urls(),
-                            p == null ? 0        : p.totalCount());
+                            p == null ? 0        : p.imageCount(),
+                            p == null ? 0        : p.videoCount());
                 })
                 .toList();
         return ResponseEntity.ok(new PageResponse<>(
@@ -305,7 +306,8 @@ public class DocumentController {
 
     private DocumentSummaryResponse toSummaryResponse(Document d,
                                                        List<String> imageUrls,
-                                                       int imageCount) {
+                                                       int imageCount,
+                                                       int videoCount) {
         String content = d.getContent() == null ? "" : d.getContent();
         String snippet = content.length() > SNIPPET_MAX_CHARS
                 ? content.substring(0, SNIPPET_MAX_CHARS)
@@ -319,6 +321,7 @@ public class DocumentController {
                 d.getTags(),
                 imageUrls,
                 imageCount,
+                videoCount,
                 d.getSpace().getId(),
                 d.getAuthor().getId(),
                 d.getAuthor().getUsername(),

@@ -13,6 +13,12 @@ public interface DocumentAttachmentRepository extends JpaRepository<DocumentAtta
 
     List<DocumentAttachment> findByDocumentOrderByPositionAsc(Document document);
 
+    // ID-based variant — used by paths that hold a Document proxy whose
+    // associations may already be in REMOVED state (e.g. just after deleting
+    // a sibling attachment within the same transaction). Avoids relying on
+    // Hibernate's proxy lookup machinery for the WHERE clause.
+    List<DocumentAttachment> findByDocument_IdOrderByPositionAsc(Long documentId);
+
     void deleteByDocument(Document document);
 
     // Returns IDs of documents in the given space that have at least one
@@ -36,4 +42,29 @@ public interface DocumentAttachmentRepository extends JpaRepository<DocumentAtta
         """)
     List<DocumentAttachment> findImageAttachmentsByDocumentIds(
             @Param("docIds") List<Long> docIds);
+
+    // Batch fetch video attachments for a page of documents. Cloudinary stores
+    // videos under `/video/upload/` so the URL pattern catches legacy migrated
+    // rows where mime_type was set to NULL during the V4 backfill.
+    @Query("""
+        SELECT da FROM DocumentAttachment da
+        WHERE da.document.id IN :docIds
+          AND (da.mimeType LIKE 'video/%' OR da.fileUrl LIKE '%/video/upload/%')
+        ORDER BY da.document.id, da.position ASC
+        """)
+    List<DocumentAttachment> findVideoAttachmentsByDocumentIds(
+            @Param("docIds") List<Long> docIds);
+
+    // String-projection variant for deleteDocument. Returns just the Cloudinary
+    // URLs without loading DocumentAttachment entities into the session — a
+    // session full of managed attachments referencing the about-to-be-removed
+    // Document confuses Hibernate at flush time and surfaces as a
+    // TransientObjectException ("persistent instance references an unsaved
+    // transient instance of Document").
+    @Query("""
+        SELECT da.fileUrl FROM DocumentAttachment da
+        WHERE da.document.id = :docId
+        ORDER BY da.position ASC
+        """)
+    List<String> findFileUrlsByDocumentId(@Param("docId") Long docId);
 }
