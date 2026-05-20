@@ -40,6 +40,7 @@ public class DocumentController {
     @Autowired private DocumentService documentService;
     @Autowired private CloudStorageService cloudStorageService;
     @Autowired private JwtUtil jwtUtil;
+    @Autowired private com.myjourney.service.AiService aiService;
 
     // ============================================================
     // Document CRUD
@@ -63,13 +64,16 @@ public class DocumentController {
     }
 
     // GET /api/spaces/{spaceId}/documents — paginated list with optional filters.
-    // `type=JOURNAL|NOTE` and `date=YYYY-MM-DD` (entry_date match) are both optional.
+    // `type=JOURNAL|NOTE`, `date=YYYY-MM-DD` (entry_date match), and `keyword`
+    // (LIKE on title or content) are all optional. When `keyword` is present,
+    // routing falls through to the search query path which requires a docType.
     @GetMapping("/api/spaces/{spaceId}/documents")
     public ResponseEntity<PageResponse<DocumentSummaryResponse>> listDocuments(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Integer spaceId,
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String date,
+            @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
@@ -79,10 +83,65 @@ public class DocumentController {
         Document.DocType docType = (type == null || type.isBlank())
                 ? null : parseDocType(type, null);
         LocalDate entryDate = parseEntryDate(date);
-        Page<Document> docs = documentService.listDocumentsInSpace(userId, spaceId, docType, entryDate, page, size);
+        String kw = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
 
-        // Batch-fetch thumbnail URLs in one query to avoid N+1 attachment lookups
-        // on a 9-card page. Returns thumbnails + total image count for "+N more".
+        Page<Document> docs = (kw != null)
+                ? documentService.searchDocumentsInSpace(userId, spaceId, docType, kw, entryDate, page, size)
+                : documentService.listDocumentsInSpace(userId, spaceId, docType, entryDate, page, size);
+
+        return ResponseEntity.ok(buildSummaryPage(docs, page));
+    }
+
+    // POST /api/spaces/{spaceId}/documents/ai-search — natural-language search.
+    // Body: { "query": "...", "type": "JOURNAL"|"NOTE" (optional, defaults to JOURNAL) }
+    // Extracts 2-3 search keywords via Claude Haiku, OR-matches them against the
+    // doc table, and returns the same DocumentSummaryResponse shape the regular
+    // search uses so the frontend can render both result sets with one template.
+    @PostMapping("/api/spaces/{spaceId}/documents/ai-search")
+    public ResponseEntity<Map<String, Object>> aiSearch(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @PathVariable Integer spaceId,
+            @RequestBody Map<String, String> body
+    ) {
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
+        if (userId == null) return ResponseEntity.status(401).build();
+
+        String query = body.get("query");
+        if (query == null || query.isBlank()) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "query is required");
+        }
+        Document.DocType docType = parseDocType(body.get("type"), Document.DocType.JOURNAL);
+
+        List<String> keywords = aiService.extractSearchKeywords(query);
+        // Cap matches at 50 to keep the response payload and rerank cost bounded;
+        // matches paginated browsing on the same list view.
+        List<Document> matches = documentService.searchDocumentsByKeywords(
+                userId, spaceId, docType, keywords, 50);
+
+        // Reuse the same thumbnail/image-preview batching the list endpoint uses
+        // so AI-search cards render identically to default-list cards.
+        List<Long> docIds = matches.stream().map(Document::getId).toList();
+        Map<Long, DocumentService.ImagePreview> imageByDoc =
+                documentService.findImagePreviewsByDocIds(docIds);
+        List<DocumentSummaryResponse> results = matches.stream()
+                .map(d -> {
+                    DocumentService.ImagePreview p = imageByDoc.get(d.getId());
+                    return toSummaryResponse(d,
+                            p == null ? List.of() : p.urls(),
+                            p == null ? 0        : p.imageCount(),
+                            p == null ? 0        : p.videoCount());
+                })
+                .toList();
+
+        return ResponseEntity.ok(Map.of(
+                "keywords", keywords,
+                "results", results));
+    }
+
+    // Shared assembler for list-style endpoints: drains a Page<Document> into
+    // a PageResponse<DocumentSummaryResponse>, batch-fetching attachments to
+    // avoid N+1 lookups on the thumbnail strip.
+    private PageResponse<DocumentSummaryResponse> buildSummaryPage(Page<Document> docs, int page) {
         List<Long> docIds = docs.getContent().stream().map(Document::getId).toList();
         Map<Long, DocumentService.ImagePreview> imageByDoc =
                 documentService.findImagePreviewsByDocIds(docIds);
@@ -96,8 +155,7 @@ public class DocumentController {
                             p == null ? 0        : p.videoCount());
                 })
                 .toList();
-        return ResponseEntity.ok(new PageResponse<>(
-                items, docs.getTotalPages(), docs.getTotalElements(), page));
+        return new PageResponse<>(items, docs.getTotalPages(), docs.getTotalElements(), page);
     }
 
     // GET /api/spaces/{spaceId}/documents/calendar — calendar feed for /journal.

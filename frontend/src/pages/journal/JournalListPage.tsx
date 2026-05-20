@@ -1,13 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { useAuth } from '@/context/AuthContext'
-import {
-  searchEntries, aiSearch, aiRecap, aiPrompts,
-} from '@/api/journal'
+import { aiRecap, aiPrompts } from '@/api/journal'
 import { getPersonalSpace } from '@/api/spaces'
-import { listDocuments } from '@/api/documents'
+import { listDocuments, aiSearchDocuments } from '@/api/documents'
 import type {
-  SpaceSummaryResponse, DocumentSummaryResponse, JournalEntry,
+  SpaceSummaryResponse, DocumentSummaryResponse,
 } from '@/types/api'
 import Icon from '@/components/ui/Icon'
 import PageTopBar from '@/components/ui/PageTopBar'
@@ -22,13 +19,10 @@ import './JournalList.css'
 // JournalListPage — paginated journal feed with keyword/date
 // search, AI search, writing prompts, and monthly recap.
 //
-// The default list reads from the unified Document model — JOURNAL
-// docs in the user's personal space. The search / AI / recap / prompts
-// tools still hit the legacy /api/entries endpoints, which operate on
-// the pre-migration journal_entry table. Search result cards therefore
-// navigate to /journal/legacy/:id (the legacy detail view); cards in
-// the default list navigate to /journal/:docId (the new doc detail).
-// Migrating the AI endpoints onto the document model is a follow-up.
+// The default list, keyword search, and AI search all read from the
+// unified Document model — JOURNAL docs in the user's personal space.
+// Recap + prompts still hit the legacy /api/entries endpoints; those
+// migrate onto Document in a later batch.
 // ─────────────────────────────────────────────────────────
 
 const PAGE_SIZE = 9
@@ -45,7 +39,6 @@ function formatDate(dateStr: string): string {
 }
 
 export default function JournalListPage() {
-  const { userId } = useAuth()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const dateFilter = searchParams.get('date') || ''
@@ -57,9 +50,11 @@ export default function JournalListPage() {
   const [totalPages, setTotalPages]       = useState(0)
   const [loading, setLoading]             = useState(true)
 
-  // ── Search-mode (legacy) state ────────────────────────
-  // When in search mode, we display legacy entries instead of new docs.
-  const [searchEntriesList, setSearchEntriesList] = useState<JournalEntry[]>([])
+  // ── Search-mode state (documents) ─────────────────────
+  // Both keyword search and AI search produce DocumentSummaryResponse[]
+  // so a single render branch covers both. Pagination is not yet wired
+  // for search results — searches return up to 50 matches in one shot.
+  const [searchDocs, setSearchDocs]     = useState<DocumentSummaryResponse[]>([])
   const [isSearchMode, setIsSearchMode] = useState(false)
 
   // ── Search inputs ─────────────────────────────────────
@@ -125,18 +120,28 @@ export default function JournalListPage() {
     loadDocs(personalSpace.id, 0, dateFilter)
   }, [personalSpace?.id, dateFilter, loadDocs])
 
-  // ── Keyword / date search (legacy /api/entries) ───────
+  // ── Keyword / date search (Documents) ─────────────────
+  // Both keyword and date are optional, but at least one must be set or
+  // we'd just re-fetch the default page. Server caps page size at 50 to
+  // keep search-result rendering snappy.
   function handleSearch() {
-    if (!userId) return
+    if (!personalSpace) return
+    if (!keyword.trim() && !date) return
     setIsSearchMode(true)
     setAiMeta('')
     setLoading(true)
-    searchEntries(userId, keyword, date)
-      .then(results => {
-        setSearchEntriesList(results)
+    listDocuments(personalSpace.id, {
+      type: 'JOURNAL',
+      keyword: keyword.trim() || undefined,
+      date: date || undefined,
+      page: 0,
+      size: 50,
+    })
+      .then(res => {
+        setSearchDocs(res.content)
         setTotalPages(0)
       })
-      .catch(() => setSearchEntriesList([]))
+      .catch(() => setSearchDocs([]))
       .finally(() => setLoading(false))
   }
 
@@ -145,26 +150,27 @@ export default function JournalListPage() {
     setDate('')
     setAiQuery('')
     setAiMeta('')
+    setSearchDocs([])
     if (dateFilter) setSearchParams({})
     if (personalSpace) loadDocs(personalSpace.id, 0, '')
   }
 
-  // ── AI search (legacy /api/entries/ai-search) ─────────
+  // ── AI search (Documents) ─────────────────────────────
   async function handleAiSearch() {
-    if (!aiQuery.trim()) return
+    if (!aiQuery.trim() || !personalSpace) return
     setAiLoading(true)
     setIsSearchMode(true)
     setAiMeta('')
-    setSearchEntriesList([])
+    setSearchDocs([])
     try {
-      const data = await aiSearch(aiQuery.trim())
+      const data = await aiSearchDocuments(personalSpace.id, aiQuery.trim(), 'JOURNAL')
       if (data.keywords?.length) {
         setAiMeta(`Matched keywords: ${data.keywords.join(', ')}`)
       }
-      setSearchEntriesList(data.entries ?? [])
+      setSearchDocs(data.results ?? [])
       setTotalPages(0)
     } catch {
-      setSearchEntriesList([])
+      setSearchDocs([])
     } finally {
       setAiLoading(false)
     }
@@ -355,114 +361,92 @@ export default function JournalListPage() {
           </div>
         )}
 
-        {/* ── Entry grid ──────────────────────────────────── */}
-        {loading ? (
-          <JournalGridSkeleton />
-        ) : isSearchMode ? (
-          searchEntriesList.length === 0 ? (
-            <EmptyState
-              illustration={<EmptySearchResult />}
-              title="No entries found"
-              subtitle="Try a different keyword, date, or search query."
-            />
-          ) : (
+        {/* ── Entry grid ────────────────────────────────────
+            Both default-list and search-result modes render the same
+            DocumentSummaryResponse, so one card template covers both.
+            displayDocs is empty in search mode until the response lands. */}
+        {(() => {
+          if (loading) return <JournalGridSkeleton />
+
+          const displayDocs = isSearchMode ? searchDocs : docs
+
+          if (displayDocs.length === 0) {
+            if (isSearchMode) {
+              return (
+                <EmptyState
+                  illustration={<EmptySearchResult />}
+                  title="No entries found"
+                  subtitle="Try a different keyword, date, or search query."
+                />
+              )
+            }
+            return (
+              <EmptyState
+                illustration={<EmptyJournal />}
+                title={dateFilter ? 'No entries on this day' : 'No entries yet'}
+                subtitle={dateFilter
+                  ? 'Try a different date or clear the filter to see everything.'
+                  : 'Start your journal with a single thought.'}
+                action={dateFilter ? undefined : (
+                  <button
+                    className="jlist-btn jlist-btn--primary"
+                    onClick={() => navigate('/journal/new')}
+                  >
+                    <Icon name="plus" size={15} />
+                    Write your first entry
+                  </button>
+                )}
+              />
+            )
+          }
+
+          return (
             <div className="jlist-grid">
-              {searchEntriesList.map(entry => (
-                <a
-                  key={entry.id}
-                  className="jlist-card"
-                  href={`/journal/legacy/${entry.id}`}
-                  onClick={e => {
-                    e.preventDefault()
-                    navigate(`/journal/legacy/${entry.id}`)
-                  }}
-                >
-                  <span className="jlist-card-date">{formatDate(entry.entryDate)}</span>
-                  <span className="jlist-card-title">{entry.title}</span>
-                  {entry.content && (
-                    <span className="jlist-card-excerpt">{entry.content}</span>
-                  )}
-                  {entry.imagePathList?.length > 0 && (
-                    <div className="jlist-card-thumbs">
-                      {entry.imagePathList.slice(0, 3).map((url, i) => (
-                        <img key={i} src={url} alt="" className="jlist-card-thumb" />
-                      ))}
-                      {entry.imagePathList.length > 3 && (
-                        <div className="jlist-card-thumb-more">
-                          +{entry.imagePathList.length - 3}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </a>
-              ))}
+              {displayDocs.map(doc => {
+                const excerpt = stripMarkdown(doc.snippet)
+                // Total media = images + videos. Show up to MAX_VISIBLE_THUMBS
+                // image thumbs; the rest (plus any videos) roll into a "+N" tile.
+                const imageTotal = doc.imageCount && doc.imageCount > 0
+                  ? doc.imageCount
+                  : doc.imageUrls.length
+                const total     = imageTotal + (doc.videoCount ?? 0)
+                const thumbs    = doc.imageUrls.slice(0, MAX_VISIBLE_THUMBS)
+                const overflows = total > thumbs.length
+                return (
+                  <a
+                    key={doc.id}
+                    className="jlist-card"
+                    href={`/journal/${doc.id}`}
+                    onClick={e => {
+                      e.preventDefault()
+                      navigate(`/journal/${doc.id}`)
+                    }}
+                  >
+                    {doc.entryDate && (
+                      <span className="jlist-card-date">{formatDate(doc.entryDate)}</span>
+                    )}
+                    <span className="jlist-card-title">{doc.title}</span>
+                    {excerpt && (
+                      <span className="jlist-card-excerpt">{excerpt}</span>
+                    )}
+                    {total > 0 && (
+                      <div className="jlist-card-thumbs">
+                        {thumbs.map((url, i) => (
+                          <img key={i} src={url} alt="" className="jlist-card-thumb" loading="lazy" />
+                        ))}
+                        {overflows && (
+                          <div className="jlist-card-thumb-more">
+                            +{total - thumbs.length}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </a>
+                )
+              })}
             </div>
           )
-        ) : docs.length === 0 ? (
-          <EmptyState
-            illustration={<EmptyJournal />}
-            title={dateFilter ? 'No entries on this day' : 'No entries yet'}
-            subtitle={dateFilter
-              ? 'Try a different date or clear the filter to see everything.'
-              : 'Start your journal with a single thought.'}
-            action={dateFilter ? undefined : (
-              <button
-                className="jlist-btn jlist-btn--primary"
-                onClick={() => navigate('/journal/new')}
-              >
-                <Icon name="plus" size={15} />
-                Write your first entry
-              </button>
-            )}
-          />
-        ) : (
-          <div className="jlist-grid">
-            {docs.map(doc => {
-              const excerpt = stripMarkdown(doc.snippet)
-              // Total media = images + videos. Backends with imageCount tell
-              // us the true image total; older backends only send imageUrls,
-              // so fall back to that count during a rolling upgrade. videoCount
-              // may be undefined on the older payload — default to 0.
-              const imageTotal = doc.imageCount && doc.imageCount > 0
-                ? doc.imageCount
-                : doc.imageUrls.length
-              const total        = imageTotal + (doc.videoCount ?? 0)
-              const thumbs       = doc.imageUrls.slice(0, MAX_VISIBLE_THUMBS)
-              const overflows    = total > thumbs.length
-              return (
-                <a
-                  key={doc.id}
-                  className="jlist-card"
-                  href={`/journal/${doc.id}`}
-                  onClick={e => {
-                    e.preventDefault()
-                    navigate(`/journal/${doc.id}`)
-                  }}
-                >
-                  {doc.entryDate && (
-                    <span className="jlist-card-date">{formatDate(doc.entryDate)}</span>
-                  )}
-                  <span className="jlist-card-title">{doc.title}</span>
-                  {excerpt && (
-                    <span className="jlist-card-excerpt">{excerpt}</span>
-                  )}
-                  {total > 0 && (
-                    <div className="jlist-card-thumbs">
-                      {thumbs.map((url, i) => (
-                        <img key={i} src={url} alt="" className="jlist-card-thumb" loading="lazy" />
-                      ))}
-                      {overflows && (
-                        <div className="jlist-card-thumb-more">
-                          +{total - thumbs.length}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </a>
-              )
-            })}
-          </div>
-        )}
+        })()}
 
         {/* Pagination — only on the default doc list */}
         {!loading && !isSearchMode && totalPages > 1 && (

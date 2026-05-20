@@ -44,5 +44,56 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
             @Param("start") LocalDate start,
             @Param("end") LocalDate end);
 
+    // ── Search (LIKE on title + content) ─────────────────────
+    // Powers the keyword search bar on /journal and (in future) /spaces/:id.
+    // LIKE %keyword% is fine while document volumes are small; FULLTEXT indexing
+    // is wired up via V3 and can replace these queries in a later batch.
+
+    @Query("""
+        SELECT d FROM Document d
+        WHERE d.space = :space
+          AND d.docType = :docType
+          AND (LOWER(d.title)   LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(d.content) LIKE LOWER(CONCAT('%', :keyword, '%')))
+        """)
+    Page<Document> searchBySpaceAndDocTypeAndKeyword(
+            @Param("space") Space space,
+            @Param("docType") Document.DocType docType,
+            @Param("keyword") String keyword,
+            Pageable pageable);
+
+    @Query("""
+        SELECT d FROM Document d
+        WHERE d.space = :space
+          AND d.docType = :docType
+          AND d.entryDate = :entryDate
+          AND (LOWER(d.title)   LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(d.content) LIKE LOWER(CONCAT('%', :keyword, '%')))
+        """)
+    Page<Document> searchBySpaceAndDocTypeAndKeywordAndEntryDate(
+            @Param("space") Space space,
+            @Param("docType") Document.DocType docType,
+            @Param("keyword") String keyword,
+            @Param("entryDate") LocalDate entryDate,
+            Pageable pageable);
+
+    // AI-search helper: single-keyword OR-match used by the service-layer
+    // dedup loop. Newest first so the merged result order is intuitive.
+    @Query("""
+        SELECT d FROM Document d
+        WHERE d.space = :space
+          AND d.docType = :docType
+          AND (LOWER(d.title)   LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(d.content) LIKE LOWER(CONCAT('%', :keyword, '%')))
+        ORDER BY
+            CASE WHEN d.docType = com.myjourney.model.Document.DocType.JOURNAL
+                 THEN d.entryDate END DESC,
+            d.createdAt DESC
+        """)
+    List<Document> findBySpaceAndDocTypeAndKeyword(
+            @Param("space") Space space,
+            @Param("docType") Document.DocType docType,
+            @Param("keyword") String keyword);
+
     long countByAuthor(User author);
 }
