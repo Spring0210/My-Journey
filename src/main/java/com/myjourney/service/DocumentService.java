@@ -39,6 +39,7 @@ public class DocumentService {
     @Autowired private SpaceRepository spaceRepository;
     @Autowired private SpaceMemberRepository spaceMemberRepository;
     @Autowired private UserRepository userRepository;
+    @Autowired private CloudStorageService cloudStorageService;
 
     // ============================================================
     // Document CRUD
@@ -129,8 +130,16 @@ public class DocumentService {
             throw new AppException(HttpStatus.FORBIDDEN,
                     "Only the author or space owner can delete this document");
         }
-        // FK ON DELETE CASCADE in V2 takes care of attachments + comments.
+        // Snapshot Cloudinary URLs before the DB cascade removes the rows.
+        // Legacy /uploads/* paths (pre-Cloudinary backfill) silently no-op
+        // inside deleteFiles — they fail Cloudinary's publicId extraction.
+        List<String> urls = attachmentRepository.findByDocumentOrderByPositionAsc(doc)
+                .stream()
+                .map(DocumentAttachment::getFileUrl)
+                .toList();
+        // FK ON DELETE CASCADE in V2 takes care of attachments + comments rows.
         documentRepository.delete(doc);
+        if (!urls.isEmpty()) cloudStorageService.deleteFiles(urls);
     }
 
     // ============================================================
@@ -220,7 +229,9 @@ public class DocumentService {
             throw new AppException(HttpStatus.FORBIDDEN,
                     "Only the document author can remove attachments");
         }
+        String url = a.getFileUrl();
         attachmentRepository.delete(a);
+        if (url != null && !url.isBlank()) cloudStorageService.deleteFile(url);
     }
 
     // ============================================================
