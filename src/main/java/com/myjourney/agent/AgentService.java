@@ -234,7 +234,12 @@ public class AgentService {
                 result.put("tool_use_id", useId);
                 try {
                     Object out = dispatcher.dispatch(conv.getUser().getId(), name, args);
-                    result.set("content", mapper.valueToTree(out));
+                    // Anthropic's tool_result.content must be a string OR an
+                    // array of content blocks -- a raw JSON object trips the
+                    // API with a 400 ('Anthropic API call failed' on retry).
+                    // Stringify; the model parses JSON content fine when it
+                    // needs structured fields.
+                    result.put("content", mapper.writeValueAsString(out));
                     result.put("is_error", false);
                 } catch (Exception e) {
                     log.warn("Tool {} failed: {}", name, e.getMessage());

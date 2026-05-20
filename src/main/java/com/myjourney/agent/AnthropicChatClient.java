@@ -12,6 +12,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -66,9 +67,20 @@ public class AnthropicChatClient {
         try {
             ResponseEntity<String> res = restTemplate.postForEntity(URL, req, String.class);
             return mapper.readTree(res.getBody());
+        } catch (HttpStatusCodeException e) {
+            // RestTemplate's 4xx/5xx exception carries the response body --
+            // surface a short excerpt of it in the thrown message so the
+            // SSE 'error' event and the server log both name the actual
+            // cause (Anthropic returns useful messages like 'tool_result
+            // content must be a string or array').
+            String body = e.getResponseBodyAsString();
+            String excerpt = body == null ? "" : body.substring(0, Math.min(body.length(), 500));
+            log.error("Anthropic API {} response: {}", e.getStatusCode(), excerpt, e);
+            throw new RuntimeException(
+                    "Anthropic API " + e.getStatusCode() + ": " + excerpt, e);
         } catch (Exception e) {
             log.error("Anthropic API call failed", e);
-            throw new RuntimeException("Anthropic API call failed", e);
+            throw new RuntimeException("Anthropic API call failed: " + e.getMessage(), e);
         }
     }
 

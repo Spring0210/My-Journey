@@ -8,12 +8,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -65,6 +68,25 @@ class AnthropicChatClientTest {
         JsonNode emptyArr = mapper.createArrayNode();
         ObjectNode body2 = client.buildBody("hi", List.of(), emptyArr);
         assertThat(body2.has("tools")).isFalse();
+    }
+
+    @Test
+    void complete_surfacesAnthropicErrorBody_inExceptionMessage() {
+        // Anthropic returns a useful JSON error body on 4xx responses. The
+        // client must include that body in the thrown RuntimeException so the
+        // SSE 'error' frame and server log both name the actual cause instead
+        // of the generic "Anthropic API call failed".
+        when(restTemplate.postForEntity(any(String.class), any(HttpEntity.class), eq(String.class)))
+                .thenThrow(HttpClientErrorException.create(
+                        HttpStatus.BAD_REQUEST, "Bad Request",
+                        org.springframework.http.HttpHeaders.EMPTY,
+                        "{\"error\":{\"message\":\"tool_result content must be a string\"}}".getBytes(),
+                        null));
+
+        assertThatThrownBy(() -> client.complete("sys", List.of(), null))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("400")
+                .hasMessageContaining("tool_result content must be a string");
     }
 
     @Test

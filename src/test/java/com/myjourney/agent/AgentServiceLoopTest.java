@@ -193,17 +193,20 @@ class AgentServiceLoopTest {
         StringBuilder out = new StringBuilder();
         service.runTurn(conv, "make a doc", List.of(), out::append);
 
-        // The tool turn must record is_error=false and contain a structured
-        // content object -- not the "Tool error: ..." string we'd see if
-        // valueToTree had thrown.
+        // The tool turn must record is_error=false. Per Anthropic's API
+        // contract, tool_result.content must be a string (not a raw JSON
+        // object), so the impl stringifies the DTO -- assert that, and that
+        // the stringified payload still round-trips back to the DTO shape.
         List<AgentMessage> turns = msgRepo.findByConversationOrderByCreatedAtAsc(conv);
         AgentMessage toolTurn = turns.stream()
                 .filter(m -> m.getRole() == AgentMessage.Role.TOOL)
                 .findFirst().orElseThrow();
         JsonNode result = toolTurn.getContent().get(0);
         assertThat(result.get("is_error").asBoolean()).isFalse();
-        assertThat(result.get("content").isObject()).isTrue();
-        assertThat(result.get("content").get("title").asText()).isEqualTo("x");
+        assertThat(result.get("content").isTextual()).isTrue();
+        JsonNode parsed = mapper.readTree(result.get("content").asText());
+        assertThat(parsed.get("title").asText()).isEqualTo("x");
+        assertThat(parsed.get("createdAt").asText()).startsWith("2026-05-20");
 
         // And the final assistant text streams through to the sink.
         assertThat(out.toString()).contains("Done");
