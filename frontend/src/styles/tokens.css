@@ -122,6 +122,18 @@
   --tint-accent-moderate: color-mix(in srgb, var(--accent) 10%, var(--surface-card));
   --tint-accent-strong:   color-mix(in srgb, var(--accent) 15%, var(--surface-card));
 
+  /* ── Backdrop filters ───────────────────────────────────────
+     IMPORTANT: keep multi-function backdrop-filter values inside
+     CSS variables. Vite's Lightning CSS minifier strips the space
+     between adjacent function calls (e.g. `saturate(180%) blur(20px)`
+     → `saturate(180%)blur(20px)`), which breaks `-webkit-backdrop-filter`
+     parsing and silently disables the frosted-glass effect.
+     Variable expansion happens at browser parse time, so spaces inside
+     the variable value are preserved. */
+  --backdrop-nav:    saturate(180%) blur(20px);
+  --backdrop-strong: blur(18px) saturate(160%);
+  --backdrop-soft:   blur(14px) saturate(160%);
+
   /* ── Motion ─────────────────────────────────────────────── */
   --ease-micro:    150ms ease;              /* hover, focus, color */
   --ease-standard: 200ms ease;             /* button, toggle, tab */

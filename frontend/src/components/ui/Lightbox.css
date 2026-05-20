@@ -113,8 +113,8 @@
   gap: 16px;
   padding: 14px 24px;
   background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: var(--backdrop-strong);
+  -webkit-backdrop-filter: var(--backdrop-strong);
   color: #ffffff;
   font-family: var(--font-sans);
 }
