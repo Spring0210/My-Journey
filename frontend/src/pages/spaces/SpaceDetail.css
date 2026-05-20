@@ -1523,9 +1523,13 @@
 .sdetail-newdoc-btn:hover { background: var(--accent-hover); }
 
 .sdetail-doc-list {
-  display: flex;
-  flex-direction: column;
+  /* Responsive Apple-style grid: cards reflow into as many columns as fit
+     at a 280px minimum each. Narrow viewports (and the space-detail feed
+     column when the sidebar is open) collapse to a single column. */
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 12px;
+  align-items: start;
 }
 
 .sdetail-doc-card {
@@ -1659,6 +1663,17 @@
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+/* "+N" overflow tile — slot inside the thumb strip when imageCount > 4. */
+.sdetail-doc-thumb--more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--label-secondary);
+  background: var(--fill-tertiary);
 }
 
 @media (max-width: 640px) {

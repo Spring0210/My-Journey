@@ -82,13 +82,18 @@ public class DocumentController {
         Page<Document> docs = documentService.listDocumentsInSpace(userId, spaceId, docType, entryDate, page, size);
 
         // Batch-fetch thumbnail URLs in one query to avoid N+1 attachment lookups
-        // on a 9-card page.
+        // on a 9-card page. Returns thumbnails + total image count for "+N more".
         List<Long> docIds = docs.getContent().stream().map(Document::getId).toList();
-        Map<Long, List<String>> imageUrlsByDoc = documentService.findImageUrlsByDocIds(docIds);
+        Map<Long, DocumentService.ImagePreview> imageByDoc =
+                documentService.findImagePreviewsByDocIds(docIds);
 
         List<DocumentSummaryResponse> items = docs.getContent().stream()
-                .map(d -> toSummaryResponse(d,
-                        imageUrlsByDoc.getOrDefault(d.getId(), List.of())))
+                .map(d -> {
+                    DocumentService.ImagePreview p = imageByDoc.get(d.getId());
+                    return toSummaryResponse(d,
+                            p == null ? List.of() : p.urls(),
+                            p == null ? 0        : p.totalCount());
+                })
                 .toList();
         return ResponseEntity.ok(new PageResponse<>(
                 items, docs.getTotalPages(), docs.getTotalElements(), page));
@@ -298,7 +303,9 @@ public class DocumentController {
                 comments);
     }
 
-    private DocumentSummaryResponse toSummaryResponse(Document d, List<String> imageUrls) {
+    private DocumentSummaryResponse toSummaryResponse(Document d,
+                                                       List<String> imageUrls,
+                                                       int imageCount) {
         String content = d.getContent() == null ? "" : d.getContent();
         String snippet = content.length() > SNIPPET_MAX_CHARS
                 ? content.substring(0, SNIPPET_MAX_CHARS)
@@ -311,6 +318,7 @@ public class DocumentController {
                 d.getEntryDate(),
                 d.getTags(),
                 imageUrls,
+                imageCount,
                 d.getSpace().getId(),
                 d.getAuthor().getId(),
                 d.getAuthor().getUsername(),
