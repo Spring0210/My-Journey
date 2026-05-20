@@ -164,22 +164,31 @@ public class DocumentService {
     // thumbnail strip. Anything beyond shows as a "+N" overflow chip in the UI.
     private static final int MAX_THUMBS_PER_DOC = 4;
 
-    // Batch-fetch image attachment URLs for a list of documents, transformed
-    // into ~200px Cloudinary thumbnails so card lists don't pull the full-res
-    // originals. Returns a map keyed by document id.
-    public Map<Long, List<String>> findImageUrlsByDocIds(List<Long> docIds) {
+    /** Per-doc payload for the list card thumbnail strip. */
+    public record ImagePreview(List<String> urls, int totalCount) {}
+
+    // Batch-fetch image attachments for a list of documents. Returns the first
+    // MAX_THUMBS_PER_DOC URLs (Cloudinary-resized) plus the total image count
+    // so the card UI can render a "+N more" overflow tile when applicable.
+    public Map<Long, ImagePreview> findImagePreviewsByDocIds(List<Long> docIds) {
         if (docIds == null || docIds.isEmpty()) return Map.of();
         List<DocumentAttachment> all = attachmentRepository
                 .findImageAttachmentsByDocumentIds(docIds);
-        Map<Long, List<String>> grouped = new LinkedHashMap<>();
+        Map<Long, List<String>> urlsByDoc = new LinkedHashMap<>();
+        Map<Long, Integer>      counts    = new LinkedHashMap<>();
         for (DocumentAttachment a : all) {
             Long docId = a.getDocument().getId();
-            List<String> list = grouped.computeIfAbsent(docId, k -> new ArrayList<>());
+            counts.merge(docId, 1, Integer::sum);
+            List<String> list = urlsByDoc.computeIfAbsent(docId, k -> new ArrayList<>());
             if (list.size() < MAX_THUMBS_PER_DOC) {
                 list.add(toCloudinaryThumb(a.getFileUrl()));
             }
         }
-        return grouped;
+        Map<Long, ImagePreview> result = new LinkedHashMap<>();
+        for (Long docId : urlsByDoc.keySet()) {
+            result.put(docId, new ImagePreview(urlsByDoc.get(docId), counts.get(docId)));
+        }
+        return result;
     }
 
     // Inserts a Cloudinary delivery transform so the browser pulls a 200x200

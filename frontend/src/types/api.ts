@@ -232,6 +232,9 @@ export interface DocumentSummaryResponse {
   tags: string[]
   // Up to 4 Cloudinary-resized image thumbnail URLs for the list card strip.
   imageUrls: string[]
+  // Total image-attachment count; drives the "+N" overflow tile when > the
+  // thumbnails actually rendered.
+  imageCount: number
   spaceId: number
   authorId: number
   authorUsername: string

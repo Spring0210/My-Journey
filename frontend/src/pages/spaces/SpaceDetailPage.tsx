@@ -594,6 +594,40 @@ export default function SpaceDetailPage() {
 }
 
 // ─────────────────────────────────────────────────────────
+// ThumbStrip — Apple Notes-style horizontal thumbnail row.
+// Shows up to 3 actual images + a "+N" overflow tile when the
+// doc has more image attachments than fit. When the total fits
+// in 4, all 4 are shown as thumbnails.
+// ─────────────────────────────────────────────────────────
+
+const MAX_VISIBLE_THUMBS = 4
+
+function ThumbStrip({ imageUrls, imageCount }: { imageUrls: string[]; imageCount: number }) {
+  // Backends with imageCount send the true total; older backends only send
+  // imageUrls (capped at 4). Fall back so the strip still renders during
+  // a rolling upgrade where one side is ahead of the other.
+  const total = imageCount && imageCount > 0 ? imageCount : imageUrls.length
+  const overflows     = total > MAX_VISIBLE_THUMBS
+  const visibleCount  = overflows ? MAX_VISIBLE_THUMBS - 1 : MAX_VISIBLE_THUMBS
+  const visibleThumbs = imageUrls.slice(0, visibleCount)
+  const overflowN     = total - visibleCount
+  return (
+    <div className="sdetail-doc-thumbs">
+      {visibleThumbs.map((url, i) => (
+        <div key={i} className="sdetail-doc-thumb">
+          <img src={url} alt="" loading="lazy" />
+        </div>
+      ))}
+      {overflows && (
+        <div className="sdetail-doc-thumb sdetail-doc-thumb--more">
+          +{overflowN}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────
 // DocCard — single document tile in the feed.
 // Clicking (or Enter/Space) opens the doc detail page.
 // ─────────────────────────────────────────────────────────
@@ -635,14 +669,8 @@ function DocCard({ doc, onOpen }: DocCardProps) {
         </p>
       )}
 
-      {doc.imageUrls.length > 0 && (
-        <div className="sdetail-doc-thumbs">
-          {doc.imageUrls.map((url, i) => (
-            <div key={i} className="sdetail-doc-thumb">
-              <img src={url} alt="" loading="lazy" />
-            </div>
-          ))}
-        </div>
+      {((doc.imageCount && doc.imageCount > 0) || doc.imageUrls.length > 0) && (
+        <ThumbStrip imageUrls={doc.imageUrls} imageCount={doc.imageCount} />
       )}
 
       {doc.tags.length > 0 && (
