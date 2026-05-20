@@ -80,8 +80,15 @@ public class DocumentController {
                 ? null : parseDocType(type, null);
         LocalDate entryDate = parseEntryDate(date);
         Page<Document> docs = documentService.listDocumentsInSpace(userId, spaceId, docType, entryDate, page, size);
+
+        // Batch-fetch thumbnail URLs in one query to avoid N+1 attachment lookups
+        // on a 9-card page.
+        List<Long> docIds = docs.getContent().stream().map(Document::getId).toList();
+        Map<Long, List<String>> imageUrlsByDoc = documentService.findImageUrlsByDocIds(docIds);
+
         List<DocumentSummaryResponse> items = docs.getContent().stream()
-                .map(this::toSummaryResponse)
+                .map(d -> toSummaryResponse(d,
+                        imageUrlsByDoc.getOrDefault(d.getId(), List.of())))
                 .toList();
         return ResponseEntity.ok(new PageResponse<>(
                 items, docs.getTotalPages(), docs.getTotalElements(), page));
@@ -281,6 +288,7 @@ public class DocumentController {
                 d.getTags(),
                 d.getSpace().getId(),
                 d.getSpace().getName(),
+                d.getSpace().isPersonal(),
                 d.getAuthor().getId(),
                 d.getAuthor().getUsername(),
                 d.getAuthor().getAvatar(),
@@ -290,7 +298,7 @@ public class DocumentController {
                 comments);
     }
 
-    private DocumentSummaryResponse toSummaryResponse(Document d) {
+    private DocumentSummaryResponse toSummaryResponse(Document d, List<String> imageUrls) {
         String content = d.getContent() == null ? "" : d.getContent();
         String snippet = content.length() > SNIPPET_MAX_CHARS
                 ? content.substring(0, SNIPPET_MAX_CHARS)
@@ -302,6 +310,7 @@ public class DocumentController {
                 d.getDocType().name(),
                 d.getEntryDate(),
                 d.getTags(),
+                imageUrls,
                 d.getSpace().getId(),
                 d.getAuthor().getId(),
                 d.getAuthor().getUsername(),

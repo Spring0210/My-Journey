@@ -78,6 +78,13 @@ export default function SpaceDetailPage() {
       listDocuments(spaceId, { page: 0 }),
     ])
       .then(([spaceData, docsPage]) => {
+        // Personal space is surfaced to users as /journal, not as a Space card.
+        // If someone reaches /spaces/{personalId} directly (old bookmark, etc.)
+        // redirect into the journal UI before showing the team-space chrome.
+        if (spaceData.isPersonal) {
+          navigate('/journal', { replace: true })
+          return
+        }
         setSpace(spaceData)
         setDocs(docsPage.content)
         setTotalPages(docsPage.totalPages)
@@ -626,6 +633,16 @@ function DocCard({ doc, onOpen }: DocCardProps) {
         <p className="sdetail-doc-snippet">
           {cleanSnippet}{truncated ? '…' : ''}
         </p>
+      )}
+
+      {doc.imageUrls.length > 0 && (
+        <div className="sdetail-doc-thumbs">
+          {doc.imageUrls.map((url, i) => (
+            <div key={i} className="sdetail-doc-thumb">
+              <img src={url} alt="" loading="lazy" />
+            </div>
+          ))}
+        </div>
       )}
 
       {doc.tags.length > 0 && (
