@@ -60,6 +60,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/spaces/**").authenticated()
                 .requestMatchers("/api/notifications/**").authenticated()
                 .requestMatchers("/api/media/**").authenticated()
+                .requestMatchers("/api/documents/**").authenticated()
                 .anyRequest().permitAll()
             )
             .exceptionHandling(ex -> ex
