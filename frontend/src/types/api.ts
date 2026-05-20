@@ -230,6 +230,8 @@ export interface DocumentSummaryResponse {
   docType: DocType
   entryDate: string | null    // "YYYY-MM-DD", only set when docType=JOURNAL
   tags: string[]
+  // Up to 4 Cloudinary-resized image thumbnail URLs for the list card strip.
+  imageUrls: string[]
   spaceId: number
   authorId: number
   authorUsername: string
@@ -248,6 +250,9 @@ export interface DocumentResponse {
   tags: string[]
   spaceId: number
   spaceName: string
+  // True when doc lives in the user's personal space — drives back-nav
+  // (→ /journal) on the detail and edit pages.
+  spacePersonal: boolean
   authorId: number
   authorUsername: string
   authorAvatar: string | null

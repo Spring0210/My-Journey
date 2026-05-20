@@ -91,7 +91,9 @@ export default function DocumentDetailPage() {
     })) return
     try {
       await deleteDocument(documentId)
-      navigate(`/spaces/${spaceId}`)
+      // Same destination as the back button — /journal for personal space docs,
+      // the team space's detail page otherwise.
+      navigate(doc.spacePersonal ? '/journal' : `/spaces/${spaceId}`)
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Failed to delete document.')
     }
@@ -135,13 +137,18 @@ export default function DocumentDetailPage() {
   const fileAttachments  = doc.attachments.filter(a => !isImageMime(a.mimeType))
   const imageUrls        = imageAttachments.map(a => a.fileUrl)
 
+  // Personal-space docs are user-facing as the /journal page; everywhere else
+  // is /spaces/{id}. The back button + post-delete nav both follow this rule.
+  const backTo    = doc.spacePersonal ? '/journal'  : `/spaces/${spaceId}`
+  const backLabel = doc.spacePersonal ? 'Journal'   : doc.spaceName
+
   return (
     <div className="ddetail-page">
 
       <PageTopBar
         title={doc.title}
-        backTo={`/spaces/${spaceId}`}
-        backLabel={doc.spaceName}
+        backTo={backTo}
+        backLabel={backLabel}
         actions={isAuthor ? (
           <>
             <button

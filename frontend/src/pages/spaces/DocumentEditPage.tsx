@@ -51,16 +51,23 @@ export default function DocumentEditPage() {
   const { userId } = useAuth()
   const toast      = useToast()
 
-  const back = documentId
-    ? `/spaces/${spaceId}/documents/${documentId}`
-    : `/spaces/${spaceId}`
-
   // ── Form state ────────────────────────────────────────
   const [title, setTitle]         = useState('')
   const [content, setContent]     = useState('')
   const [tagsInput, setTagsInput] = useState('')
   const [docType, setDocType]     = useState<DocType>('NOTE')
   const [entryDate, setEntryDate] = useState(TODAY)
+  // Tracks whether this doc's space is the user's personal space. Drives
+  // smart back navigation (-> /journal) and post-save / cancel destinations.
+  const [isPersonal, setIsPersonal] = useState(false)
+
+  // Cancel / back destination:
+  //  - editing existing doc: doc detail (which has its own correct back link)
+  //  - creating a new personal-space doc: /journal
+  //  - creating a new shared-space doc: /spaces/{id}
+  const back = documentId
+    ? `/spaces/${spaceId}/documents/${documentId}`
+    : (isPersonal ? '/journal' : `/spaces/${spaceId}`)
 
   // ── Attachments ───────────────────────────────────────
   // /edit mode: pre-filled from doc.attachments, mutated in place by uploader.
@@ -82,8 +89,11 @@ export default function DocumentEditPage() {
     if (isNew) {
       // Fetch space to default docType: JOURNAL on personal spaces, NOTE elsewhere.
       getSpaceDetail(spaceId)
-        .then(s => setDocType(s.isPersonal ? 'JOURNAL' : 'NOTE'))
-        .catch(() => navigate(`/spaces/${spaceId}`))
+        .then(s => {
+          setIsPersonal(s.isPersonal)
+          setDocType(s.isPersonal ? 'JOURNAL' : 'NOTE')
+        })
+        .catch(() => navigate('/spaces'))
         .finally(() => setLoading(false))
     } else {
       getDocument(documentId!)
@@ -98,12 +108,13 @@ export default function DocumentEditPage() {
           setContent(d.content)
           setTagsInput(d.tags.join(', '))
           setDocType(d.docType)
+          setIsPersonal(d.spacePersonal)
           if (d.entryDate) setEntryDate(d.entryDate)
           setExistingAttachments(d.attachments)
         })
         .catch(() => {
           toast.error('Failed to load document.')
-          navigate(`/spaces/${spaceId}`)
+          navigate('/spaces')
         })
         .finally(() => setLoading(false))
     }

@@ -16,6 +16,9 @@ public record DocumentResponse(
         List<String> tags,
         Integer spaceId,
         String spaceName,
+        // True when the doc lives in the author's personal space. Drives the
+        // back-button on doc detail / edit pages (-> /journal, not /spaces/<id>).
+        boolean spacePersonal,
         Integer authorId,
         String authorUsername,
         String authorAvatar,
