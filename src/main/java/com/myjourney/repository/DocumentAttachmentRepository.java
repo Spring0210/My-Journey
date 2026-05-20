@@ -24,4 +24,16 @@ public interface DocumentAttachmentRepository extends JpaRepository<DocumentAtta
         WHERE da.document.space = :space
         """)
     List<Long> findDocumentIdsWithAttachmentInSpace(@Param("space") Space space);
+
+    // Batch fetch image attachments for a page of documents. Filters by
+    // mime_type when present (new uploads) and falls back to the Cloudinary
+    // URL pattern for legacy migrated rows where mime_type is NULL.
+    @Query("""
+        SELECT da FROM DocumentAttachment da
+        WHERE da.document.id IN :docIds
+          AND (da.mimeType LIKE 'image/%' OR da.fileUrl LIKE '%/image/upload/%')
+        ORDER BY da.document.id, da.position ASC
+        """)
+    List<DocumentAttachment> findImageAttachmentsByDocumentIds(
+            @Param("docIds") List<Long> docIds);
 }

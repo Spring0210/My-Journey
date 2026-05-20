@@ -14,6 +14,10 @@ public record DocumentSummaryResponse(
         String docType,
         LocalDate entryDate,
         List<String> tags,
+        // Up to 4 thumbnail URLs (image attachments). Cloudinary delivery
+        // transforms are inserted server-side so a 4 MB photo doesn't get
+        // downloaded for a 48px thumbnail.
+        List<String> imageUrls,
         Integer spaceId,
         Integer authorId,
         String authorUsername,

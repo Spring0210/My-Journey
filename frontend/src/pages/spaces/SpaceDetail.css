@@ -1636,3 +1636,31 @@
   .sdetail-doc-card { padding: 16px; border-radius: var(--radius-md); }
   .sdetail-doc-title { font-size: 16px; }
 }
+
+/* ── Doc card thumbnail strip (Apple Notes style) ──────── */
+.sdetail-doc-thumbs {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.sdetail-doc-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--fill-quaternary);
+  border: 1px solid var(--separator);
+  flex-shrink: 0;
+}
+.sdetail-doc-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+@media (max-width: 640px) {
+  .sdetail-doc-thumb { width: 52px; height: 52px; }
+}
