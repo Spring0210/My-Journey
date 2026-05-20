@@ -56,6 +56,9 @@ public class SecurityConfig {
                                "/notifications.html", "/oauth2-callback.html").permitAll()
                 .requestMatchers("/css/**", "/js/**", "/uploads/**", "/static/**").permitAll()
                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
+                // Health endpoint used by the CI deploy gate; returns {"status":"UP"}.
+                // Only /actuator/health is exposed — other actuator endpoints stay locked.
+                .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/api/entries/**").authenticated()
                 .requestMatchers("/api/spaces/**").authenticated()
                 .requestMatchers("/api/notifications/**").authenticated()
