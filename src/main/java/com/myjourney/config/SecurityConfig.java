@@ -64,6 +64,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/notifications/**").authenticated()
                 .requestMatchers("/api/media/**").authenticated()
                 .requestMatchers("/api/documents/**").authenticated()
+                .requestMatchers("/api/agent/**").authenticated()
                 .anyRequest().permitAll()
             )
             .exceptionHandling(ex -> ex
