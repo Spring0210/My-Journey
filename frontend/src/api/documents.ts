@@ -5,7 +5,7 @@
 // Create / update / attachment upload land in PR 2-3.
 // ─────────────────────────────────────────────────────────
 
-import { apiRequest } from './client'
+import { apiRequest, apiUploadWithProgress } from './client'
 import type {
   DocumentResponse,
   DocumentSummaryResponse,
@@ -86,8 +86,29 @@ export function deleteDocumentComment(
   })
 }
 
-// ── Attachments (read-only in PR 1) ───────────────────────
+// ── Attachments ───────────────────────────────────────────
 
 export function listDocumentAttachments(docId: number): Promise<DocumentAttachmentResponse[]> {
   return apiRequest(`/documents/${docId}/attachments`)
+}
+
+// Upload one file via multipart. onProgress fires with 0-100 pct values.
+export function uploadAttachment(
+  docId: number,
+  file: File,
+  onProgress?: (pct: number) => void,
+): Promise<DocumentAttachmentResponse> {
+  const fd = new FormData()
+  fd.append('file', file)
+  return apiUploadWithProgress(
+    `/documents/${docId}/attachments`,
+    fd,
+    { onProgress },
+  )
+}
+
+export function deleteAttachment(docId: number, attachmentId: number): Promise<void> {
+  return apiRequest(`/documents/${docId}/attachments/${attachmentId}`, {
+    method: 'DELETE',
+  })
 }
