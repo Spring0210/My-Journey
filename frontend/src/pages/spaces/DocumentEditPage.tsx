@@ -195,32 +195,9 @@ export default function DocumentEditPage() {
       <div className="dedit-inner">
         <form className="dedit-form" onSubmit={e => e.preventDefault()}>
 
-          {/* Doc type selector — only on /new. /edit cannot change type. */}
-          {isNew && (
-            <div className="dedit-typeswitch" role="tablist" aria-label="Document type">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={docType === 'NOTE'}
-                className={docType === 'NOTE' ? 'active' : ''}
-                onClick={() => setDocType('NOTE')}
-              >
-                Note
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={docType === 'JOURNAL'}
-                className={docType === 'JOURNAL' ? 'active' : ''}
-                onClick={() => setDocType('JOURNAL')}
-              >
-                Journal
-              </button>
-            </div>
-          )}
-
-          {/* Entry date — only when creating a JOURNAL */}
-          {isNew && docType === 'JOURNAL' && (
+          {/* Entry date — JOURNAL docs only (always present on Personal Space,
+              never on shared spaces, since docType is derived from the space). */}
+          {docType === 'JOURNAL' && (
             <label className="dedit-field">
               <span className="dedit-label">Entry date</span>
               <input
