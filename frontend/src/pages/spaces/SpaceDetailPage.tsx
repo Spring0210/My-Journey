@@ -13,6 +13,7 @@ import Icon from '@/components/ui/Icon'
 import PageTopBar from '@/components/ui/PageTopBar'
 import { useToast, useConfirm } from '@/components/feedback'
 import { Skeleton, SkeletonCircle } from '@/components/ui/Skeleton'
+import { formatRelativeTime, formatEntryDate, stripMarkdown } from './docCardUtils'
 import './SpaceDetail.css'
 
 // ─────────────────────────────────────────────────────────
@@ -28,51 +29,8 @@ import './SpaceDetail.css'
 // Tint classes (.slist-cover-N) are defined in Spaces.css and adapt to theme.
 const COVER_COUNT = 7
 
-// Format ISO timestamp to a human-readable relative string
-function formatTime(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime()
-  const m = Math.floor(diff / 60000)
-  if (m < 1)  return 'Just now'
-  if (m < 60) return `${m}m ago`
-  const h = Math.floor(m / 60)
-  if (h < 24) return `${h}h ago`
-  const d = Math.floor(h / 24)
-  if (d < 7)  return `${d}d ago`
-  return new Date(iso).toLocaleDateString()
-}
-
-// Format a JOURNAL entry date ("YYYY-MM-DD"). Drops the year for dates in
-// the current year, matching the way other apps surface diary dates.
-function formatEntryDate(iso: string): string {
-  const [y, m, d] = iso.split('-').map(Number)
-  const date = new Date(y, m - 1, d)
-  const sameYear = date.getFullYear() === new Date().getFullYear()
-  return date.toLocaleDateString('en-US', sameYear
-    ? { month: 'short', day: 'numeric' }
-    : { year: 'numeric', month: 'short', day: 'numeric' })
-}
-
-// Crude markdown → plain text for list snippets. We're not trying to render,
-// just to keep "#" / "**" / "- " noise out of the card preview. Keeps the
-// snippet on the same character budget the backend already trimmed it to.
-function stripMarkdown(md: string): string {
-  return md
-    .replace(/!\[[^\]]*]\([^)]+\)/g, '')        // images
-    .replace(/\[([^\]]+)]\([^)]+\)/g, '$1')     // links → text
-    .replace(/^#{1,6}\s+/gm, '')                 // headings
-    .replace(/^>\s+/gm, '')                      // blockquote
-    .replace(/^[-*+]\s+/gm, '')                  // unordered list bullets
-    .replace(/^\d+\.\s+/gm, '')                  // ordered list markers
-    .replace(/```[\s\S]*?```/g, '')              // fenced code blocks
-    .replace(/`([^`]+)`/g, '$1')                 // inline code
-    .replace(/\*\*([^*]+)\*\*/g, '$1')           // **bold**
-    .replace(/__([^_]+)__/g, '$1')               // __bold__
-    .replace(/\*([^*]+)\*/g, '$1')               // *italic*
-    .replace(/_([^_]+)_/g, '$1')                 // _italic_
-    .replace(/~~([^~]+)~~/g, '$1')               // ~~strike~~
-    .replace(/\s+/g, ' ')                        // collapse whitespace
-    .trim()
-}
+// formatRelativeTime / formatEntryDate / stripMarkdown moved to docCardUtils.ts
+// for reuse by the /journal list page.
 
 export default function SpaceDetailPage() {
   const { id }   = useParams<{ id: string }>()
@@ -648,7 +606,7 @@ function DocCard({ doc, onOpen }: DocCardProps) {
   // Both render in the same meta-row slot for consistent card geometry.
   const dateLabel = doc.docType === 'JOURNAL' && doc.entryDate
     ? formatEntryDate(doc.entryDate)
-    : formatTime(doc.createdAt)
+    : formatRelativeTime(doc.createdAt)
   return (
     <article
       className="sdetail-doc-card"

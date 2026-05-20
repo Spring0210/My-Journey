@@ -6,9 +6,9 @@ import listPlugin from '@fullcalendar/list'
 import interactionPlugin from '@fullcalendar/interaction'
 import type { EventClickArg, EventContentArg } from '@fullcalendar/core'
 import type { DateClickArg } from '@fullcalendar/interaction'
-import { useAuth } from '@/context/AuthContext'
-import { getCalendarEntries } from '@/api/journal'
-import type { CalendarEvent } from '@/types/api'
+import { getPersonalSpace } from '@/api/spaces'
+import { getDocCalendar } from '@/api/documents'
+import type { CalendarEvent, SpaceSummaryResponse } from '@/types/api'
 import PageTopBar from '@/components/ui/PageTopBar'
 import { Skeleton } from '@/components/ui/Skeleton'
 import Icon from '@/components/ui/Icon'
@@ -25,20 +25,23 @@ import './Calendar.css'
 type CalView = 'month' | 'list' | 'year'
 
 export default function CalendarPage() {
-  const { userId } = useAuth()
-  const navigate   = useNavigate()
+  const navigate = useNavigate()
+  const [personalSpace, setPersonalSpace] = useState<SpaceSummaryResponse | null>(null)
   const [events, setEvents]   = useState<CalendarEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [view, setView]       = useState<CalView>('month')
 
   useEffect(() => {
-    if (!userId) return
     setLoading(true)
-    getCalendarEntries(userId)
+    getPersonalSpace()
+      .then(space => {
+        setPersonalSpace(space)
+        return getDocCalendar(space.id)
+      })
       .then(data => setEvents(data))
       .catch(() => setEvents([]))
       .finally(() => setLoading(false))
-  }, [userId])
+  }, [])
 
   function handleDateClick(info: DateClickArg) {
     // Navigate to journal list with the clicked date pre-filtered
@@ -47,7 +50,8 @@ export default function CalendarPage() {
 
   function handleEventClick(info: EventClickArg) {
     info.jsEvent.preventDefault()
-    navigate(`/journal/${info.event.id}`)
+    if (!personalSpace) return
+    navigate(`/spaces/${personalSpace.id}/documents/${info.event.id}`)
   }
 
   // Custom event pill — show a camera glyph when the entry has photos

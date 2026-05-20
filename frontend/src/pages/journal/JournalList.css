@@ -929,3 +929,52 @@
     margin: 12px auto 20px;
   }
 }
+
+
+/* ────────────────────────────────────────────────────────
+   PR 4 additions — doc-mode journal list.
+   Calendar drill-in pill + Load-more button.
+   The list cards reuse .sdetail-doc-card from SpaceDetail.css.
+   ──────────────────────────────────────────────────────── */
+
+.jlist-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px 6px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--tint-accent-subtle);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.jlist-filter-clear {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  transition: background var(--ease-micro);
+}
+.jlist-filter-clear:hover {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.jlist-load-more {
+  display: block;
+  margin: 16px auto 0;
+  padding: 8px 18px;
+  border-radius: var(--radius-pill);
+  background: var(--fill-tertiary);
+  color: var(--label-primary);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background var(--ease-micro);
+}
+.jlist-load-more:hover:not(:disabled) { background: var(--fill-secondary); }
+.jlist-load-more:disabled { opacity: 0.5; cursor: not-allowed; }

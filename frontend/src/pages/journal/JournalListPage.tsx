@@ -1,599 +1,258 @@
-import { useState, useEffect, useCallback } from 'react'
-import { NavLink, useSearchParams } from 'react-router-dom'
-import { useAuth } from '@/context/AuthContext'
-import {
-  getEntries, searchEntries, aiSearch, aiRecap, aiPrompts,
-} from '@/api/journal'
-import type { JournalEntry } from '@/types/api'
+import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { getPersonalSpace } from '@/api/spaces'
+import { listDocuments } from '@/api/documents'
+import type {
+  SpaceSummaryResponse, DocumentSummaryResponse,
+} from '@/types/api'
 import Icon from '@/components/ui/Icon'
 import PageTopBar from '@/components/ui/PageTopBar'
-import { Skeleton } from '@/components/ui/Skeleton'
+import { Skeleton, SkeletonCircle } from '@/components/ui/Skeleton'
 import EmptyState from '@/components/ui/EmptyState'
 import EmptyJournal from '@/components/ui/illustrations/EmptyJournal'
-import EmptySearchResult from '@/components/ui/illustrations/EmptySearchResult'
+import { formatEntryDate, stripMarkdown } from '@/pages/spaces/docCardUtils'
+import '@/pages/spaces/SpaceDetail.css'   // reuse .sdetail-doc-card styling
 import './JournalList.css'
 
 // ─────────────────────────────────────────────────────────
-// JournalListPage — paginated entry list with keyword/date
-// search, AI search, writing prompts, and monthly recap.
+// JournalListPage — the user's journal feed.
+// Backed by the unified Document model: lists JOURNAL docs
+// from the user's auto-created personal space. Date click
+// from Calendar / Heatmap drills in via ?date=YYYY-MM-DD.
+//
+// Legacy search / AI search / recap / prompts UI was removed
+// with the doc model pivot — those features depend on the
+// /api/entries endpoints, which are scheduled to migrate to
+// the document model in a follow-up PR.
 // ─────────────────────────────────────────────────────────
 
 const PAGE_SIZE = 9
 
-function formatDate(dateStr: string): string {
-  const [y, m, d] = dateStr.split('-').map(Number)
-  return new Date(y, m - 1, d).toLocaleDateString('en-US', {
-    year: 'numeric', month: 'short', day: 'numeric',
-  })
-}
-
 export default function JournalListPage() {
-  const { userId } = useAuth()
-  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const dateFilter = searchParams.get('date') || ''
 
-  // ── Entry list state ──────────────────────────────────
-  const [entries, setEntries]     = useState<JournalEntry[]>([])
-  const [currentPage, setCurrentPage] = useState(0)
-  const [totalPages, setTotalPages]   = useState(0)
-  const [loading, setLoading]         = useState(true)
-  const [isSearchMode, setIsSearchMode] = useState(false)
+  const [personalSpace, setPersonalSpace] = useState<SpaceSummaryResponse | null>(null)
+  const [docs, setDocs]                   = useState<DocumentSummaryResponse[]>([])
+  const [currentPage, setCurrentPage]     = useState(0)
+  const [totalPages, setTotalPages]       = useState(0)
+  const [loading, setLoading]             = useState(true)
+  const [loadingMore, setLoadingMore]     = useState(false)
 
-  // ── Search state ──────────────────────────────────────
-  const [keyword, setKeyword] = useState('')
-  const [date, setDate]       = useState('')
-
-  // ── AI search state ───────────────────────────────────
-  const [aiQuery, setAiQuery]     = useState('')
-  const [aiMeta, setAiMeta]       = useState('')
-  const [aiLoading, setAiLoading] = useState(false)
-
-  // ── Desktop AI bar toggle ─────────────────────────────
-  const [showAiBar, setShowAiBar] = useState(false)
-
-  // ── Mobile bottom sheet states ────────────────────────
-  const [searchOpen, setSearchOpen] = useState(false)
-  const [aiOpen, setAiOpen]         = useState(false)
-
-  // ── Modal state ───────────────────────────────────────
-  const [showPrompts, setShowPrompts]     = useState(false)
-  const [prompts, setPrompts]             = useState<string[]>([])
-  const [promptsLoading, setPromptsLoading] = useState(false)
-  const [promptsError, setPromptsError]   = useState('')
-
-  const [showRecap, setShowRecap]         = useState(false)
-  const [recapYear, setRecapYear]         = useState(new Date().getFullYear())
-  const [recapMonth, setRecapMonth]       = useState(new Date().getMonth() + 1)
-  const [recapText, setRecapText]         = useState('')
-  const [recapLoading, setRecapLoading]   = useState(false)
-
-  // ── Load entries ──────────────────────────────────────
-  const loadEntries = useCallback(async (page: number) => {
-    if (!userId) return
-    setLoading(true)
-    try {
-      const data = await getEntries(userId, page, PAGE_SIZE)
-      setEntries(data.content)
-      setCurrentPage(data.currentPage)
-      setTotalPages(data.totalPages)
-      setIsSearchMode(false)
-      setAiMeta('')
-    } catch {
-      setEntries([])
-    } finally {
-      setLoading(false)
-    }
-  }, [userId])
-
-  // Pre-filter by date from calendar navigation
+  // Fetch the personal space once on mount; subsequent fetches reuse it.
   useEffect(() => {
-    const dateParam = searchParams.get('date')
-    if (dateParam && userId) {
-      setDate(dateParam)
-      setIsSearchMode(true)
-      setLoading(true)
-      searchEntries(userId, '', dateParam)
-        .then(results => { setEntries(results); setTotalPages(0) })
-        .catch(() => setEntries([]))
-        .finally(() => setLoading(false))
-    } else {
-      loadEntries(0)
-    }
-  }, [userId]) // eslint-disable-line react-hooks/exhaustive-deps
+    getPersonalSpace()
+      .then(setPersonalSpace)
+      .catch(() => setPersonalSpace(null))
+  }, [])
 
-  // ── Keyword / date search ──────────────────────────────
-  function handleSearch() {
-    if (!userId) return
-    setIsSearchMode(true)
-    setAiMeta('')
+  // (Re)load the doc list when the personal space resolves or the date filter changes.
+  useEffect(() => {
+    if (!personalSpace) return
     setLoading(true)
-    searchEntries(userId, keyword, date)
-      .then(results => { setEntries(results); setTotalPages(0) })
-      .catch(() => setEntries([]))
+    listDocuments(personalSpace.id, {
+      type: 'JOURNAL',
+      date: dateFilter || undefined,
+      page: 0,
+      size: PAGE_SIZE,
+    })
+      .then(page => {
+        setDocs(page.content)
+        setCurrentPage(page.currentPage)
+        setTotalPages(page.totalPages)
+      })
+      .catch(() => setDocs([]))
       .finally(() => setLoading(false))
-  }
+  }, [personalSpace?.id, dateFilter])
 
-  function handleClear() {
-    setKeyword('')
-    setDate('')
-    setAiQuery('')
-    setAiMeta('')
-    loadEntries(0)
-  }
-
-  // ── AI search ─────────────────────────────────────────
-  async function handleAiSearch() {
-    if (!aiQuery.trim()) return
-    setAiLoading(true)
-    setIsSearchMode(true)
-    setAiMeta('')
-    setEntries([])
+  async function loadMore() {
+    if (!personalSpace || loadingMore || currentPage + 1 >= totalPages) return
+    setLoadingMore(true)
     try {
-      const data = await aiSearch(aiQuery.trim())
-      if (data.keywords?.length) {
-        setAiMeta(`Matched keywords: ${data.keywords.join(', ')}`)
-      }
-      setEntries(data.entries ?? [])
-      setTotalPages(0)
-    } catch {
-      setEntries([])
+      const next = await listDocuments(personalSpace.id, {
+        type: 'JOURNAL',
+        date: dateFilter || undefined,
+        page: currentPage + 1,
+        size: PAGE_SIZE,
+      })
+      setDocs(prev => [...prev, ...next.content])
+      setCurrentPage(next.currentPage)
     } finally {
-      setAiLoading(false)
+      setLoadingMore(false)
     }
   }
 
-  // ── Writing prompts ───────────────────────────────────
-  async function openPrompts() {
-    setShowPrompts(true)
-    setPromptsError('')
-    setPrompts([])
-    setPromptsLoading(true)
-    try {
-      const data = await aiPrompts()
-      if (data.error) { setPromptsError(data.error); return }
-      setPrompts(data.prompts ?? [])
-    } catch {
-      setPromptsError('Failed to generate prompts. Please try again.')
-    } finally {
-      setPromptsLoading(false)
-    }
+  function clearDateFilter() {
+    setSearchParams({})
   }
 
-  // ── Monthly recap ─────────────────────────────────────
-  async function handleGenerateRecap() {
-    setRecapLoading(true)
-    setRecapText('Generating...')
-    try {
-      const data = await aiRecap(recapYear, recapMonth)
-      setRecapText(data.recap ?? data.error ?? 'Failed to generate.')
-    } catch {
-      setRecapText('Failed to generate recap. Please try again.')
-    } finally {
-      setRecapLoading(false)
-    }
+  function newEntryPath(): string | null {
+    return personalSpace ? `/spaces/${personalSpace.id}/documents/new` : null
   }
 
-  const years = Array.from(
-    { length: 5 },
-    (_, i) => new Date().getFullYear() - i,
-  )
+  function entryPath(docId: number): string {
+    return `/spaces/${personalSpace!.id}/documents/${docId}`
+  }
 
-  // ── Render ────────────────────────────────────────────
   return (
     <div className="jlist-page">
 
       <PageTopBar
-        title="My Journal"
+        title="Journal"
         actions={
-          <>
-            <NavLink to="/journal/new" className="jlist-btn jlist-btn--primary jlist-btn--topbar">
-              <Icon name="plus" size={16} />
-              New entry
-            </NavLink>
-          </>
+          <button
+            className="jlist-btn jlist-btn--primary jlist-btn--topbar"
+            onClick={() => {
+              const path = newEntryPath()
+              if (path) navigate(path)
+            }}
+            disabled={!personalSpace}
+          >
+            <Icon name="plus" size={16} />
+            New entry
+          </button>
         }
       />
 
       <div className="jlist-inner">
 
-        {/* ── Desktop: single flex-wrap toolbar card ─────────── */}
-        <div className="jlist-desktop-bar">
-          <div className="jlist-search-card">
-
-            {/* Toolbar row — search inputs on left, tools on right.
-                flex-wrap: wraps naturally on tablet widths. */}
-            <div className="jlist-toolbar-row">
-
-              {/* Group 1: keyword + date + Search/Clear */}
-              <div className="jlist-toolbar-search">
-                <input
-                  className="jlist-input jlist-input--keyword"
-                  type="text"
-                  placeholder="Search by keyword..."
-                  value={keyword}
-                  onChange={e => setKeyword(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                />
-                <input
-                  className="jlist-input jlist-input--date"
-                  type="date"
-                  value={date}
-                  onChange={e => setDate(e.target.value)}
-                />
-                <button className="jlist-btn" onClick={handleClear}>Clear</button>
-                <button className="jlist-btn jlist-btn--primary" onClick={handleSearch}>
-                  <Icon name="search" size={14} />
-                  Search
-                </button>
-              </div>
-
-              {/* Group 2: AI Search + Recap + Prompts — pushed right */}
-              <div className="jlist-toolbar-tools">
-                <button
-                  className={`jlist-btn${showAiBar ? ' jlist-btn--active' : ''}`}
-                  onClick={() => setShowAiBar(v => !v)}
-                >
-                  <Icon name="ai" size={14} />
-                  AI Search
-                </button>
-                <button className="jlist-btn" onClick={() => { setShowRecap(true); setRecapText('') }}>
-                  <Icon name="calendar" size={14} />
-                  Recap
-                </button>
-                <button className="jlist-btn" onClick={openPrompts}>
-                  <Icon name="journal" size={14} />
-                  Prompts
-                </button>
-              </div>
-            </div>
-
-            {/* AI Search bar — expands below when toggled */}
-            {showAiBar && (
-              <div className="jlist-ai-bar">
-                <input
-                  className="jlist-ai-input"
-                  type="text"
-                  placeholder='Try "entries about my mom" or "times I felt proud"'
-                  value={aiQuery}
-                  onChange={e => setAiQuery(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleAiSearch()}
-                  autoFocus
-                />
-                <button
-                  className="jlist-btn jlist-btn--primary"
-                  onClick={handleAiSearch}
-                  disabled={aiLoading}
-                >
-                  <Icon name="ai" size={14} />
-                  {aiLoading ? 'Searching...' : 'Search'}
-                </button>
-              </div>
-            )}
-
-          </div>
-        </div>
-
-        {/* ── Mobile layout ──────────────────────────────── */}
-        <div className="jlist-mobile-bar">
-
-          {/* Horizontal chip row — mirrors desktop toolbar spirit */}
-          <div className="jlist-chip-row">
+        {dateFilter && (
+          <div className="jlist-filter-pill">
+            <Icon name="calendar" size={13} />
+            <span>Showing entries from {formatEntryDate(dateFilter)}</span>
             <button
-              className={`jlist-chip${searchOpen ? ' jlist-chip--active' : ''}`}
-              onClick={() => { setSearchOpen(v => !v); setAiOpen(false) }}
+              type="button"
+              className="jlist-filter-clear"
+              onClick={clearDateFilter}
+              aria-label="Clear date filter"
             >
-              <Icon name="search" size={15} />
-              Search
-            </button>
-            <button
-              className={`jlist-chip${aiOpen ? ' jlist-chip--active' : ''}`}
-              onClick={() => { setAiOpen(v => !v); setSearchOpen(false) }}
-            >
-              <Icon name="ai" size={15} />
-              AI Search
-            </button>
-            <button
-              className="jlist-chip"
-              onClick={() => { setShowRecap(true); setRecapText('') }}
-            >
-              <Icon name="calendar" size={15} />
-              Recap
-            </button>
-            <button className="jlist-chip" onClick={openPrompts}>
-              <Icon name="journal" size={15} />
-              Prompts
-            </button>
-          </div>
-
-        </div>
-
-        {/* Active filter banner — shows on both desktop and mobile when in search mode.
-            Lets the user see what filter is active and clear it with one tap. */}
-        {isSearchMode && (
-          <div className="jlist-filter-banner">
-            <Icon name={aiMeta ? 'ai' : 'search'} size={14} />
-            <span className="jlist-filter-banner-text">
-              {aiMeta
-                ? `AI matched: ${aiQuery}`
-                : keyword || date
-                  ? [keyword, date].filter(Boolean).join(' · ')
-                  : 'Search results'
-              }
-            </span>
-            <button className="jlist-filter-banner-clear" onClick={handleClear}>
-              Clear
-              <Icon name="close" size={11} />
+              <Icon name="close" size={12} />
             </button>
           </div>
         )}
 
-        {/* Entry grid */}
         {loading ? (
-          <div className="jlist-grid">
-            {Array.from({ length: 9 }).map((_, i) => (
-              <div key={i} className="jlist-card" style={{ pointerEvents: 'none' }}>
-                <Skeleton width={90} height={13} />
-                <Skeleton width="80%" height={17} style={{ marginTop: 8 }} />
-                <Skeleton width="100%" height={13} style={{ marginTop: 6 }} />
-                <Skeleton width="65%" height={13} style={{ marginTop: 4 }} />
-              </div>
-            ))}
-          </div>
-        ) : entries.length === 0 ? (
-          isSearchMode ? (
-            <EmptyState
-              illustration={<EmptySearchResult />}
-              title="No entries found"
-              subtitle="Try a different keyword, date, or search query."
-            />
-          ) : (
-            <EmptyState
-              illustration={<EmptyJournal />}
-              title="No entries yet"
-              subtitle="Start your journal with a single thought."
-              action={
-                <NavLink to="/journal/new" className="jlist-btn jlist-btn--primary">
-                  <Icon name="plus" size={15} />
-                  Write your first entry
-                </NavLink>
-              }
-            />
-          )
-        ) : (
-          <div className="jlist-grid">
-            {entries.map(entry => (
-              <NavLink
-                key={entry.id}
-                to={`/journal/${entry.id}`}
-                className="jlist-card"
+          <JournalListSkeleton />
+        ) : docs.length === 0 ? (
+          <EmptyState
+            illustration={<EmptyJournal />}
+            title={dateFilter ? 'No entries on this day' : 'No journal entries yet'}
+            subtitle={dateFilter
+              ? 'Try a different date or clear the filter to see everything.'
+              : 'Start writing — the first entry is always the hardest.'}
+            action={dateFilter ? undefined : (
+              <button
+                className="jlist-btn jlist-btn--primary"
+                onClick={() => {
+                  const path = newEntryPath()
+                  if (path) navigate(path)
+                }}
+                disabled={!personalSpace}
               >
-                <span className="jlist-card-date">{formatDate(entry.entryDate)}</span>
-                <span className="jlist-card-title">{entry.title}</span>
-                {entry.content && (
-                  <span className="jlist-card-excerpt">{entry.content}</span>
-                )}
-                {entry.imagePathList?.length > 0 && (
-                  <div className="jlist-card-thumbs">
-                    {entry.imagePathList.slice(0, 3).map((url, i) => (
-                      <img key={i} src={url} alt="" className="jlist-card-thumb" />
-                    ))}
-                    {entry.imagePathList.length > 3 && (
-                      <div className="jlist-card-thumb-more">
-                        +{entry.imagePathList.length - 3}
-                      </div>
+                <Icon name="plus" size={16} />
+                Write your first entry
+              </button>
+            )}
+          />
+        ) : (
+          <div className="sdetail-doc-list">
+            {docs.map(doc => {
+              const cleanSnippet = stripMarkdown(doc.snippet)
+              const truncated = doc.snippet.length >= 200
+              const dateLabel = doc.entryDate ? formatEntryDate(doc.entryDate) : ''
+              return (
+                <article
+                  key={doc.id}
+                  className="sdetail-doc-card"
+                  onClick={() => navigate(entryPath(doc.id))}
+                  role="link"
+                  tabIndex={0}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      navigate(entryPath(doc.id))
+                    }
+                  }}
+                >
+                  <h3 className="sdetail-doc-title">{doc.title}</h3>
+
+                  {cleanSnippet && (
+                    <p className="sdetail-doc-snippet">
+                      {cleanSnippet}{truncated ? '…' : ''}
+                    </p>
+                  )}
+
+                  {doc.tags.length > 0 && (
+                    <div className="sdetail-doc-tags">
+                      {doc.tags.slice(0, 6).map(t => (
+                        <span key={t} className="sdetail-doc-tag">#{t}</span>
+                      ))}
+                      {doc.tags.length > 6 && (
+                        <span className="sdetail-doc-tag sdetail-doc-tag--more">
+                          +{doc.tags.length - 6}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="sdetail-doc-meta">
+                    <div className="sdetail-doc-avatar">
+                      {doc.authorAvatar
+                        ? <img src={doc.authorAvatar} alt="" />
+                        : doc.authorUsername.charAt(0).toUpperCase()
+                      }
+                    </div>
+                    <span className="sdetail-doc-author">@{doc.authorUsername}</span>
+                    {dateLabel && (
+                      <>
+                        <span className="sdetail-doc-dot">·</span>
+                        <span className="sdetail-doc-time">{dateLabel}</span>
+                      </>
                     )}
                   </div>
-                )}
-              </NavLink>
-            ))}
+                </article>
+              )
+            })}
           </div>
         )}
 
-        {/* Pagination */}
-        {!isSearchMode && totalPages > 1 && (
-          <div className="jlist-pagination">
-            <button
-              className="jlist-btn"
-              disabled={currentPage === 0}
-              onClick={() => loadEntries(currentPage - 1)}
-            >
-              Previous
-            </button>
-            <span className="jlist-page-info">
-              Page {currentPage + 1} of {totalPages}
-            </span>
-            <button
-              className="jlist-btn"
-              disabled={currentPage >= totalPages - 1}
-              onClick={() => loadEntries(currentPage + 1)}
-            >
-              Next
-            </button>
-          </div>
+        {!loading && currentPage + 1 < totalPages && (
+          <button
+            className="jlist-load-more"
+            onClick={loadMore}
+            disabled={loadingMore}
+          >
+            {loadingMore ? 'Loading...' : 'Load more entries'}
+          </button>
         )}
       </div>
+    </div>
+  )
+}
 
-      {/* ── Search bottom sheet ──────────────────────────── */}
-      {searchOpen && (
-        <div className="jlist-modal-overlay" onClick={e => { if (e.target === e.currentTarget) setSearchOpen(false) }}>
-          <div className="jlist-modal">
-            <div className="jlist-modal-header">
-              <h2 className="jlist-modal-title">Search</h2>
-              <button className="jlist-modal-close" onClick={() => setSearchOpen(false)} aria-label="Close">
-                <Icon name="close" size={16} />
-              </button>
-            </div>
-
-            {/* Keyword field */}
-            <div className="jlist-sheet-field">
-              <label className="jlist-sheet-label">Keyword</label>
-              <input
-                className="jlist-sheet-input"
-                type="text"
-                placeholder="Search entries..."
-                value={keyword}
-                onChange={e => setKeyword(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') { handleSearch(); setSearchOpen(false) } }}
-                autoFocus
-              />
-            </div>
-
-            {/* Date field */}
-            <div className="jlist-sheet-field">
-              <label className="jlist-sheet-label">Date</label>
-              <input
-                className="jlist-sheet-input jlist-sheet-date"
-                type="date"
-                value={date}
-                onChange={e => setDate(e.target.value)}
-              />
-            </div>
-
-            {/* Primary action */}
-            <button
-              className="jlist-sheet-primary-btn"
-              onClick={() => { handleSearch(); setSearchOpen(false) }}
-            >
-              <Icon name="search" size={16} />
-              Search
-            </button>
-
-            {/* Secondary clear */}
-            <button
-              className="jlist-sheet-clear-link"
-              onClick={() => { handleClear(); setSearchOpen(false) }}
-            >
-              Clear all
-            </button>
+// ─────────────────────────────────────────────────────────
+// Three doc-card placeholders while the personal space + first
+// page of journal docs load.
+// ─────────────────────────────────────────────────────────
+function JournalListSkeleton() {
+  return (
+    <div className="sdetail-doc-list">
+      {[0, 1, 2].map(i => (
+        <div
+          key={i}
+          className="sdetail-doc-card"
+          style={{ pointerEvents: 'none' }}
+        >
+          <Skeleton width="60%" height={18} />
+          <Skeleton width="100%" height={13} style={{ marginTop: 10 }} />
+          <Skeleton width="90%" height={13} style={{ marginTop: 6 }} />
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 14 }}>
+            <SkeletonCircle size={24} />
+            <Skeleton width={100} height={11} />
           </div>
         </div>
-      )}
-
-      {/* ── AI Search bottom sheet ────────────────────────── */}
-      {aiOpen && (
-        <div className="jlist-modal-overlay" onClick={e => { if (e.target === e.currentTarget) setAiOpen(false) }}>
-          <div className="jlist-modal">
-            <div className="jlist-modal-header">
-              <h2 className="jlist-modal-title">AI Search</h2>
-              <button className="jlist-modal-close" onClick={() => setAiOpen(false)} aria-label="Close">
-                <Icon name="close" size={16} />
-              </button>
-            </div>
-
-            {/* Query field — textarea for longer descriptions */}
-            <div className="jlist-sheet-field">
-              <label className="jlist-sheet-label">Describe what you're looking for</label>
-              <textarea
-                className="jlist-sheet-input jlist-sheet-textarea"
-                placeholder={'e.g. "entries about my mom"'}
-                value={aiQuery}
-                onChange={e => setAiQuery(e.target.value)}
-                rows={3}
-                autoFocus
-              />
-            </div>
-
-            {/* Primary action */}
-            <button
-              className="jlist-sheet-primary-btn"
-              onClick={() => { handleAiSearch(); setAiOpen(false) }}
-              disabled={aiLoading}
-            >
-              <Icon name="ai" size={16} />
-              {aiLoading ? 'Searching...' : 'Search'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── Writing Prompts Modal ─────────────────────────── */}
-      {showPrompts && (
-        <div className="jlist-modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowPrompts(false) }}>
-          <div className="jlist-modal">
-            <div className="jlist-modal-header">
-              <h2 className="jlist-modal-title">Writing Prompts</h2>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button className="jlist-btn" onClick={openPrompts} disabled={promptsLoading} style={{ height: 32, padding: '0 12px', fontSize: 13 }}>
-                  Refresh
-                </button>
-                <button className="jlist-modal-close" onClick={() => setShowPrompts(false)} aria-label="Close">
-                  <Icon name="close" size={16} />
-                </button>
-              </div>
-            </div>
-
-            {promptsLoading && <p style={{ color: 'var(--label-tertiary)', fontSize: 14 }}>Generating prompts...</p>}
-            {promptsError  && <p style={{ color: 'var(--label-tertiary)', fontSize: 14 }}>{promptsError}</p>}
-
-            {!promptsLoading && prompts.length > 0 && (
-              <div className="jlist-prompts-list">
-                {prompts.map((prompt, i) => (
-                  <NavLink
-                    key={i}
-                    to={`/journal/new?prompt=${encodeURIComponent(prompt)}`}
-                    className="jlist-prompt-card"
-                    onClick={() => setShowPrompts(false)}
-                  >
-                    <span className="jlist-prompt-num">
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
-                    <p className="jlist-prompt-text">{prompt}</p>
-                    <Icon name="chevron-right" size={16} className="jlist-prompt-chevron" />
-                  </NavLink>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── Monthly Recap Modal ───────────────────────────── */}
-      {showRecap && (
-        <div className="jlist-modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowRecap(false) }}>
-          <div className="jlist-modal">
-            <div className="jlist-modal-header">
-              <h2 className="jlist-modal-title">Monthly Recap</h2>
-              <button className="jlist-modal-close" onClick={() => setShowRecap(false)} aria-label="Close">
-                <Icon name="close" size={16} />
-              </button>
-            </div>
-
-            <div className="jlist-recap-controls">
-              <div className="jlist-recap-selects">
-                <select
-                  className="jlist-select"
-                  value={recapYear}
-                  onChange={e => setRecapYear(Number(e.target.value))}
-                >
-                  {years.map(y => <option key={y} value={y}>{y}</option>)}
-                </select>
-                <select
-                  className="jlist-select"
-                  value={recapMonth}
-                  onChange={e => setRecapMonth(Number(e.target.value))}
-                >
-                  {Array.from({ length: 12 }, (_, i) => (
-                    <option key={i + 1} value={i + 1}>
-                      {new Date(2000, i).toLocaleString('en-US', { month: 'long' })}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <button
-                className="jlist-btn jlist-btn--primary jlist-recap-generate"
-                onClick={handleGenerateRecap}
-                disabled={recapLoading}
-              >
-                <Icon name="ai" size={15} />
-                {recapLoading ? 'Generating...' : 'Generate Recap'}
-              </button>
-            </div>
-
-            {recapText && (
-              <p className="jlist-recap-text">{recapText}</p>
-            )}
-          </div>
-        </div>
-      )}
+      ))}
     </div>
   )
 }

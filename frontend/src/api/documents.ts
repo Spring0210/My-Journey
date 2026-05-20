@@ -14,21 +14,36 @@ import type {
   CreateDocumentRequest,
   UpdateDocumentRequest,
   PageResponse,
+  CalendarEvent,
+  HeatmapPoint,
   DocType,
 } from '@/types/api'
 
 // ── Documents: list & read ────────────────────────────────
 
-// Paginated list of documents in a space; optional docType filter ("JOURNAL"|"NOTE").
+// Paginated list of documents in a space.
+// type:  JOURNAL|NOTE  — optional doc-type filter
+// date:  YYYY-MM-DD    — optional entry_date match (powers calendar/heatmap drill-in)
 export function listDocuments(
   spaceId: number,
-  opts: { type?: DocType; page?: number; size?: number } = {},
+  opts: { type?: DocType; date?: string; page?: number; size?: number } = {},
 ): Promise<PageResponse<DocumentSummaryResponse>> {
   const params = new URLSearchParams()
   if (opts.type) params.set('type', opts.type)
+  if (opts.date) params.set('date', opts.date)
   params.set('page', String(opts.page ?? 0))
   params.set('size', String(opts.size ?? 20))
   return apiRequest(`/spaces/${spaceId}/documents?${params.toString()}`)
+}
+
+// Calendar feed for /journal — one event per JOURNAL doc with an entry_date.
+export function getDocCalendar(spaceId: number): Promise<CalendarEvent[]> {
+  return apiRequest(`/spaces/${spaceId}/documents/calendar`)
+}
+
+// Year heatmap for /journal — count of JOURNAL docs per day in the given year.
+export function getDocHeatmap(spaceId: number, year: number): Promise<HeatmapPoint[]> {
+  return apiRequest(`/spaces/${spaceId}/documents/heatmap?year=${year}`)
 }
 
 export function getDocument(docId: number): Promise<DocumentResponse> {

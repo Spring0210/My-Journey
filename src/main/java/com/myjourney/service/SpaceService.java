@@ -100,6 +100,24 @@ public class SpaceService {
         return new SpaceResponse(space.getId(), space.getName(), space.getDescription(), space.getInviteCode(), space.getCoverImage());
     }
 
+    // Return the user's auto-created personal space (every user has exactly one).
+    // Used by the /journal page to know which space hosts the user's JOURNAL docs.
+    public SpaceSummaryResponse getPersonalSpace(Integer userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "User not found"));
+        Space space = spaceRepository.findFirstByOwnerAndPersonalTrue(user)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Personal space not found"));
+        // Membership lookup is technically redundant (owner is always a member),
+        // but keep it consistent with the SpaceSummaryResponse contract.
+        SpaceMember member = spaceMemberRepository.findBySpaceAndUser(space, user)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Personal space membership missing"));
+        return new SpaceSummaryResponse(
+                space.getId(), space.getName(), space.getDescription(),
+                space.getCoverImage(), space.getInviteCode(),
+                member.getRole().name(), space.getOwner().getUsername(),
+                space.isPersonal());
+    }
+
     // Get all spaces the user belongs to
     public List<SpaceSummaryResponse> getMySpaces(Integer userId) {
         User user = userRepository.findById(userId)

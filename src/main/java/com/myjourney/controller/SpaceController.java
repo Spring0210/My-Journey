@@ -70,6 +70,18 @@ public class SpaceController {
         return ResponseEntity.ok(spaceService.getMySpaces(userId));
     }
 
+    // GET /api/spaces/personal — current user's auto-created personal space.
+    // Used by the /journal page to know which space hosts the user's JOURNAL docs.
+    @GetMapping("/personal")
+    public ResponseEntity<SpaceSummaryResponse> getPersonalSpace(
+            @RequestHeader(value = "Authorization", required = false) String authHeader
+    ) {
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
+        if (userId == null) return ResponseEntity.status(401).build();
+
+        return ResponseEntity.ok(spaceService.getPersonalSpace(userId));
+    }
+
     // GET /api/spaces/{spaceId} — get space detail (members only)
     @GetMapping("/{spaceId}")
     public ResponseEntity<SpaceDetailResponse> getSpaceDetail(
