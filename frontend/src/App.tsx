@@ -18,6 +18,7 @@ import SpacesListPage      from '@/pages/spaces/SpacesListPage'
 import SpaceDetailPage     from '@/pages/spaces/SpaceDetailPage'
 import DocumentDetailPage  from '@/pages/spaces/DocumentDetailPage'
 import DocumentEditPage    from '@/pages/spaces/DocumentEditPage'
+import AgentChatPage       from '@/pages/agent/AgentChatPage'
 import NotificationsPage   from '@/pages/notifications/NotificationsPage'
 import ProfilePage         from '@/pages/profile/ProfilePage'
 import DashboardPage       from '@/pages/dashboard/DashboardPage'
@@ -76,6 +77,7 @@ function AppRoutes() {
         <Route path="/calendar"      element={<CalendarPage />} />
         <Route path="/spaces"        element={<SpacesListPage />} />
         <Route path="/spaces/:id"    element={<SpaceDetailPage />} />
+        <Route path="/spaces/:id/chat"                  element={<AgentChatPage />} />
         <Route path="/spaces/:id/documents/new"         element={<DocumentEditPage />} />
         <Route path="/spaces/:id/documents/:docId"      element={<DocumentDetailPage />} />
         <Route path="/spaces/:id/documents/:docId/edit" element={<DocumentEditPage />} />

@@ -11,6 +11,7 @@ import type {
 import { useAuth } from '@/context/AuthContext'
 import Icon from '@/components/ui/Icon'
 import PageTopBar from '@/components/ui/PageTopBar'
+import ChatPanel from '@/pages/agent/ChatPanel'
 import { useToast, useConfirm } from '@/components/feedback'
 import { Skeleton, SkeletonCircle } from '@/components/ui/Skeleton'
 import { formatRelativeTime, formatEntryDate, stripMarkdown } from './docCardUtils'
@@ -67,6 +68,10 @@ export default function SpaceDetailPage() {
 
   // Controls info sheet (used on both mobile and desktop)
   const [showInfoSheet, setShowInfoSheet] = useState(false)
+
+  // Agent chat. Desktop opens the drawer in-place; mobile navigates to the
+  // /spaces/:id/chat full-page route (drawer ergonomics are bad on a phone).
+  const [chatOpen, setChatOpen] = useState(false)
 
   const isOwner = space?.ownerUsername === username
 
@@ -243,6 +248,21 @@ export default function SpaceDetailPage() {
         backLabel="Spaces"
         actions={
           <>
+            {/* Ask AI — desktop opens drawer, mobile routes to full page */}
+            <button
+              className="sdetail-btn sdetail-btn--topbar"
+              onClick={() => {
+                if (window.matchMedia('(max-width: 767px)').matches) {
+                  navigate(`/spaces/${spaceId}/chat`)
+                } else {
+                  setChatOpen(v => !v)
+                }
+              }}
+              aria-label="Ask AI"
+            >
+              <Icon name="ai" size={15} />
+              <span className="sdetail-btn-label">Ask AI</span>
+            </button>
             {/* Info button — hidden on desktop, visible on mobile */}
             <button
               className="sdetail-btn sdetail-btn--topbar sdetail-info-toggle"
@@ -587,6 +607,24 @@ export default function SpaceDetailPage() {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Right-side ChatPanel drawer (desktop only). Mobile uses the dedicated
+          /spaces/:id/chat route -- the drawer overlay is hidden via CSS at
+          ≤767 px to avoid two competing surfaces. */}
+      {chatOpen && (
+        <div
+          className="sdetail-chat-overlay"
+          onClick={e => { if (e.target === e.currentTarget) setChatOpen(false) }}
+        >
+          <aside className="sdetail-chat-drawer">
+            <ChatPanel
+              spaceId={Number(spaceId)}
+              spaceName={space.name}
+              onClose={() => setChatOpen(false)}
+            />
+          </aside>
         </div>
       )}
     </div>

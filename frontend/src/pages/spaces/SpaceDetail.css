@@ -1693,3 +1693,37 @@
   .sdetail-doc-thumb,
   .sdetail-doc-thumb-more { width: 48px; height: 48px; }
 }
+
+/* ── Agent chat drawer ─────────────────────────────────────
+   Mounted via SpaceDetailPage's "Ask AI" button on desktop only.
+   Mobile (≤767 px) navigates to /spaces/:id/chat instead, so the
+   overlay is hidden at that breakpoint. */
+.sdetail-chat-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 50;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.sdetail-chat-drawer {
+  width: min(420px, 90vw);
+  height: 100%;
+  background: var(--bg-primary);
+  box-shadow: -2px 0 24px rgba(0, 0, 0, 0.18);
+  animation: sdetail-chat-slidein 220ms ease-out;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+@keyframes sdetail-chat-slidein {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@media (max-width: 767px) {
+  /* Drawer is desktop-only; mobile uses /spaces/:id/chat. */
+  .sdetail-chat-overlay { display: none; }
+}
