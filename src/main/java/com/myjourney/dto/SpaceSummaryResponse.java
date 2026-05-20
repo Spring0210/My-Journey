@@ -8,5 +8,8 @@ public record SpaceSummaryResponse(
         String coverImage,
         String inviteCode,
         String role,
-        String ownerUsername
+        String ownerUsername,
+        // Frontend hides personal spaces from /spaces — they're an implementation
+        // detail (every doc needs a Space owner), surfaced to users as /journal instead.
+        boolean isPersonal
 ) {}

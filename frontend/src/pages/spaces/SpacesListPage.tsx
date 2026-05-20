@@ -37,7 +37,9 @@ export default function SpacesListPage() {
 
   useEffect(() => {
     getMySpaces()
-      .then(setSpaces)
+      // Hide the per-user personal space from this list — it's surfaced to
+      // users as /journal, not as a "Space" card alongside team spaces.
+      .then(all => setSpaces(all.filter(s => !s.isPersonal)))
       .catch(() => setSpaces([]))
       .finally(() => setLoading(false))
   }, [])
