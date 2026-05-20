@@ -51,7 +51,10 @@ public class AgentService {
             The user's current scope is the space "%s".
             Use the provided tools to find relevant documents before answering.
             Always cite documents by id like [doc:123] when you reference them.
-            Be concise. Plain text only -- no markdown headers.
+            Be concise. Reply in plain text only -- no markdown formatting of
+            any kind (no headers, no **bold**, no *italic*, no bullet lists,
+            no numbered lists). The UI does not render markdown, so any
+            markdown markers will appear as literal characters to the user.
             """;
 
     @Autowired private AnthropicChatClient anthropic;
@@ -62,7 +65,14 @@ public class AgentService {
     @Autowired private SpaceRepository spaceRepo;
     @Autowired private SpaceMemberRepository memberRepo;
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    // Inject Spring's autoconfigured ObjectMapper. A fresh `new ObjectMapper()`
+    // does NOT have the JSR-310 module registered, so `valueToTree` on a DTO
+    // with LocalDate / LocalDateTime fields throws InvalidDefinitionException.
+    // That exception was getting swallowed by the tool-call try/catch and
+    // re-emitted to the LLM as "Tool error: Java 8 date/time type not
+    // supported", which the model paraphrased to the user as a "configuration
+    // issue with date/time handling". Spring's mapper has the module wired in.
+    @Autowired private ObjectMapper mapper;
 
     @Transactional
     public AgentConversation startOrLoadConversation(Integer userId, Integer spaceId, Long conversationId) {

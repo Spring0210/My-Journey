@@ -2,6 +2,7 @@ package com.myjourney.agent;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.myjourney.agent.dto.ToolDocumentDetail;
 import com.myjourney.agent.dto.ToolSearchResult;
 import com.myjourney.model.AgentConversation;
 import com.myjourney.model.AgentMessage;
@@ -20,6 +21,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -145,6 +148,65 @@ class AgentServiceLoopTest {
         // Exactly MAX_TOOL_ITERATIONS Anthropic calls before the cap kicked in.
         verify(anthropic, times(AgentService.MAX_TOOL_ITERATIONS))
                 .complete(anyString(), anyList(), any());
+    }
+
+    @Test
+    void runTurn_serializesToolResultsContainingJsr310Dates() throws Exception {
+        // Regression: a fresh `new ObjectMapper()` cannot serialize
+        // LocalDate / LocalDateTime, so before AgentService started injecting
+        // Spring's autoconfigured mapper, ANY tool returning a record with a
+        // date field (get_document, create_document, ...) failed serialization
+        // and surfaced to the model as `Tool error: Java 8 date/time type ...`.
+        // This test fails on the old code path and passes on the fix.
+
+        JsonNode toolUseResp = mapper.readTree("""
+                {
+                  "stop_reason": "tool_use",
+                  "content": [
+                    {"type":"tool_use","id":"t1","name":"create_document",
+                     "input":{"title":"x","content":"y"}}
+                  ]
+                }
+                """);
+        JsonNode finalResp = mapper.readTree("""
+                {
+                  "stop_reason": "end_turn",
+                  "content": [
+                    {"type":"text","text":"Done -- see [doc:7]."}
+                  ]
+                }
+                """);
+        when(anthropic.complete(anyString(), anyList(), any()))
+                .thenReturn(toolUseResp, finalResp);
+
+        ToolDocumentDetail detail = new ToolDocumentDetail(
+                7L, "x", "y", "NOTE",
+                LocalDate.of(2026, 5, 20),           // entryDate
+                List.of("tag1"),
+                conv.getSpace().getId(), conv.getSpace().getName(), "alice",
+                LocalDateTime.of(2026, 5, 20, 10, 0),  // createdAt
+                LocalDateTime.of(2026, 5, 20, 10, 0),  // updatedAt
+                List.of(), List.of());
+        when(toolset.createDocument(any(), eq("x"), eq("y"), any(), any(), any(), any()))
+                .thenReturn(detail);
+
+        StringBuilder out = new StringBuilder();
+        service.runTurn(conv, "make a doc", List.of(), out::append);
+
+        // The tool turn must record is_error=false and contain a structured
+        // content object -- not the "Tool error: ..." string we'd see if
+        // valueToTree had thrown.
+        List<AgentMessage> turns = msgRepo.findByConversationOrderByCreatedAtAsc(conv);
+        AgentMessage toolTurn = turns.stream()
+                .filter(m -> m.getRole() == AgentMessage.Role.TOOL)
+                .findFirst().orElseThrow();
+        JsonNode result = toolTurn.getContent().get(0);
+        assertThat(result.get("is_error").asBoolean()).isFalse();
+        assertThat(result.get("content").isObject()).isTrue();
+        assertThat(result.get("content").get("title").asText()).isEqualTo("x");
+
+        // And the final assistant text streams through to the sink.
+        assertThat(out.toString()).contains("Done");
     }
 
     @Test
