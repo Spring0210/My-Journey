@@ -1,0 +1,72 @@
+package com.myjourney.agent;
+
+import com.myjourney.agent.dto.ToolComment;
+import com.myjourney.agent.dto.ToolDocumentDetail;
+import com.myjourney.agent.dto.ToolSearchResult;
+import com.myjourney.agent.dto.ToolSpaceSummary;
+
+import java.time.LocalDate;
+import java.util.List;
+
+// The 8 tools the internal agent (and later the MCP server) can call.
+// All methods are access-checked against the authenticated user -- the
+// implementation MUST refuse access to spaces the user is not a member of.
+//
+// See docs/superpowers/specs/2026-05-19-team-kb-mcp-design.md section 4.
+public interface DocumentToolset {
+
+    // -- Read tools ------------------------------------------------
+
+    // Keyword search. spaceId=null means search every space the caller is in.
+    ToolSearchResult searchDocuments(
+            Integer callerUserId,
+            String query,
+            Integer spaceId,
+            LocalDate dateFrom,
+            LocalDate dateTo,
+            List<String> tags,   // AND match (lowercase); null = no tag filter
+            int limit            // capped to 25
+    );
+
+    ToolDocumentDetail getDocument(Integer callerUserId, Long documentId);
+
+    List<ToolSpaceSummary> listSpaces(Integer callerUserId);
+
+    // Paginated listing inside one space. docType: "JOURNAL" | "NOTE" | null.
+    ToolSearchResult listDocuments(
+            Integer callerUserId,
+            Integer spaceId,
+            String docType,
+            LocalDate since,
+            String tag,
+            int limit,
+            int offset
+    );
+
+    List<ToolComment> getComments(Integer callerUserId, Long documentId);
+
+    // -- Write tools -----------------------------------------------
+
+    // spaceId=null routes to the caller's personal space.
+    // entryDate is required when docType=JOURNAL.
+    ToolDocumentDetail createDocument(
+            Integer callerUserId,
+            String title,
+            String content,
+            Integer spaceId,
+            String docType,
+            LocalDate entryDate,
+            List<String> tags
+    );
+
+    // Author-only. null fields mean "unchanged"; an empty tags list clears tags.
+    ToolDocumentDetail updateDocument(
+            Integer callerUserId,
+            Long documentId,
+            String title,
+            String content,
+            List<String> tags
+    );
+
+    ToolComment addComment(Integer callerUserId, Long documentId, String content);
+}
