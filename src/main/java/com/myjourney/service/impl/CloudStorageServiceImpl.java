@@ -105,6 +105,45 @@ public class CloudStorageServiceImpl implements CloudStorageService {
         return urls;
     }
 
+    // Document attachments come through this path. `resource_type=auto` lets
+    // Cloudinary decide image vs video vs raw based on the actual bytes —
+    // unlike `uploadFile`, which force-converts to JPG and so blows up on
+    // PDFs / zips / text files.
+    @Override
+    @SuppressWarnings("unchecked")
+    public String uploadRaw(MultipartFile file, String folder) {
+        try {
+            log.info("Uploading attachment to Cloudinary - file: {}, folder: {}",
+                    file.getOriginalFilename(), folder);
+
+            Map<String, Object> uploadOptions = new HashMap<>();
+            uploadOptions.put("folder", folder != null ? folder : "my-journey");
+            uploadOptions.put("resource_type", "auto");
+            // Preserve the original filename so raw assets (PDFs, zips) keep their
+            // extension for download. unique_filename appends a random suffix to
+            // avoid collisions when two users upload "report.pdf" to the same folder.
+            if (file.getOriginalFilename() != null) {
+                uploadOptions.put("use_filename", true);
+                uploadOptions.put("unique_filename", true);
+            }
+
+            Map<String, Object> result = cloudinary.uploader().upload(
+                    file.getBytes(), uploadOptions);
+            String url = (String) result.get("secure_url");
+
+            // q_auto is an image/video delivery transform; raw assets reject it.
+            if (url != null && url.contains("/image/upload/")) {
+                url = url.replace("/upload/", "/upload/q_auto/");
+            }
+
+            log.info("Uploaded attachment to Cloudinary: {}", url);
+            return url;
+        } catch (IOException e) {
+            log.error("Failed to upload attachment to Cloudinary: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to upload attachment to Cloudinary", e);
+        }
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public boolean deleteFile(String fileUrl) {
@@ -116,8 +155,16 @@ public class CloudStorageServiceImpl implements CloudStorageService {
                 return false;
             }
 
-            // Detect resource type from URL path segment — videos use /video/upload/, images use /image/upload/
-            String resourceType = fileUrl.contains("/video/upload/") ? "video" : "image";
+            // Detect resource type from URL path segment.
+            // raw assets (PDFs/zips/...) use /raw/upload/; videos use /video/upload/; everything else is image.
+            String resourceType;
+            if (fileUrl.contains("/video/upload/")) {
+                resourceType = "video";
+            } else if (fileUrl.contains("/raw/upload/")) {
+                resourceType = "raw";
+            } else {
+                resourceType = "image";
+            }
 
             Map<String, Object> result = cloudinary.uploader().destroy(
                 publicId,
