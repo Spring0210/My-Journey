@@ -173,7 +173,7 @@
 - [ ] **Sentry** — backend (Spring Boot) + frontend (React) error capture; free tier sufficient at current scale
 
 ### Quality
-- [ ] **Flyway** — replace Hibernate `ddl-auto=update` with versioned migrations; baseline current production schema as `V1__baseline.sql` (use `baseline-on-migrate` for the first deploy)
+- [x] **Flyway** — Flyway dependency + `V1__baseline.sql` + `baseline-on-migrate=true` + `ddl-auto=validate` landed in dev (2026-05-19). Future schema changes must go through versioned migrations under `src/main/resources/db/migration/`. Known historical drift (ENUM-vs-VARCHAR for enum columns, TIMESTAMP-vs-DATETIME, missing `user.email` UNIQUE, `user.password` NOT NULL) is tolerated by validate and tracked as cleanup items for a future V2 batch.
 - [ ] **Golden-path tests** — JUnit integration tests for auth + entry CRUD + space CRUD; Vitest for the 2–3 most critical frontend utils. Skip exhaustive unit tests — diminishing returns at this scale.
 - [ ] **CI test step** — run tests in GitHub Actions before building the Docker image
 
