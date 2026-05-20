@@ -56,6 +56,16 @@ public interface CloudStorageService {
     List<String> uploadVideos(MultipartFile[] files, String folder);
 
     /**
+     * Upload any file (image / video / PDF / arbitrary binary) with auto-detection.
+     * Unlike {@link #uploadFile} this does NOT force JPG conversion, so PDFs and
+     * non-image content survive intact. Used by document attachments.
+     * @param file   The file to be uploaded.
+     * @param folder The folder path in the cloud storage.
+     * @return The public URL of the uploaded asset.
+     */
+    String uploadRaw(MultipartFile file, String folder);
+
+    /**
      * Check whether the cloud storage service is available.
      * @return true if the service is available, false otherwise.
      */

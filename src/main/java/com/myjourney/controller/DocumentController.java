@@ -202,11 +202,10 @@ public class DocumentController {
         }
 
         String mimeType = file.getContentType();
-        boolean isVideo = mimeType != null && mimeType.startsWith("video/");
         String folder = "my-journey/documents/" + id;
-        String url = isVideo
-                ? cloudStorageService.uploadVideo(file, folder)
-                : cloudStorageService.uploadFile(file, folder);
+        // uploadRaw uses Cloudinary's resource_type=auto so PDFs, text files,
+        // and other non-image attachments don't get force-converted to JPG.
+        String url = cloudStorageService.uploadRaw(file, folder);
 
         DocumentAttachment a = documentService.addAttachment(
                 userId, id, url,
