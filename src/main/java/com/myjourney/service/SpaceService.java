@@ -110,7 +110,8 @@ public class SpaceService {
             return new SpaceSummaryResponse(
                     s.getId(), s.getName(), s.getDescription(),
                     s.getCoverImage(), s.getInviteCode(),
-                    m.getRole().name(), s.getOwner().getUsername());
+                    m.getRole().name(), s.getOwner().getUsername(),
+                    s.isPersonal());
         }).toList();
     }
 

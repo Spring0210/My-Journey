@@ -41,6 +41,39 @@ function formatTime(iso: string): string {
   return new Date(iso).toLocaleDateString()
 }
 
+// Format a JOURNAL entry date ("YYYY-MM-DD"). Drops the year for dates in
+// the current year, matching the way other apps surface diary dates.
+function formatEntryDate(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  const sameYear = date.getFullYear() === new Date().getFullYear()
+  return date.toLocaleDateString('en-US', sameYear
+    ? { month: 'short', day: 'numeric' }
+    : { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+// Crude markdown → plain text for list snippets. We're not trying to render,
+// just to keep "#" / "**" / "- " noise out of the card preview. Keeps the
+// snippet on the same character budget the backend already trimmed it to.
+function stripMarkdown(md: string): string {
+  return md
+    .replace(/!\[[^\]]*]\([^)]+\)/g, '')        // images
+    .replace(/\[([^\]]+)]\([^)]+\)/g, '$1')     // links → text
+    .replace(/^#{1,6}\s+/gm, '')                 // headings
+    .replace(/^>\s+/gm, '')                      // blockquote
+    .replace(/^[-*+]\s+/gm, '')                  // unordered list bullets
+    .replace(/^\d+\.\s+/gm, '')                  // ordered list markers
+    .replace(/```[\s\S]*?```/g, '')              // fenced code blocks
+    .replace(/`([^`]+)`/g, '$1')                 // inline code
+    .replace(/\*\*([^*]+)\*\*/g, '$1')           // **bold**
+    .replace(/__([^_]+)__/g, '$1')               // __bold__
+    .replace(/\*([^*]+)\*/g, '$1')               // *italic*
+    .replace(/_([^_]+)_/g, '$1')                 // _italic_
+    .replace(/~~([^~]+)~~/g, '$1')               // ~~strike~~
+    .replace(/\s+/g, ' ')                        // collapse whitespace
+    .trim()
+}
+
 export default function SpaceDetailPage() {
   const { id }   = useParams<{ id: string }>()
   const spaceId  = Number(id)
@@ -608,7 +641,14 @@ interface DocCardProps {
 
 function DocCard({ doc, onOpen }: DocCardProps) {
   // Snippet hits 200 chars in the backend; show "…" if it likely got cut off.
-  const truncated = doc.snippet.length >= 200
+  const cleanSnippet = stripMarkdown(doc.snippet)
+  const truncated    = doc.snippet.length >= 200
+  // JOURNAL cards show the entry date (the day being journaled about);
+  // NOTE cards show relative createdAt (the day the doc was written).
+  // Both render in the same meta-row slot for consistent card geometry.
+  const dateLabel = doc.docType === 'JOURNAL' && doc.entryDate
+    ? formatEntryDate(doc.entryDate)
+    : formatTime(doc.createdAt)
   return (
     <article
       className="sdetail-doc-card"
@@ -622,19 +662,11 @@ function DocCard({ doc, onOpen }: DocCardProps) {
         }
       }}
     >
-      <div className="sdetail-doc-head">
-        {doc.docType === 'JOURNAL' && (
-          <span className="sdetail-doc-badge">
-            <Icon name="calendar" size={11} />
-            {doc.entryDate ?? 'Journal'}
-          </span>
-        )}
-        <h3 className="sdetail-doc-title">{doc.title}</h3>
-      </div>
+      <h3 className="sdetail-doc-title">{doc.title}</h3>
 
-      {doc.snippet.trim() && (
+      {cleanSnippet && (
         <p className="sdetail-doc-snippet">
-          {doc.snippet}{truncated ? '…' : ''}
+          {cleanSnippet}{truncated ? '…' : ''}
         </p>
       )}
 
@@ -660,7 +692,7 @@ function DocCard({ doc, onOpen }: DocCardProps) {
         </div>
         <span className="sdetail-doc-author">@{doc.authorUsername}</span>
         <span className="sdetail-doc-dot">·</span>
-        <span className="sdetail-doc-time">{formatTime(doc.createdAt)}</span>
+        <span className="sdetail-doc-time">{dateLabel}</span>
       </div>
     </article>
   )

@@ -71,6 +71,8 @@ export interface SpaceSummaryResponse {
   inviteCode: string
   role: 'OWNER' | 'MEMBER'
   ownerUsername: string
+  // True for the auto-created per-user personal space. Filtered out of /spaces.
+  isPersonal: boolean
 }
 
 export interface MemberInfo {
