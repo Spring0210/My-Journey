@@ -47,4 +47,19 @@ jobs:
             curl -fsSL https://raw.githubusercontent.com/Spring0210/My-Journey/main/docker-compose.yml -o docker-compose.yml
             docker compose pull
             docker compose up -d --remove-orphans
-            docker image prune -f
+            # Post-deploy health gate. `docker compose up -d` only confirms the
+            # container started, not that Spring Boot booted — Flyway crashes
+            # and Hibernate validate failures pass through it silently. Poll
+            # /actuator/health for up to ~60s and fail the workflow if the app
+            # never comes up healthy, so a broken deploy stops being green.
+            for i in $(seq 1 30); do
+              if curl -fsS http://127.0.0.1:8080/actuator/health > /dev/null; then
+                echo "App healthy after attempt ${i}"
+                docker image prune -f
+                exit 0
+              fi
+              sleep 2
+            done
+            echo "App failed to become healthy within ~60s — dumping logs and failing the deploy"
+            docker compose logs --tail=200 app
+            exit 1

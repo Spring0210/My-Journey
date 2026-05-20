@@ -1523,67 +1523,65 @@
 .sdetail-newdoc-btn:hover { background: var(--accent-hover); }
 
 .sdetail-doc-list {
-  /* Responsive Apple-style grid: cards reflow into as many columns as fit
-     at a 280px minimum each. Narrow viewports (and the space-detail feed
-     column when the sidebar is open) collapse to a single column. */
+  /* Responsive grid: cards reflow into as many columns as fit at a 280px
+     minimum each. Narrow viewports collapse to a single column.
+     No align-items override — all cards share min-height for a clean grid. */
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
-  align-items: start;
+  gap: 16px;
 }
 
+/* Content-first card in the spirit of Apple Notes: typography carries
+   hierarchy, chrome stays out of the way. Flex column with a spacer pins
+   the meta row to the bottom so every tile is uniform height. */
 .sdetail-doc-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 220px;
+  padding: 18px 20px 16px;
   background: var(--surface-card);
   border: 1px solid var(--separator);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-raised);
-  padding: 18px 20px;
   cursor: pointer;
-  transition: transform var(--ease-micro), box-shadow var(--ease-micro);
+  transition: transform var(--ease-micro), box-shadow var(--ease-micro), border-color var(--ease-micro);
 }
+
 .sdetail-doc-card:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-elevated);
+  border-color: color-mix(in srgb, var(--separator) 60%, var(--label-quaternary));
 }
+
 .sdetail-doc-card:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
-.sdetail-doc-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-  flex-wrap: wrap;
-}
-
-.sdetail-doc-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: var(--radius-pill);
-  background: var(--tint-accent-subtle);
-  color: var(--accent);
-  font-size: 11px;
-  font-weight: 500;
-  flex-shrink: 0;
+/* Spacer pushes the meta row to the bottom of the card */
+.sdetail-doc-spacer {
+  flex: 1;
+  min-height: 8px;
 }
 
 .sdetail-doc-title {
-  font-size: 17px;
+  margin: 0 0 8px;
+  font-size: 16px;
   font-weight: 600;
-  line-height: 1.3;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
   color: var(--label-primary);
-  margin: 0;
-  flex: 1;
-  min-width: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
 }
 
 .sdetail-doc-snippet {
-  font-size: 14px;
-  line-height: 1.5;
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
   color: var(--label-secondary);
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -1592,14 +1590,17 @@
   word-break: break-word;
 }
 
+/* Tags: single-row, subtle, clip overflow to keep card height stable */
 .sdetail-doc-tags {
   display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 10px;
+  gap: 6px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  margin: 12px 0 0;
 }
 
 .sdetail-doc-tag {
+  flex-shrink: 0;
   font-size: 11px;
   padding: 2px 8px;
   border-radius: var(--radius-pill);
@@ -1608,24 +1609,24 @@
 }
 .sdetail-doc-tag--more { color: var(--label-tertiary); }
 
+/* Meta footer — subtle, all in tertiary except the author handle */
 .sdetail-doc-meta {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-top: 14px;
   font-size: 12px;
-  color: var(--label-secondary);
+  color: var(--label-tertiary);
 }
 
 .sdetail-doc-avatar {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border-radius: var(--radius-full);
   background: var(--fill-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   color: var(--label-secondary);
   overflow: hidden;
@@ -1633,49 +1634,62 @@
 }
 .sdetail-doc-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
-.sdetail-doc-author { color: var(--label-primary); font-weight: 500; }
-.sdetail-doc-dot { color: var(--label-tertiary); }
-
-@media (max-width: 640px) {
-  .sdetail-doc-card { padding: 16px; border-radius: var(--radius-md); }
-  .sdetail-doc-title { font-size: 16px; }
+.sdetail-doc-author {
+  color: var(--label-secondary);
+  font-weight: 500;
 }
+.sdetail-doc-dot { color: var(--label-quaternary); }
 
-/* ── Doc card thumbnail strip (Apple Notes style) ──────── */
+/* Thumbnail row — one image preview plus a "+N" tile when more media exists.
+   52×52 squares match the Journal page's thumb treatment for visual parity. */
 .sdetail-doc-thumbs {
   display: flex;
-  gap: 6px;
-  margin-top: 10px;
-  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 12px;
 }
 
 .sdetail-doc-thumb {
-  width: 56px;
-  height: 56px;
+  width: 52px;
+  height: 52px;
   border-radius: var(--radius-sm);
-  overflow: hidden;
-  background: var(--fill-quaternary);
-  border: 1px solid var(--separator);
-  flex-shrink: 0;
-}
-.sdetail-doc-thumb img {
-  width: 100%;
-  height: 100%;
   object-fit: cover;
-  display: block;
+  flex-shrink: 0;
+  border: 1px solid var(--separator);
+  background: var(--fill-quaternary);
 }
 
-/* "+N" overflow tile — slot inside the thumb strip when imageCount > 4. */
-.sdetail-doc-thumb--more {
+/* Video placeholder tile — used when a doc has video(s) but no image,
+   so the thumb row never starts with a bare "+N" square. */
+.sdetail-doc-thumb--video {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fill-tertiary);
+  color: var(--label-secondary);
+}
+
+/* "+N" overflow tile — single square indicating remaining items */
+.sdetail-doc-thumb-more {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-sm);
+  background: var(--fill-tertiary);
+  border: 1px solid var(--separator);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
   font-weight: 600;
   color: var(--label-secondary);
-  background: var(--fill-tertiary);
+  flex-shrink: 0;
 }
 
 @media (max-width: 640px) {
-  .sdetail-doc-thumb { width: 52px; height: 52px; }
+  .sdetail-doc-card {
+    min-height: 200px;
+    padding: 16px 16px 14px;
+  }
+  .sdetail-doc-title { font-size: 15px; }
+  .sdetail-doc-thumb,
+  .sdetail-doc-thumb-more { width: 48px; height: 48px; }
 }
