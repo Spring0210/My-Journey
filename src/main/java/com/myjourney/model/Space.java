@@ -21,12 +21,19 @@ public class Space {
     @Column(name = "cover_image", length = 500)
     private String coverImage;
 
-    @Column(name = "invite_code", unique = true, nullable = false, length = 20)
+    // Nullable for personal spaces (no invite code; not joinable by code).
+    // Regular shared spaces always have an 8-char alphanumeric code.
+    @Column(name = "invite_code", unique = true, length = 20)
     private String inviteCode;
 
     @ManyToOne
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
+
+    // Personal spaces are auto-created on first login and hold a user's
+    // private documents (JOURNAL doc_type). They cannot be invited into.
+    @Column(name = "is_personal", nullable = false)
+    private boolean personal = false;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -62,6 +69,9 @@ public class Space {
 
     public User getOwner() { return owner; }
     public void setOwner(User owner) { this.owner = owner; }
+
+    public boolean isPersonal() { return personal; }
+    public void setPersonal(boolean personal) { this.personal = personal; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
