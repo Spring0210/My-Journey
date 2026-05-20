@@ -201,3 +201,152 @@
   .dedit-title-input { font-size: 22px; }
   .dedit-body { min-height: 280px; }
 }
+
+/* ── Attachments uploader ─────────────────────────────── */
+.dedit-attach {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dedit-attach-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dedit-attach-count {
+  font-size: 12px;
+  color: var(--label-tertiary);
+}
+
+.dedit-attach-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.dedit-attach-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--fill-quaternary);
+  min-width: 0;
+}
+.dedit-attach-chip--staged    { background: var(--tint-accent-subtle); }
+.dedit-attach-chip--uploading { background: var(--tint-accent-subtle); }
+
+.dedit-attach-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-xs);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.dedit-attach-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-xs);
+  background: var(--fill-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--label-secondary);
+  flex-shrink: 0;
+}
+
+.dedit-attach-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.dedit-attach-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--label-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dedit-attach-size {
+  font-size: 11px;
+  color: var(--label-tertiary);
+}
+
+.dedit-attach-remove {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--label-tertiary);
+  transition: color var(--ease-micro), background var(--ease-micro);
+  flex-shrink: 0;
+}
+.dedit-attach-remove:hover {
+  color: var(--system-red);
+  background: color-mix(in srgb, var(--system-red) 10%, transparent);
+}
+
+.dedit-attach-bar {
+  height: 4px;
+  background: var(--fill-tertiary);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  margin-top: 4px;
+}
+.dedit-attach-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 120ms ease-out;
+}
+.dedit-attach-pct {
+  font-size: 11px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+/* ── Drop zone ────────────────────────────────────────── */
+.dedit-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 22px 18px;
+  border: 1.5px dashed var(--separator-strong);
+  border-radius: var(--radius-md);
+  background: var(--fill-quaternary);
+  color: var(--label-secondary);
+  font-size: 13px;
+  text-align: center;
+  cursor: pointer;
+  transition: background var(--ease-micro), border-color var(--ease-micro), color var(--ease-micro);
+}
+.dedit-dropzone:hover {
+  background: var(--fill-tertiary);
+  border-color: var(--accent);
+  color: var(--label-primary);
+}
+.dedit-dropzone--active {
+  background: var(--tint-accent-subtle);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.dedit-dropzone-hint {
+  font-size: 11px;
+  color: var(--label-tertiary);
+}
+
+.dedit-staged-progress {
+  font-size: 13px;
+  color: var(--label-secondary);
+  padding: 8px 0;
+}

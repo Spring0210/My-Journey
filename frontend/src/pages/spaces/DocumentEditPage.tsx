@@ -4,11 +4,14 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useAuth } from '@/context/AuthContext'
 import { getSpaceDetail } from '@/api/spaces'
-import { getDocument, createDocument, updateDocument } from '@/api/documents'
-import type { DocType } from '@/types/api'
+import {
+  getDocument, createDocument, updateDocument, uploadAttachment,
+} from '@/api/documents'
+import type { DocType, DocumentAttachmentResponse } from '@/types/api'
 import PageTopBar from '@/components/ui/PageTopBar'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useToast } from '@/components/feedback'
+import AttachmentUploader from './AttachmentUploader'
 import './DocumentDetail.css'   // reuse .ddetail-content markdown styles for preview
 import './DocumentEdit.css'
 
@@ -61,6 +64,15 @@ export default function DocumentEditPage() {
   const [entryDate, setEntryDate] = useState(TODAY)
   const [tab, setTab]             = useState<'write' | 'preview'>('write')
 
+  // ── Attachments ───────────────────────────────────────
+  // /edit mode: pre-filled from doc.attachments, mutated in place by uploader.
+  // /new mode:  stays empty; staged files queue uploads after createDocument.
+  const [existingAttachments, setExistingAttachments] =
+    useState<DocumentAttachmentResponse[]>([])
+  const [stagedFiles, setStagedFiles]         = useState<File[]>([])
+  const [uploadingStaged, setUploadingStaged] = useState(false)
+  const [stagedDoneCount, setStagedDoneCount] = useState(0)
+
   // ── UI state ──────────────────────────────────────────
   const [loading, setLoading] = useState(true)
   const [saving, setSaving]   = useState(false)
@@ -89,6 +101,7 @@ export default function DocumentEditPage() {
           setTagsInput(d.tags.join(', '))
           setDocType(d.docType)
           if (d.entryDate) setEntryDate(d.entryDate)
+          setExistingAttachments(d.attachments)
         })
         .catch(() => {
           toast.error('Failed to load document.')
@@ -112,6 +125,8 @@ export default function DocumentEditPage() {
     setError('')
     try {
       const tags = normalizeTags(tagsInput)
+      let savedDocId: number
+
       if (isNew) {
         const created = await createDocument(spaceId, {
           title: title.trim(),
@@ -120,19 +135,38 @@ export default function DocumentEditPage() {
           entryDate: docType === 'JOURNAL' ? entryDate : null,
           tags,
         })
-        navigate(`/spaces/${spaceId}/documents/${created.id}`)
+        savedDocId = created.id
       } else {
         await updateDocument(documentId!, {
           title: title.trim(),
           content,
           tags,
         })
-        navigate(`/spaces/${spaceId}/documents/${documentId}`)
+        savedDocId = documentId!
       }
+
+      // Upload staged files (only present in /new mode; /edit uploads immediately).
+      // Sequential — keeps Cloudinary calls predictable on a 2 GB VPS.
+      if (stagedFiles.length > 0) {
+        setUploadingStaged(true)
+        setStagedDoneCount(0)
+        for (const file of stagedFiles) {
+          try {
+            await uploadAttachment(savedDocId, file)
+          } catch {
+            // Doc itself is saved; surface a toast per failed file and continue.
+            toast.error(`Failed to upload ${file.name}.`)
+          }
+          setStagedDoneCount(n => n + 1)
+        }
+      }
+
+      navigate(`/spaces/${spaceId}/documents/${savedDocId}`)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save.')
     } finally {
       setSaving(false)
+      setUploadingStaged(false)
     }
   }
 
@@ -149,9 +183,11 @@ export default function DocumentEditPage() {
           <button
             className="dedit-btn dedit-btn--primary dedit-btn--topbar"
             onClick={handleSave}
-            disabled={saving || !title.trim()}
+            disabled={saving || uploadingStaged || !title.trim()}
           >
-            {saving ? 'Saving...' : 'Save'}
+            {saving
+              ? (uploadingStaged ? 'Uploading...' : 'Saving...')
+              : 'Save'}
           </button>
         }
       />
@@ -256,6 +292,20 @@ export default function DocumentEditPage() {
             </div>
           )}
 
+          <AttachmentUploader
+            documentId={isNew ? null : documentId}
+            existingAttachments={existingAttachments}
+            onExistingChange={setExistingAttachments}
+            stagedFiles={stagedFiles}
+            onStagedChange={setStagedFiles}
+          />
+
+          {uploadingStaged && (
+            <p className="dedit-staged-progress">
+              Uploading attachments... {stagedDoneCount} / {stagedFiles.length}
+            </p>
+          )}
+
           {error && <p className="dedit-error">{error}</p>}
 
           <div className="dedit-actions">
@@ -266,9 +316,11 @@ export default function DocumentEditPage() {
               type="button"
               className="dedit-btn dedit-btn--primary"
               onClick={handleSave}
-              disabled={saving || !title.trim()}
+              disabled={saving || uploadingStaged || !title.trim()}
             >
-              {saving ? 'Saving...' : 'Save'}
+              {saving
+                ? (uploadingStaged ? 'Uploading...' : 'Saving...')
+                : 'Save'}
             </button>
           </div>
         </form>
