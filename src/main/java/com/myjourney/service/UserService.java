@@ -58,6 +58,9 @@ public class UserService {
     @Autowired
     private CloudStorageService cloudStorageService;
 
+    @Autowired
+    private SpaceService spaceService;
+
     @Value("${resend.api-key}")
     private String resendApiKey;
 
@@ -129,6 +132,9 @@ public class UserService {
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
         userRepository.save(user);
+
+        // Auto-provision the user's personal space (team-KB pivot).
+        spaceService.createPersonalSpace(user);
 
         registrationCodeRepository.delete(rc);
         return "Registration successful";
