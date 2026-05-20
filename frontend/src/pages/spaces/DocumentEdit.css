@@ -1,0 +1,203 @@
+/* DocumentEditPage — create / edit a Document.
+   Preview tab reuses .ddetail-content styles from DocumentDetail.css. */
+
+.dedit-page {
+  background: var(--page-bg);
+  min-height: 100vh;
+}
+
+.dedit-inner {
+  max-width: var(--content-narrow);
+  margin: 0 auto;
+  padding: 24px var(--page-gutter) 80px;
+}
+
+.dedit-form {
+  background: var(--surface-card);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── iOS-style segmented control for NOTE/JOURNAL ─────── */
+.dedit-typeswitch {
+  display: inline-flex;
+  background: var(--fill-tertiary);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  align-self: flex-start;
+}
+.dedit-typeswitch button {
+  padding: 6px 16px;
+  border-radius: var(--radius-xs);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--label-secondary);
+  background: transparent;
+  transition: background var(--ease-micro), color var(--ease-micro);
+}
+.dedit-typeswitch button.active {
+  background: var(--surface-card);
+  color: var(--label-primary);
+  box-shadow: var(--shadow-raised);
+}
+
+.dedit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dedit-label {
+  font-size: 13px;
+  color: var(--label-secondary);
+}
+
+/* ── Title — large, no border, inline editing feel ────── */
+.dedit-title-input {
+  width: 100%;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--label-primary);
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 4px 0;
+}
+.dedit-title-input::placeholder {
+  color: var(--label-tertiary);
+  font-weight: 700;
+}
+
+/* ── Tags — pill input ────────────────────────────────── */
+.dedit-tags-input {
+  width: 100%;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--separator);
+  background: var(--surface-card);
+  font-size: 13px;
+  color: var(--label-primary);
+  outline: none;
+  transition: border-color var(--ease-micro);
+}
+.dedit-tags-input:focus { border-color: var(--accent); }
+.dedit-tags-input::placeholder { color: var(--label-tertiary); }
+
+/* ── Date input ───────────────────────────────────────── */
+.dedit-date-input {
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--separator);
+  background: var(--surface-card);
+  font-size: 14px;
+  color: var(--label-primary);
+  font-family: var(--font-sans);
+  width: max-content;
+  outline: none;
+  transition: border-color var(--ease-micro);
+}
+.dedit-date-input:focus { border-color: var(--accent); }
+
+/* ── Write / Preview tabs ─────────────────────────────── */
+.dedit-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--separator);
+}
+.dedit-tabs button {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--label-secondary);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color var(--ease-micro), border-color var(--ease-micro);
+}
+.dedit-tabs button.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ── Body textarea ────────────────────────────────────── */
+.dedit-body {
+  width: 100%;
+  min-height: 360px;
+  padding: 14px 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--label-primary);
+  resize: vertical;
+}
+.dedit-body::placeholder { color: var(--label-tertiary); }
+
+/* ── Preview area ─────────────────────────────────────── */
+.dedit-preview {
+  min-height: 360px;
+  padding: 14px 0;
+}
+.dedit-preview-empty {
+  font-size: 14px;
+  color: var(--label-tertiary);
+  font-style: italic;
+}
+
+.dedit-error {
+  font-size: 13px;
+  color: var(--system-red);
+  margin-top: -4px;
+}
+
+/* ── Action bar (bottom) ──────────────────────────────── */
+.dedit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--separator);
+}
+
+.dedit-btn {
+  padding: 8px 18px;
+  border-radius: var(--radius-pill);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--label-primary);
+  background: var(--fill-tertiary);
+  transition: background var(--ease-micro);
+}
+.dedit-btn:hover { background: var(--fill-secondary); }
+.dedit-btn--primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: var(--shadow-btn-accent);
+}
+.dedit-btn--primary:hover { background: var(--accent-hover); }
+.dedit-btn--primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.dedit-btn--topbar {
+  padding: 5px 14px;
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .dedit-inner { padding: 12px var(--page-gutter-mobile) 60px; }
+  .dedit-form  { padding: 18px; border-radius: var(--radius-md); gap: 14px; }
+  .dedit-title-input { font-size: 22px; }
+  .dedit-body { min-height: 280px; }
+}

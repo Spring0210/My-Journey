@@ -138,7 +138,7 @@ public class SpaceService {
         return new SpaceDetailResponse(
                 space.getId(), space.getName(), space.getDescription(),
                 space.getCoverImage(), space.getInviteCode(),
-                space.getOwner().getUsername(), members);
+                space.getOwner().getUsername(), space.isPersonal(), members);
     }
 
     // Update space name and description — owner only
