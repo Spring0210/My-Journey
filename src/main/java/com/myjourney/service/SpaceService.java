@@ -81,6 +81,12 @@ public class SpaceService {
         Space space = spaceRepository.findByInviteCode(inviteCode.toUpperCase())
                 .orElseThrow(() -> new AppException(HttpStatus.BAD_REQUEST, "Invalid invite code"));
 
+        // Personal spaces have invite_code=NULL, so they shouldn't reach here,
+        // but reject defensively in case someone crafts a request.
+        if (space.isPersonal()) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "Cannot join a personal space");
+        }
+
         if (spaceMemberRepository.existsBySpaceAndUser(space, user)) {
             throw new AppException(HttpStatus.BAD_REQUEST, "Already a member of this space");
         }
@@ -144,6 +150,9 @@ public class SpaceService {
         if (!space.getOwner().getId().equals(userId)) {
             throw new AppException(HttpStatus.FORBIDDEN, "Only the owner can edit this space");
         }
+        if (space.isPersonal()) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "Personal spaces cannot be renamed");
+        }
 
         if (name != null && !name.isBlank()) space.setName(name);
         if (description != null) space.setDescription(description);
@@ -181,6 +190,9 @@ public class SpaceService {
         if (!space.getOwner().getId().equals(ownerId)) {
             throw new AppException(HttpStatus.FORBIDDEN, "Only the owner can remove members");
         }
+        if (space.isPersonal()) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "Personal spaces have no other members");
+        }
 
         if (ownerId.equals(targetUserId)) {
             throw new AppException(HttpStatus.BAD_REQUEST, "Owner cannot remove themselves");
@@ -203,6 +215,9 @@ public class SpaceService {
 
         if (!space.getOwner().getId().equals(userId)) {
             throw new AppException(HttpStatus.FORBIDDEN, "Only the owner can delete this space");
+        }
+        if (space.isPersonal()) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "Personal spaces cannot be deleted");
         }
 
         spaceRepository.delete(space);
@@ -239,6 +254,30 @@ public class SpaceService {
         spaceRepository.save(space);
 
         return new SpaceResponse(space.getId(), space.getName(), space.getDescription(), space.getInviteCode(), space.getCoverImage());
+    }
+
+    // Auto-create the user's personal space on signup.
+    // Called by UserService.register and CustomOAuth2UserService for new accounts.
+    // Idempotent: returns the existing personal space if one already exists.
+    @Transactional
+    public Space createPersonalSpace(User owner) {
+        Optional<Space> existing = spaceRepository.findFirstByOwnerAndPersonalTrue(owner);
+        if (existing.isPresent()) return existing.get();
+
+        Space space = new Space();
+        space.setName("Personal");
+        space.setOwner(owner);
+        space.setPersonal(true);
+        // invite_code stays NULL — personal spaces are not joinable by code.
+        spaceRepository.save(space);
+
+        SpaceMember member = new SpaceMember();
+        member.setSpace(space);
+        member.setUser(owner);
+        member.setRole(Role.OWNER);
+        spaceMemberRepository.save(member);
+
+        return space;
     }
 
     private String generateUniqueInviteCode() {

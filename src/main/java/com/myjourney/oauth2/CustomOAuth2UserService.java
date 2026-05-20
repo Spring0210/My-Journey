@@ -2,6 +2,7 @@ package com.myjourney.oauth2;
 
 import com.myjourney.model.User;
 import com.myjourney.repository.UserRepository;
+import com.myjourney.service.SpaceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -17,6 +18,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private SpaceService spaceService;
 
     @Override
     @Transactional
@@ -61,6 +65,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             // No password — this user can only sign in via Google
             userRepository.save(user);
         }
+
+        // Auto-provision a personal space for any first-time sign-in if missing.
+        // For users created before this pivot, V4 backfilled this — but the
+        // call is idempotent so we keep it as a safety net.
+        spaceService.createPersonalSpace(user);
 
         return new CustomOAuth2User(googleUser, user.getId(), user.getUsername(), user.getAvatar());
     }
