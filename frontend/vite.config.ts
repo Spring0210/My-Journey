@@ -3,6 +3,11 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 
+// Vitest config lives in vitest.config.ts so this file stays Vite-pure;
+// Vite 8 (rolldown) and Vitest 3.x (pinned to a rollup-based Vite) have
+// incompatible plugin type signatures, and keeping `test` in here trips
+// `tsc -b`.
+
 export default defineConfig({
   plugins: [
     react(),
