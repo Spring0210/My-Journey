@@ -22,18 +22,35 @@ import type {
 // ── Documents: list & read ────────────────────────────────
 
 // Paginated list of documents in a space.
-// type:  JOURNAL|NOTE  — optional doc-type filter
-// date:  YYYY-MM-DD    — optional entry_date match (powers calendar/heatmap drill-in)
+// type:     JOURNAL|NOTE  — optional doc-type filter
+// date:     YYYY-MM-DD    — optional entry_date match (powers calendar/heatmap drill-in)
+// keyword:  optional LIKE match on title or content (powers search bar)
 export function listDocuments(
   spaceId: number,
-  opts: { type?: DocType; date?: string; page?: number; size?: number } = {},
+  opts: { type?: DocType; date?: string; keyword?: string; page?: number; size?: number } = {},
 ): Promise<PageResponse<DocumentSummaryResponse>> {
   const params = new URLSearchParams()
   if (opts.type) params.set('type', opts.type)
   if (opts.date) params.set('date', opts.date)
+  if (opts.keyword) params.set('keyword', opts.keyword)
   params.set('page', String(opts.page ?? 0))
   params.set('size', String(opts.size ?? 20))
   return apiRequest(`/spaces/${spaceId}/documents?${params.toString()}`)
+}
+
+// AI search — natural-language query routed through Claude Haiku keyword
+// extraction, OR-matched against doc title/content. Returns the same
+// DocumentSummaryResponse shape as the regular list so the cards render
+// identically; `keywords` is surfaced for the "Matched keywords: ..." banner.
+export function aiSearchDocuments(
+  spaceId: number,
+  query: string,
+  type: DocType = 'JOURNAL',
+): Promise<{ keywords: string[]; results: DocumentSummaryResponse[] }> {
+  return apiRequest(`/spaces/${spaceId}/documents/ai-search`, {
+    method: 'POST',
+    body: JSON.stringify({ query, type }),
+  })
 }
 
 // Calendar feed for /journal — one event per JOURNAL doc with an entry_date.

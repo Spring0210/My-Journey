@@ -144,6 +144,83 @@ public class DocumentService {
         return documentRepository.findBySpace(space, pageable);
     }
 
+    // ============================================================
+    // Search
+    // ============================================================
+
+    // Keyword + optional entry_date search over documents in a space.
+    // Currently scoped to a specific docType (the /journal page only searches
+    // JOURNAL docs in the user's personal space); pass null for type-agnostic
+    // search across the whole space when that surface is added.
+    public Page<Document> searchDocumentsInSpace(Integer userId,
+                                                  Integer spaceId,
+                                                  Document.DocType docType,
+                                                  String keyword,
+                                                  LocalDate entryDate,
+                                                  int page,
+                                                  int size) {
+        User user = loadUser(userId);
+        Space space = loadSpace(spaceId);
+        requireMember(user, space);
+
+        if (docType == null) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "docType is required for search");
+        }
+        String kw = keyword == null ? "" : keyword.trim();
+
+        Sort.Direction dir = Sort.Direction.DESC;
+        String sortField = (docType == Document.DocType.JOURNAL) ? "entryDate" : "createdAt";
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(dir, sortField));
+
+        // Keyword-only path: hit the LIKE query.
+        if (!kw.isEmpty() && entryDate != null) {
+            return documentRepository.searchBySpaceAndDocTypeAndKeywordAndEntryDate(
+                    space, docType, kw, entryDate, pageable);
+        }
+        if (!kw.isEmpty()) {
+            return documentRepository.searchBySpaceAndDocTypeAndKeyword(
+                    space, docType, kw, pageable);
+        }
+        // Empty keyword falls back to the plain listing — keeps the controller
+        // single-shaped (no need to branch in the JSON request).
+        if (entryDate != null) {
+            return documentRepository.findBySpaceAndDocTypeAndEntryDate(space, docType, entryDate, pageable);
+        }
+        return documentRepository.findBySpaceAndDocType(space, docType, pageable);
+    }
+
+    // AI-search: OR-match a list of keywords (typically 2-3 extracted from a
+    // natural-language query by AiService). Mirrors the legacy
+    // JournalService.searchEntriesByKeywords contract — deduped, newest-first,
+    // capped at `limit` for an upper bound on response size.
+    public List<Document> searchDocumentsByKeywords(Integer userId,
+                                                     Integer spaceId,
+                                                     Document.DocType docType,
+                                                     List<String> keywords,
+                                                     int limit) {
+        User user = loadUser(userId);
+        Space space = loadSpace(spaceId);
+        requireMember(user, space);
+
+        if (docType == null) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "docType is required for ai-search");
+        }
+        if (keywords == null || keywords.isEmpty()) return List.of();
+
+        LinkedHashMap<Long, Document> seen = new LinkedHashMap<>();
+        for (String raw : keywords) {
+            if (raw == null) continue;
+            String k = raw.trim();
+            if (k.isEmpty()) continue;
+            for (Document d : documentRepository.findBySpaceAndDocTypeAndKeyword(space, docType, k)) {
+                seen.putIfAbsent(d.getId(), d);
+                if (seen.size() >= limit) break;
+            }
+            if (seen.size() >= limit) break;
+        }
+        return new ArrayList<>(seen.values());
+    }
+
     // Calendar feed for the /journal page — JOURNAL docs in the given space
     // that have an entry_date. hasImage is computed in a single side query so
     // we don't blow up to N+1 lookups on a year of entries.
