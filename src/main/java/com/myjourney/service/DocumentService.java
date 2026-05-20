@@ -1,5 +1,7 @@
 package com.myjourney.service;
 
+import com.myjourney.dto.CalendarEventResponse;
+import com.myjourney.dto.HeatmapPoint;
 import com.myjourney.exception.AppException;
 import com.myjourney.model.Document;
 import com.myjourney.model.DocumentAttachment;
@@ -21,6 +23,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -107,18 +111,61 @@ public class DocumentService {
     public Page<Document> listDocumentsInSpace(Integer userId,
                                                 Integer spaceId,
                                                 Document.DocType docType,
+                                                LocalDate entryDate,
                                                 int page,
                                                 int size) {
         User user = loadUser(userId);
         Space space = loadSpace(spaceId);
         requireMember(user, space);
 
-        PageRequest pageable = PageRequest.of(page, size,
-                Sort.by(Sort.Direction.DESC, "createdAt"));
+        // Sort by entry_date desc when filtering JOURNAL docs (the chronological
+        // axis users actually scan); otherwise fall back to created_at desc.
+        Sort.Direction dir = Sort.Direction.DESC;
+        String sortField = (docType == Document.DocType.JOURNAL) ? "entryDate" : "createdAt";
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(dir, sortField));
+
+        if (entryDate != null && docType != null) {
+            return documentRepository.findBySpaceAndDocTypeAndEntryDate(space, docType, entryDate, pageable);
+        }
+        if (entryDate != null) {
+            return documentRepository.findBySpaceAndEntryDate(space, entryDate, pageable);
+        }
         if (docType != null) {
             return documentRepository.findBySpaceAndDocType(space, docType, pageable);
         }
         return documentRepository.findBySpace(space, pageable);
+    }
+
+    // Calendar feed for the /journal page — JOURNAL docs in the given space
+    // that have an entry_date. hasImage is computed in a single side query so
+    // we don't blow up to N+1 lookups on a year of entries.
+    public List<CalendarEventResponse> getJournalCalendar(Integer userId, Integer spaceId) {
+        User user = loadUser(userId);
+        Space space = loadSpace(spaceId);
+        requireMember(user, space);
+
+        List<Document> docs = documentRepository.findBySpaceAndDocTypeAndEntryDateBetween(
+                space, Document.DocType.JOURNAL, LocalDate.of(1970, 1, 1), LocalDate.of(9999, 12, 31));
+        Set<Long> withAttachment = new HashSet<>(
+                attachmentRepository.findDocumentIdsWithAttachmentInSpace(space));
+
+        return docs.stream()
+                .map(d -> new CalendarEventResponse(
+                        d.getId(),
+                        d.getTitle(),
+                        d.getEntryDate().toString(),
+                        withAttachment.contains(d.getId())))
+                .toList();
+    }
+
+    public List<HeatmapPoint> getJournalHeatmap(Integer userId, Integer spaceId, int year) {
+        User user = loadUser(userId);
+        Space space = loadSpace(spaceId);
+        requireMember(user, space);
+
+        LocalDate start = LocalDate.of(year, 1, 1);
+        LocalDate end   = LocalDate.of(year, 12, 31);
+        return documentRepository.findJournalHeatmap(space, start, end);
     }
 
     @Transactional

@@ -180,7 +180,7 @@ public class JournalController {
         User user = userRepository.findById(userId).orElseThrow();
         List<CalendarEventResponse> events = journalService.getEntriesByUser(user).stream()
                 .map(e -> new CalendarEventResponse(
-                        e.getId(),
+                        e.getId().longValue(),
                         e.getTitle(),
                         e.getEntryDate().toString(),
                         !e.getImagePathList().isEmpty()

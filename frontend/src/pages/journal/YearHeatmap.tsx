@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getHeatmap } from '@/api/journal'
+import { getPersonalSpace } from '@/api/spaces'
+import { getDocHeatmap } from '@/api/documents'
 import type { HeatmapPoint } from '@/types/api'
-import { useAuth } from '@/context/AuthContext'
 import { Skeleton } from '@/components/ui/Skeleton'
 import Icon from '@/components/ui/Icon'
 import './YearHeatmap.css'
@@ -37,22 +37,29 @@ function intensity(count: number): 0 | 1 | 2 | 3 | 4 {
 }
 
 export default function YearHeatmap() {
-  const { userId } = useAuth()
   const navigate = useNavigate()
 
   const currentYear = new Date().getFullYear()
   const [year, setYear] = useState(currentYear)
   const [points, setPoints] = useState<HeatmapPoint[]>([])
   const [loading, setLoading] = useState(true)
+  const [personalSpaceId, setPersonalSpaceId] = useState<number | null>(null)
+
+  // Resolve personal space once; reuse for subsequent year switches.
+  useEffect(() => {
+    getPersonalSpace()
+      .then(s => setPersonalSpaceId(s.id))
+      .catch(() => setPersonalSpaceId(null))
+  }, [])
 
   useEffect(() => {
-    if (!userId) return
+    if (personalSpaceId == null) return
     setLoading(true)
-    getHeatmap(userId, year)
+    getDocHeatmap(personalSpaceId, year)
       .then(setPoints)
       .catch(() => setPoints([]))
       .finally(() => setLoading(false))
-  }, [userId, year])
+  }, [personalSpaceId, year])
 
   // Index point counts by ISO date for O(1) lookup during render
   const countByDate = useMemo(() => {

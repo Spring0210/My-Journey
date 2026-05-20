@@ -14,6 +14,12 @@ export function getMySpaces(): Promise<SpaceSummaryResponse[]> {
   return apiRequest('/spaces')
 }
 
+// The user's auto-created personal space — frontend uses this to know which
+// space to read JOURNAL documents from for the /journal page.
+export function getPersonalSpace(): Promise<SpaceSummaryResponse> {
+  return apiRequest('/spaces/personal')
+}
+
 export function createSpace(name: string, description: string): Promise<SpaceResponse> {
   return apiRequest('/spaces', { method: 'POST', body: JSON.stringify({ name, description }) })
 }

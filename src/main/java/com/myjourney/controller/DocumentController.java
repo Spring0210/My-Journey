@@ -1,10 +1,12 @@
 package com.myjourney.controller;
 
+import com.myjourney.dto.CalendarEventResponse;
 import com.myjourney.dto.CreateDocumentRequest;
 import com.myjourney.dto.DocumentAttachmentResponse;
 import com.myjourney.dto.DocumentCommentResponse;
 import com.myjourney.dto.DocumentResponse;
 import com.myjourney.dto.DocumentSummaryResponse;
+import com.myjourney.dto.HeatmapPoint;
 import com.myjourney.dto.PageResponse;
 import com.myjourney.dto.UpdateDocumentRequest;
 import com.myjourney.exception.AppException;
@@ -21,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -59,12 +62,14 @@ public class DocumentController {
         return ResponseEntity.ok(toDetailResponse(doc));
     }
 
-    // GET /api/spaces/{spaceId}/documents — paginated list, optional type filter
+    // GET /api/spaces/{spaceId}/documents — paginated list with optional filters.
+    // `type=JOURNAL|NOTE` and `date=YYYY-MM-DD` (entry_date match) are both optional.
     @GetMapping("/api/spaces/{spaceId}/documents")
     public ResponseEntity<PageResponse<DocumentSummaryResponse>> listDocuments(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Integer spaceId,
             @RequestParam(required = false) String type,
+            @RequestParam(required = false) String date,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
@@ -73,12 +78,38 @@ public class DocumentController {
 
         Document.DocType docType = (type == null || type.isBlank())
                 ? null : parseDocType(type, null);
-        Page<Document> docs = documentService.listDocumentsInSpace(userId, spaceId, docType, page, size);
+        LocalDate entryDate = parseEntryDate(date);
+        Page<Document> docs = documentService.listDocumentsInSpace(userId, spaceId, docType, entryDate, page, size);
         List<DocumentSummaryResponse> items = docs.getContent().stream()
                 .map(this::toSummaryResponse)
                 .toList();
         return ResponseEntity.ok(new PageResponse<>(
                 items, docs.getTotalPages(), docs.getTotalElements(), page));
+    }
+
+    // GET /api/spaces/{spaceId}/documents/calendar — calendar feed for /journal.
+    // Returns one event per JOURNAL doc (with an entry_date) in the space.
+    @GetMapping("/api/spaces/{spaceId}/documents/calendar")
+    public ResponseEntity<List<CalendarEventResponse>> listJournalCalendar(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @PathVariable Integer spaceId
+    ) {
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
+        if (userId == null) return ResponseEntity.status(401).build();
+        return ResponseEntity.ok(documentService.getJournalCalendar(userId, spaceId));
+    }
+
+    // GET /api/spaces/{spaceId}/documents/heatmap?year=YYYY — year heatmap for /journal.
+    @GetMapping("/api/spaces/{spaceId}/documents/heatmap")
+    public ResponseEntity<List<HeatmapPoint>> listJournalHeatmap(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @PathVariable Integer spaceId,
+            @RequestParam(defaultValue = "0") int year
+    ) {
+        Integer userId = jwtUtil.extractUserIdFromHeader(authHeader);
+        if (userId == null) return ResponseEntity.status(401).build();
+        int y = year > 0 ? year : java.time.LocalDate.now().getYear();
+        return ResponseEntity.ok(documentService.getJournalHeatmap(userId, spaceId, y));
     }
 
     // GET /api/documents/{id} — full detail (content + attachments + comments)
@@ -298,6 +329,18 @@ public class DocumentController {
                 c.getAuthor().getUsername(),
                 c.getAuthor().getAvatar(),
                 c.getCreatedAt());
+    }
+
+    // Parse "YYYY-MM-DD" from the `date` query param. Null/blank returns null;
+    // bogus input returns 400 instead of bubbling a DateTimeParseException 500.
+    private LocalDate parseEntryDate(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        try {
+            return LocalDate.parse(raw.trim());
+        } catch (java.time.format.DateTimeParseException e) {
+            throw new AppException(HttpStatus.BAD_REQUEST,
+                    "Invalid date '" + raw + "'. Expected YYYY-MM-DD.");
+        }
     }
 
     // Returns the parsed DocType for non-null/blank input, or `fallback`
