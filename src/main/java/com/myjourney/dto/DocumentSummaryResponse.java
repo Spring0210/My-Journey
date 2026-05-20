@@ -20,8 +20,12 @@ public record DocumentSummaryResponse(
         List<String> imageUrls,
         // Total number of image attachments on the doc, including those not
         // surfaced in imageUrls. The card UI shows a "+N" overflow tile when
-        // imageCount exceeds the number of thumbnails rendered.
+        // imageCount + videoCount exceeds the number of thumbnails rendered.
         int imageCount,
+        // Total number of video attachments on the doc. The card UI rolls
+        // these into the "+N" overflow tile since we don't render video
+        // thumbnails in the strip (only image previews).
+        int videoCount,
         Integer spaceId,
         Integer authorId,
         String authorUsername,

@@ -21,7 +21,11 @@ import java.time.ZoneOffset;
 public class Media {
 
     public enum Type { IMAGE, VIDEO }
-    public enum SourceType { JOURNAL, SPACE_POST }
+    // JOURNAL / SPACE_POST refer to the legacy journal_entry / space_post
+    // tables (still backing the V1 paths). DOCUMENT covers everything in the
+    // unified Document model — both JOURNAL-type docs in a user's personal
+    // space and NOTE-type docs in a team space.
+    public enum SourceType { JOURNAL, SPACE_POST, DOCUMENT }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

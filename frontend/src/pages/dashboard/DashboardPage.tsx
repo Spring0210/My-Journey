@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getEntries } from '@/api/journal'
+import { listDocuments } from '@/api/documents'
+import { getPersonalSpace } from '@/api/spaces'
 import { useAuth } from '@/context/AuthContext'
-import type { JournalEntry } from '@/types/api'
+import type { DocumentSummaryResponse } from '@/types/api'
+import { stripMarkdown } from '@/pages/spaces/docCardUtils'
 import Icon from '@/components/ui/Icon'
 import PageTopBar from '@/components/ui/PageTopBar'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -44,21 +46,39 @@ export default function DashboardPage() {
   const navigate = useNavigate()
   const { userId, username } = useAuth()
 
-  const [entries, setEntries] = useState<JournalEntry[]>([])
+  // Recent + today are read from the unified Document model (JOURNAL docs in
+  // the user's personal space). The legacy /api/entries endpoint pointed at
+  // the pre-migration journal_entry table; clicking those rows routed to a
+  // stale ID via /journal/:legacyId which now resolves to DocumentDetailPage
+  // and 404s.
+  const [docs, setDocs] = useState<DocumentSummaryResponse[]>([])
   const [loading, setLoading] = useState(true)
 
   const todayStr = new Date().toISOString().slice(0, 10)
 
   useEffect(() => {
     if (!userId) return
-    getEntries(userId, 0, 10)
-      .then(data => setEntries(data.content))
-      .catch(() => {})
-      .finally(() => setLoading(false))
+    let cancelled = false
+    ;(async () => {
+      try {
+        const personal = await getPersonalSpace()
+        const page = await listDocuments(personal.id, {
+          type: 'JOURNAL',
+          page: 0,
+          size: 10,
+        })
+        if (!cancelled) setDocs(page.content)
+      } catch {
+        if (!cancelled) setDocs([])
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
   }, [userId])
 
-  const todayEntry  = entries.find(e => e.entryDate === todayStr) ?? null
-  const recentFour  = entries.filter(e => e.entryDate !== todayStr).slice(0, 4)
+  const todayEntry  = docs.find(d => d.entryDate === todayStr) ?? null
+  const recentFour  = docs.filter(d => d.entryDate !== todayStr).slice(0, 4)
 
   const todayDisplay = new Date().toLocaleDateString('en-US', {
     weekday: 'long', month: 'long', day: 'numeric',
@@ -95,11 +115,15 @@ export default function DashboardPage() {
                     <Icon name="check" size={13} />
                   </span>
                   <span className="dash-today-written-label">Today's entry</span>
-                  <span className="dash-today-written-date">{fmtDate(todayEntry.entryDate)}</span>
+                  <span className="dash-today-written-date">
+                    {todayEntry.entryDate && fmtDate(todayEntry.entryDate)}
+                  </span>
                 </div>
                 <p className="dash-today-written-title">{todayEntry.title}</p>
-                {todayEntry.content && (
-                  <p className="dash-today-written-excerpt">{todayEntry.content}</p>
+                {todayEntry.snippet && (
+                  <p className="dash-today-written-excerpt">
+                    {stripMarkdown(todayEntry.snippet)}
+                  </p>
                 )}
               </button>
             ) : (
@@ -166,27 +190,32 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="dash-entry-list">
-                  {recentFour.map((entry, i) => {
-                    const { month, day } = dateParts(entry.entryDate)
+                  {recentFour.map((doc, i) => {
+                    // entryDate is always populated for JOURNAL docs (server
+                    // enforces it at create). Fall back to createdAt for
+                    // safety in case an older row slipped through validation.
+                    const dateStr = doc.entryDate ?? doc.createdAt.slice(0, 10)
+                    const { month, day } = dateParts(dateStr)
+                    const excerpt = doc.snippet ? stripMarkdown(doc.snippet) : ''
                     return (
                       <button
-                        key={entry.id}
+                        key={doc.id}
                         className={`dash-entry-row${i < recentFour.length - 1 ? ' dash-entry-row--border' : ''}`}
-                        onClick={() => navigate(`/journal/${entry.id}`)}
+                        onClick={() => navigate(`/journal/${doc.id}`)}
                       >
                         <div className="dash-entry-row-pill">
                           <span className="dash-entry-row-pill-month">{month}</span>
                           <span className="dash-entry-row-pill-day">{day}</span>
                         </div>
                         <div className="dash-entry-row-inner">
-                          <p className="dash-entry-row-title">{entry.title}</p>
-                          {entry.content && (
-                            <p className="dash-entry-row-excerpt">{entry.content}</p>
+                          <p className="dash-entry-row-title">{doc.title}</p>
+                          {excerpt && (
+                            <p className="dash-entry-row-excerpt">{excerpt}</p>
                           )}
                         </div>
-                        {entry.imagePathList[0] && (
+                        {doc.imageUrls[0] && (
                           <img
-                            src={entry.imagePathList[0]}
+                            src={doc.imageUrls[0]}
                             alt=""
                             className="dash-entry-row-thumb"
                           />
@@ -200,7 +229,7 @@ export default function DashboardPage() {
             )}
 
             {/* First-time empty state */}
-            {entries.length === 0 && (
+            {docs.length === 0 && (
               <EmptyState
                 illustration={<EmptyJournal />}
                 title="Your journal is empty"

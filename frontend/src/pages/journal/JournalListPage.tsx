@@ -32,7 +32,10 @@ import './JournalList.css'
 // ─────────────────────────────────────────────────────────
 
 const PAGE_SIZE = 9
-const MAX_VISIBLE_THUMBS = 4
+// Max image thumbs rendered on a card before we collapse the rest into a
+// "+N" overflow tile. When total media (images + videos) exceeds this, the
+// 4th slot becomes the overflow chip.
+const MAX_VISIBLE_THUMBS = 3
 
 function formatDate(dateStr: string): string {
   const [y, m, d] = dateStr.split('-').map(Number)
@@ -416,15 +419,16 @@ export default function JournalListPage() {
           <div className="jlist-grid">
             {docs.map(doc => {
               const excerpt = stripMarkdown(doc.snippet)
-              // Backends with imageCount tell us the true total; older
-              // backends only send imageUrls — fall back so the strip
-              // still renders during a rolling upgrade.
-              const total = doc.imageCount && doc.imageCount > 0
+              // Total media = images + videos. Backends with imageCount tell
+              // us the true image total; older backends only send imageUrls,
+              // so fall back to that count during a rolling upgrade. videoCount
+              // may be undefined on the older payload — default to 0.
+              const imageTotal = doc.imageCount && doc.imageCount > 0
                 ? doc.imageCount
                 : doc.imageUrls.length
-              const overflows    = total > MAX_VISIBLE_THUMBS
-              const visibleCount = overflows ? MAX_VISIBLE_THUMBS - 1 : MAX_VISIBLE_THUMBS
-              const thumbs       = doc.imageUrls.slice(0, visibleCount)
+              const total        = imageTotal + (doc.videoCount ?? 0)
+              const thumbs       = doc.imageUrls.slice(0, MAX_VISIBLE_THUMBS)
+              const overflows    = total > thumbs.length
               return (
                 <a
                   key={doc.id}
@@ -449,7 +453,7 @@ export default function JournalListPage() {
                       ))}
                       {overflows && (
                         <div className="jlist-card-thumb-more">
-                          +{total - visibleCount}
+                          +{total - thumbs.length}
                         </div>
                       )}
                     </div>

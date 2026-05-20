@@ -10,10 +10,19 @@ import {
 import type { DocumentResponse, DocumentCommentResponse } from '@/types/api'
 import Icon from '@/components/ui/Icon'
 import PageTopBar from '@/components/ui/PageTopBar'
-import Lightbox from '@/components/ui/Lightbox'
+import Lightbox, { type LightboxItem } from '@/components/ui/Lightbox'
 import { useToast, useConfirm } from '@/components/feedback'
 import { Skeleton, SkeletonCircle } from '@/components/ui/Skeleton'
 import './DocumentDetail.css'
+
+// Cloudinary first-frame thumbnail trick for video tiles. Rewriting the
+// extension to .jpg with /upload/so_0/ pulls a still from offset 0. No-ops
+// for non-Cloudinary URLs so legacy assets still render (just as a black box).
+function videoThumbnail(url: string): string {
+  return url
+    .replace('/upload/', '/upload/so_0/')
+    .replace(/\.[a-z0-9]+$/i, '.jpg')
+}
 
 // ─────────────────────────────────────────────────────────
 // DocumentDetailPage — read-only doc viewer.
@@ -45,6 +54,14 @@ function isImageMime(mimeType: string | null): boolean {
   return !!mimeType && mimeType.startsWith('image/')
 }
 
+// Videos may be uploaded with a mime type from the browser (preferred) or,
+// for legacy backfilled rows, with a NULL mime — fall back to the Cloudinary
+// /video/upload/ URL pattern so playback still works there.
+function isVideoAttachment(att: { mimeType: string | null; fileUrl: string }): boolean {
+  if (att.mimeType && att.mimeType.startsWith('video/')) return true
+  return !!att.fileUrl && att.fileUrl.includes('/video/upload/')
+}
+
 export default function DocumentDetailPage() {
   // Two URL families lead here:
   //   /journal/:docId                        (personal-space docs)
@@ -66,10 +83,11 @@ export default function DocumentDetailPage() {
   const [commentInput, setCommentInput] = useState('')
   const [addingComment, setAddingComment] = useState(false)
 
-  // Lightbox for image attachments.
-  const [lightboxImages, setLightboxImages] = useState<string[]>([])
-  const [lightboxIndex, setLightboxIndex]   = useState(0)
-  const [lightboxOpen, setLightboxOpen]     = useState(false)
+  // Lightbox covers both image and video attachments — images render in place,
+  // videos play inside the lightbox via the shared `<video controls>` panel.
+  const [lightboxItems, setLightboxItems] = useState<LightboxItem[]>([])
+  const [lightboxIndex, setLightboxIndex] = useState(0)
+  const [lightboxOpen, setLightboxOpen]   = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -127,8 +145,8 @@ export default function DocumentDetailPage() {
     }
   }
 
-  function openImageLightbox(urls: string[], index: number) {
-    setLightboxImages(urls)
+  function openMediaLightbox(items: LightboxItem[], index: number) {
+    setLightboxItems(items)
     setLightboxIndex(index)
     setLightboxOpen(true)
   }
@@ -136,10 +154,29 @@ export default function DocumentDetailPage() {
   if (loading) return <DocumentDetailSkeleton />
   if (!doc) return null
 
-  const isAuthor         = doc.authorId === userId
-  const imageAttachments = doc.attachments.filter(a => isImageMime(a.mimeType))
-  const fileAttachments  = doc.attachments.filter(a => !isImageMime(a.mimeType))
-  const imageUrls        = imageAttachments.map(a => a.fileUrl)
+  const isAuthor = doc.authorId === userId
+
+  // Build a single ordered list of media (images + videos) so the grid keeps
+  // upload order and the lightbox can page through them all. Non-media files
+  // (PDFs etc.) split out into the download chip list below.
+  const mediaTiles = doc.attachments
+    .map(a => {
+      if (isImageMime(a.mimeType)) {
+        return { att: a, type: 'IMAGE' as const, thumb: a.fileUrl }
+      }
+      if (isVideoAttachment(a)) {
+        return { att: a, type: 'VIDEO' as const, thumb: videoThumbnail(a.fileUrl) }
+      }
+      return null
+    })
+    .filter((x): x is { att: typeof doc.attachments[number]; type: 'IMAGE' | 'VIDEO'; thumb: string } => x !== null)
+  const fileAttachments = doc.attachments.filter(
+    a => !isImageMime(a.mimeType) && !isVideoAttachment(a),
+  )
+  const lightboxItemsForDoc: LightboxItem[] = mediaTiles.map(m => ({
+    type: m.type,
+    url:  m.att.fileUrl,
+  }))
 
   // Personal-space docs live under /journal/*; team docs under /spaces/{id}/*.
   // The back button + Edit button + post-delete nav all follow this split.
@@ -219,19 +256,28 @@ export default function DocumentDetailPage() {
             </ReactMarkdown>
           </div>
 
-          {/* Attachments — images first as a clickable grid, then other files */}
-          {(imageAttachments.length > 0 || fileAttachments.length > 0) && (
+          {/* Attachments — unified square-tile grid for images + videos
+              (videos show first-frame thumb with play overlay; click opens
+              the lightbox), then any remaining files as download chips. */}
+          {(mediaTiles.length > 0 || fileAttachments.length > 0) && (
             <section className="ddetail-attachments">
-              {imageAttachments.length > 0 && (
+              {mediaTiles.length > 0 && (
                 <div className="ddetail-img-grid">
-                  {imageAttachments.map((a, i) => (
+                  {mediaTiles.map((m, i) => (
                     <button
-                      key={a.id}
+                      key={m.att.id}
                       className="ddetail-img-cell"
-                      onClick={() => openImageLightbox(imageUrls, i)}
-                      aria-label={`View image ${i + 1}`}
+                      onClick={() => openMediaLightbox(lightboxItemsForDoc, i)}
+                      aria-label={m.type === 'VIDEO'
+                        ? `Play video ${i + 1}`
+                        : `View image ${i + 1}`}
                     >
-                      <img src={a.fileUrl} alt={a.originalName ?? ''} />
+                      <img src={m.thumb} alt={m.att.originalName ?? ''} />
+                      {m.type === 'VIDEO' && (
+                        <span className="ddetail-img-play" aria-hidden="true">
+                          <Icon name="video" size={18} />
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -257,72 +303,76 @@ export default function DocumentDetailPage() {
             </section>
           )}
 
-          {/* Comments */}
-          <section className="ddetail-comments">
-            <h2 className="ddetail-comments-title">
-              {comments.length > 0
-                ? `${comments.length} comment${comments.length !== 1 ? 's' : ''}`
-                : 'Comments'}
-            </h2>
+          {/* Comments — only shown on team-space docs. Personal-space docs
+              (journal entries) are read by their owner alone, so threading
+              a comment input there would be meaningless noise. */}
+          {!doc.spacePersonal && (
+            <section className="ddetail-comments">
+              <h2 className="ddetail-comments-title">
+                {comments.length > 0
+                  ? `${comments.length} comment${comments.length !== 1 ? 's' : ''}`
+                  : 'Comments'}
+              </h2>
 
-            {comments.length === 0 ? (
-              <p className="ddetail-comments-empty">No comments yet.</p>
-            ) : (
-              <ul className="ddetail-comment-list">
-                {comments.map(c => (
-                  <li key={c.id} className="ddetail-comment">
-                    <div className="ddetail-comment-avatar">
-                      {c.authorAvatar
-                        ? <img src={c.authorAvatar} alt="" />
-                        : c.authorUsername.charAt(0).toUpperCase()
-                      }
-                    </div>
-                    <div className="ddetail-comment-body">
-                      <div className="ddetail-comment-meta">
-                        <span className="ddetail-comment-author">@{c.authorUsername}</span>
-                        <span className="ddetail-dot">·</span>
-                        <span className="ddetail-comment-time">{formatTime(c.createdAt)}</span>
+              {comments.length === 0 ? (
+                <p className="ddetail-comments-empty">No comments yet.</p>
+              ) : (
+                <ul className="ddetail-comment-list">
+                  {comments.map(c => (
+                    <li key={c.id} className="ddetail-comment">
+                      <div className="ddetail-comment-avatar">
+                        {c.authorAvatar
+                          ? <img src={c.authorAvatar} alt="" />
+                          : c.authorUsername.charAt(0).toUpperCase()
+                        }
                       </div>
-                      <p className="ddetail-comment-text">{c.content}</p>
-                    </div>
-                    {c.authorId === userId && (
-                      <button
-                        className="ddetail-comment-del"
-                        onClick={() => handleDeleteComment(c.id)}
-                        title="Delete comment"
-                      >
-                        <Icon name="close" size={11} />
-                      </button>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
+                      <div className="ddetail-comment-body">
+                        <div className="ddetail-comment-meta">
+                          <span className="ddetail-comment-author">@{c.authorUsername}</span>
+                          <span className="ddetail-dot">·</span>
+                          <span className="ddetail-comment-time">{formatTime(c.createdAt)}</span>
+                        </div>
+                        <p className="ddetail-comment-text">{c.content}</p>
+                      </div>
+                      {c.authorId === userId && (
+                        <button
+                          className="ddetail-comment-del"
+                          onClick={() => handleDeleteComment(c.id)}
+                          title="Delete comment"
+                        >
+                          <Icon name="close" size={11} />
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
 
-            <div className="ddetail-comment-add">
-              <input
-                className="ddetail-comment-input"
-                type="text"
-                placeholder="Write a comment..."
-                value={commentInput}
-                onChange={e => setCommentInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleAddComment()}
-              />
-              <button
-                className="ddetail-comment-send"
-                onClick={handleAddComment}
-                disabled={addingComment || !commentInput.trim()}
-              >
-                <Icon name="send" size={14} />
-              </button>
-            </div>
-          </section>
+              <div className="ddetail-comment-add">
+                <input
+                  className="ddetail-comment-input"
+                  type="text"
+                  placeholder="Write a comment..."
+                  value={commentInput}
+                  onChange={e => setCommentInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleAddComment()}
+                />
+                <button
+                  className="ddetail-comment-send"
+                  onClick={handleAddComment}
+                  disabled={addingComment || !commentInput.trim()}
+                >
+                  <Icon name="send" size={14} />
+                </button>
+              </div>
+            </section>
+          )}
 
         </article>
       </div>
 
       <Lightbox
-        images={lightboxImages}
+        items={lightboxItems}
         index={lightboxIndex}
         open={lightboxOpen}
         onClose={() => setLightboxOpen(false)}
