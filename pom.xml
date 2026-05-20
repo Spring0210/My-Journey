@@ -29,6 +29,13 @@
     </scm>
     <properties>
         <java.version>21</java.version>
+        <!-- Defaults match the standard local dev MySQL setup. Override on the
+             command line with `-Dflyway.url=...` etc. for other environments.
+             These are not secrets — they're the same defaults documented for
+             every fresh dev clone. -->
+        <flyway.url>jdbc:mysql://localhost:3306/my_journey?useSSL=false&amp;serverTimezone=UTC</flyway.url>
+        <flyway.user>root</flyway.user>
+        <flyway.password></flyway.password>
     </properties>
     <dependencies>
         <dependency>
@@ -166,6 +173,36 @@
                         </exclude>
                     </excludes>
                 </configuration>
+            </plugin>
+            <!-- Flyway CLI hooks: lets us run `./mvnw flyway:repair`,
+                 `flyway:info`, `flyway:validate`, etc. directly. Same Flyway
+                 version Spring Boot 3.4.5 manages, plus the MySQL extension.
+                 Connection settings come from the <properties> block above and
+                 can be overridden with -Dflyway.url=... on the command line. -->
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <version>10.20.1</version>
+                <configuration>
+                    <url>${flyway.url}</url>
+                    <user>${flyway.user}</user>
+                    <password>${flyway.password}</password>
+                    <locations>
+                        <location>filesystem:src/main/resources/db/migration</location>
+                    </locations>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.flywaydb</groupId>
+                        <artifactId>flyway-mysql</artifactId>
+                        <version>10.20.1</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.mysql</groupId>
+                        <artifactId>mysql-connector-j</artifactId>
+                        <version>9.0.0</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>
