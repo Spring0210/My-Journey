@@ -142,6 +142,16 @@ All secrets are injected as environment variables at runtime via `.env` at `/opt
 
 STOMP over WebSocket at `/ws`. After login, clients subscribe to `/user/queue/notifications` to receive real-time notification pushes. Replaces the previous 30-second polling approach.
 
+## Database Migrations
+
+Flyway manages versioned SQL migrations under `src/main/resources/db/migration/`. Naming convention: `V{n}__{description}.sql`.
+
+- **V1 (`V1__baseline.sql`)** — baseline schema as of 2026-05-19. Reflects what Hibernate `ddl-auto=update` had produced from the entity classes in `com.myjourney.model` up through commit `e16c4c1` (Phase 6 + Media library).
+- **`spring.flyway.baseline-on-migrate=true`** with `baseline-version=1` — on the existing production database (which already has all tables from pre-Flyway `ddl-auto` runs), Flyway records V1 as applied without running it. On fresh dev / test databases, V1 runs normally to create the full schema.
+- **`spring.jpa.hibernate.ddl-auto=validate`** — Hibernate verifies entities match the schema on startup but never alters it. Schema changes go through Flyway migrations only. Known historical drift (legacy ENUM types vs VARCHAR, TIMESTAMP vs DATETIME, missing `user.email` UNIQUE, `user.password` NOT NULL on long-lived databases) is tolerated by validate and tracked as cleanup items for a future V2 batch.
+
+Future migrations: `V2__add_document_model.sql` etc. — see Phase 8 work in `docs/superpowers/specs/` (gitignored locally) for the team-KB pivot data model.
+
 ## Technology Decisions
 
 | Decision | Choice | Reason |
