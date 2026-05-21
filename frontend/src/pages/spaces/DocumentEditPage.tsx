@@ -6,11 +6,13 @@ import {
   getDocument, createDocument, updateDocument, uploadAttachment,
 } from '@/api/documents'
 import type { DocType, DocumentAttachmentResponse } from '@/types/api'
+import Icon from '@/components/ui/Icon'
 import PageTopBar from '@/components/ui/PageTopBar'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useToast } from '@/components/feedback'
 import AttachmentUploader from './AttachmentUploader'
 import RichEditor from './RichEditor'
+import TagsInput from './TagsInput'
 import './DocumentDetail.css'   // .ddetail-content typography is shared with the editor
 import './DocumentEdit.css'
 
@@ -19,28 +21,38 @@ import './DocumentEdit.css'
 // Routes:
 //   /spaces/:id/documents/new            → create
 //   /spaces/:id/documents/:docId/edit    → edit (author only)
+//   /journal/new + /journal/:docId/edit  → personal-space variants
 //
-// Markdown body uses a Write/Preview tab switch (textarea +
-// react-markdown). Tag input is plain comma-separated; tags
-// are normalized to lowercase + trimmed + deduped on save.
-// Attachment upload is deferred to PR 3.
+// docType is *derived* from the target space (JOURNAL for personal,
+// NOTE for shared) and is never user-selectable — matches the agent
+// invariant. The entry-date row only renders on JOURNAL docs.
 // ─────────────────────────────────────────────────────────
 
-// Normalize comma-separated tag input into a clean array.
-// Lowercase, trim, drop empties, drop duplicates (preserve first-seen order).
-function normalizeTags(input: string): string[] {
-  const seen = new Set<string>()
-  const out: string[] = []
-  for (const raw of input.split(',')) {
-    const t = raw.trim().toLowerCase()
-    if (!t || seen.has(t)) continue
-    seen.add(t)
-    out.push(t)
-  }
-  return out
+// Build a "YYYY-MM-DD" string in the user's local timezone. The naive
+// `new Date().toISOString().split('T')[0]` shifts dates around midnight
+// for non-UTC users; this avoids that whole class of bug.
+function localISODate(d: Date): string {
+  const y  = d.getFullYear()
+  const m  = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${dd}`
 }
 
-const TODAY = new Date().toISOString().split('T')[0]
+const TODAY = localISODate(new Date())
+
+// Pretty-print "YYYY-MM-DD" for the pill button. Split + construct so the
+// parsed Date stays in local time (not parsed-as-UTC then shifted back).
+function formatEntryDate(iso: string): string {
+  if (!iso) return ''
+  const [y, m, d] = iso.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  return date.toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
 
 export default function DocumentEditPage() {
   // URL shape varies by mount path:
@@ -60,10 +72,10 @@ export default function DocumentEditPage() {
   const [searchParams] = useSearchParams()
 
   // ── Form state ────────────────────────────────────────
-  const [title, setTitle]         = useState('')
-  const [content, setContent]     = useState('')
-  const [tagsInput, setTagsInput] = useState('')
-  const [docType, setDocType]     = useState<DocType>('NOTE')
+  const [title, setTitle]     = useState('')
+  const [content, setContent] = useState('')
+  const [tags, setTags]       = useState<string[]>([])
+  const [docType, setDocType] = useState<DocType>('NOTE')
   const [entryDate, setEntryDate] = useState(TODAY)
   // Tracks whether this doc's space is the user's personal space. Drives
   // smart back navigation (-> /journal) and post-save / cancel destinations.
@@ -145,7 +157,7 @@ export default function DocumentEditPage() {
           }
           setTitle(d.title)
           setContent(d.content)
-          setTagsInput(d.tags.join(', '))
+          setTags(d.tags)
           setDocType(d.docType)
           setIsPersonal(d.spacePersonal)
           setSpaceId(d.spaceId)
@@ -173,7 +185,6 @@ export default function DocumentEditPage() {
     setSaving(true)
     setError('')
     try {
-      const tags = normalizeTags(tagsInput)
       let savedDocId: number
 
       if (isNew) {
@@ -249,17 +260,24 @@ export default function DocumentEditPage() {
       <div className="dedit-inner">
         <form className="dedit-form" onSubmit={e => e.preventDefault()}>
 
-          {/* Entry date — JOURNAL docs only (always present on Personal Space,
-              never on shared spaces, since docType is derived from the space). */}
+          {/* Entry date — JOURNAL docs only. The pill button shows the
+              formatted date; an absolutely-positioned transparent native
+              <input type="date"> fills it so a click anywhere opens the
+              platform picker (iOS wheel, macOS popover, etc.). */}
           {docType === 'JOURNAL' && (
-            <label className="dedit-field">
-              <span className="dedit-label">Entry date</span>
+            <label className="dedit-date-pill">
+              <Icon name="calendar" size={14} />
+              <span className="dedit-date-pill-label">
+                {formatEntryDate(entryDate)}
+              </span>
+              <Icon name="chevron-down" size={12} />
               <input
-                className="dedit-date-input"
                 type="date"
+                className="dedit-date-native"
                 value={entryDate}
-                onChange={e => setEntryDate(e.target.value)}
                 max={TODAY}
+                onChange={e => setEntryDate(e.target.value)}
+                aria-label="Entry date"
               />
             </label>
           )}
@@ -275,14 +293,9 @@ export default function DocumentEditPage() {
             autoFocus={isNew}
           />
 
-          {/* Tags */}
-          <input
-            className="dedit-tags-input"
-            type="text"
-            placeholder="Tags (comma-separated, e.g. work, idea)"
-            value={tagsInput}
-            onChange={e => setTagsInput(e.target.value)}
-          />
+          {/* Tags — chip-style input. Enter / comma commits; backspace on empty
+              removes the last chip. */}
+          <TagsInput tags={tags} onChange={setTags} placeholder="Add tags…" />
 
           {/* Rich body — WYSIWYG that serializes to markdown on every change. */}
           <RichEditor defaultContent={content} onChange={setContent} />
