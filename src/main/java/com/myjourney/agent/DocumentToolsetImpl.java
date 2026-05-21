@@ -183,6 +183,25 @@ public class DocumentToolsetImpl implements DocumentToolset {
         return toComment(c);
     }
 
+    @Override
+    public ToolSpaceSummary createSpace(Integer userId, String name, String description) {
+        // SpaceService handles validation + persists the owner SpaceMember row.
+        // We re-fetch the entity via the repository so we can report the
+        // canonical member count (1, the owner) without trusting the response
+        // DTO's structure.
+        com.myjourney.dto.SpaceResponse created = spaceService.createSpace(
+                userId, name, description);
+        return spaceRepository.findById(created.id())
+                .map(s -> new ToolSpaceSummary(
+                        s.getId(),
+                        s.getName(),
+                        s.isPersonal(),
+                        spaceMemberRepository.countBySpace(s)))
+                .orElseThrow(() -> new AppException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Space was created but could not be reloaded"));
+    }
+
     // -- Mapping helpers ----------------------------------------------
 
     private ToolSearchResult.Hit toHit(Document d) {

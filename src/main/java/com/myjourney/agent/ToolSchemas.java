@@ -20,6 +20,7 @@ public final class ToolSchemas {
     public static final String NAME_CREATE_DOCUMENT  = "create_document";
     public static final String NAME_UPDATE_DOCUMENT  = "update_document";
     public static final String NAME_ADD_COMMENT      = "add_comment";
+    public static final String NAME_CREATE_SPACE     = "create_space";
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -123,6 +124,18 @@ public final class ToolSchemas {
                   },
                   "required": ["document_id", "content"]
                 }
+              },
+              {
+                "name": "create_space",
+                "description": "Create a brand-new shared Space the user can later publish documents into. The user automatically becomes the OWNER. A non-empty name is required; description is optional. Use this when the user explicitly asks to set up a new workspace, team area, or shared knowledge base. Do NOT use it to write a private note -- create_document with no space_id already routes to the user's personal space.",
+                "input_schema": {
+                  "type": "object",
+                  "properties": {
+                    "name":        {"type": "string"},
+                    "description": {"type": ["string","null"]}
+                  },
+                  "required": ["name"]
+                }
               }
             ]
             """);
@@ -135,6 +148,6 @@ public final class ToolSchemas {
         return List.of(
                 NAME_SEARCH_DOCUMENTS, NAME_GET_DOCUMENT, NAME_LIST_SPACES,
                 NAME_LIST_DOCUMENTS, NAME_GET_COMMENTS, NAME_CREATE_DOCUMENT,
-                NAME_UPDATE_DOCUMENT, NAME_ADD_COMMENT);
+                NAME_UPDATE_DOCUMENT, NAME_ADD_COMMENT, NAME_CREATE_SPACE);
     }
 }

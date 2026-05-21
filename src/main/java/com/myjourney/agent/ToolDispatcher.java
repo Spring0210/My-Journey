@@ -69,6 +69,10 @@ public class ToolDispatcher {
                     userId,
                     longRequired(args, "document_id"),
                     str(args, "content"));
+            case ToolSchemas.NAME_CREATE_SPACE -> toolset.createSpace(
+                    userId,
+                    str(args, "name"),
+                    strOrNull(args, "description"));
             default -> throw new AppException(HttpStatus.BAD_REQUEST,
                     "Unknown tool name: " + toolName);
         };

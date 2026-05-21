@@ -138,6 +138,34 @@ class DocumentToolsetImplTest {
         assertThat(all).extracting(ToolComment::content).contains("first!");
     }
 
+    @Test
+    void createSpace_returnsNonPersonalSummary_andListsAsMemberSpace() {
+        // Start with just a user; no fixture spaces.
+        var alice = com.myjourney.testsupport.AgentTestFixture.saveUser(userRepository, "alice");
+
+        ToolSpaceSummary created = toolset.createSpace(
+                alice.getId(), "Team KB", "shared notes");
+
+        assertThat(created.id()).isNotNull();
+        assertThat(created.name()).isEqualTo("Team KB");
+        assertThat(created.isPersonal()).isFalse();
+        // Owner is the sole member at creation time.
+        assertThat(created.memberCount()).isEqualTo(1);
+
+        // listSpaces must surface the new space to the same user.
+        List<ToolSpaceSummary> mine = toolset.listSpaces(alice.getId());
+        assertThat(mine).extracting(ToolSpaceSummary::id).contains(created.id());
+    }
+
+    @Test
+    void createSpace_acceptsNullDescription() {
+        var alice = com.myjourney.testsupport.AgentTestFixture.saveUser(userRepository, "alice");
+
+        ToolSpaceSummary created = toolset.createSpace(alice.getId(), "Side", null);
+
+        assertThat(created.name()).isEqualTo("Side");
+    }
+
     private Long firstDocId(Space space) {
         return documentRepository.findAll().stream()
                 .filter(d -> d.getSpace().getId().equals(space.getId()))

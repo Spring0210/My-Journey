@@ -120,6 +120,33 @@ class ToolDispatcherTest {
     }
 
     @Test
+    void createSpace_parsesNameAndOptionalDescription() throws Exception {
+        JsonNode args = mapper.readTree("{\"name\":\"Team KB\",\"description\":\"shared notes\"}");
+
+        dispatcher.dispatch(42, "create_space", args);
+
+        verify(toolset).createSpace(42, "Team KB", "shared notes");
+    }
+
+    @Test
+    void createSpace_passesNullDescriptionWhenOmitted() throws Exception {
+        JsonNode args = mapper.readTree("{\"name\":\"Side Project\"}");
+
+        dispatcher.dispatch(42, "create_space", args);
+
+        verify(toolset).createSpace(42, "Side Project", null);
+    }
+
+    @Test
+    void createSpace_missingNameThrowsBadRequest() throws Exception {
+        JsonNode args = mapper.readTree("{\"description\":\"forgot the name\"}");
+
+        assertThatThrownBy(() -> dispatcher.dispatch(42, "create_space", args))
+                .isInstanceOf(AppException.class);
+        verifyNoInteractions(toolset);
+    }
+
+    @Test
     void unknownToolName_throwsBadRequest() {
         assertThatThrownBy(() -> dispatcher.dispatch(42, "bogus_tool", null))
                 .isInstanceOf(AppException.class);

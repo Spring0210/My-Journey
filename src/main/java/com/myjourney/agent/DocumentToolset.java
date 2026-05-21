@@ -69,4 +69,13 @@ public interface DocumentToolset {
     );
 
     ToolComment addComment(Integer callerUserId, Long documentId, String content);
+
+    // Create a brand-new shared Space owned by the caller. Returns the
+    // Space summary so the agent can immediately reference the new id (e.g.
+    // by creating a document inside it on the very next tool call).
+    ToolSpaceSummary createSpace(
+            Integer callerUserId,
+            String name,
+            String description
+    );
 }
