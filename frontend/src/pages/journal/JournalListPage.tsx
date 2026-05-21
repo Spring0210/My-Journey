@@ -8,6 +8,7 @@ import type {
 } from '@/types/api'
 import Icon from '@/components/ui/Icon'
 import PageTopBar from '@/components/ui/PageTopBar'
+import ChatPanel from '@/pages/agent/ChatPanel'
 import { Skeleton } from '@/components/ui/Skeleton'
 import EmptyState from '@/components/ui/EmptyState'
 import EmptyJournal from '@/components/ui/illustrations/EmptyJournal'
@@ -72,6 +73,11 @@ export default function JournalListPage() {
   // ── Mobile bottom sheet states ────────────────────────
   const [searchOpen, setSearchOpen] = useState(false)
   const [aiOpen, setAiOpen]         = useState(false)
+
+  // Agent chat. Desktop opens the drawer in-place scoped to the personal
+  // space; mobile navigates to /journal/chat (drawer ergonomics are bad on
+  // a phone -- a full-page route gives the composer the room it needs).
+  const [chatOpen, setChatOpen] = useState(false)
 
   // ── Modal state ───────────────────────────────────────
   const [showPrompts, setShowPrompts]       = useState(false)
@@ -226,13 +232,29 @@ export default function JournalListPage() {
       <PageTopBar
         title="Journal"
         actions={
-          <button
-            className="jlist-btn jlist-btn--primary jlist-btn--topbar"
-            onClick={() => navigate('/journal/new')}
-          >
-            <Icon name="plus" size={16} />
-            New entry
-          </button>
+          <>
+            <button
+              className="jlist-btn jlist-btn--topbar"
+              onClick={() => {
+                if (window.matchMedia('(max-width: 767px)').matches) {
+                  navigate('/journal/chat')
+                } else {
+                  setChatOpen(v => !v)
+                }
+              }}
+              aria-label="Ask AI"
+            >
+              <Icon name="ai" size={16} />
+              <span className="jlist-btn-label">Ask AI</span>
+            </button>
+            <button
+              className="jlist-btn jlist-btn--primary jlist-btn--topbar"
+              onClick={() => navigate('/journal/new')}
+            >
+              <Icon name="plus" size={16} />
+              New entry
+            </button>
+          </>
         }
       />
 
@@ -637,6 +659,24 @@ export default function JournalListPage() {
               <p className="jlist-recap-text">{recapText}</p>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Right-side ChatPanel drawer (desktop only). Mobile uses the
+          dedicated /journal/chat route -- the drawer is hidden via CSS at
+          <= 767 px to avoid two competing surfaces. */}
+      {chatOpen && personalSpace && (
+        <div
+          className="jlist-chat-overlay"
+          onClick={e => { if (e.target === e.currentTarget) setChatOpen(false) }}
+        >
+          <aside className="jlist-chat-drawer">
+            <ChatPanel
+              spaceId={personalSpace.id}
+              spaceName={personalSpace.name}
+              onClose={() => setChatOpen(false)}
+            />
+          </aside>
         </div>
       )}
     </div>
