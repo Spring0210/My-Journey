@@ -162,7 +162,7 @@ describe('ChatPanel', () => {
   it('cross-space: scope chip reads "All my spaces", spaceName is ignored', async () => {
     vi.mocked(spacesApi.getPersonalSpace).mockResolvedValue({
       id: 99, name: 'Personal', description: null, coverImage: null,
-      inviteCode: null, role: 'OWNER', ownerUsername: 'alice', personal: true,
+      inviteCode: "", role: 'OWNER', ownerUsername: 'alice', isPersonal: true,
     })
     vi.mocked(agentApi.listAgentConversations).mockResolvedValue([])
 
@@ -175,7 +175,7 @@ describe('ChatPanel', () => {
   it('cross-space: resolves personal space and lists conversations under it', async () => {
     vi.mocked(spacesApi.getPersonalSpace).mockResolvedValue({
       id: 99, name: 'Personal', description: null, coverImage: null,
-      inviteCode: null, role: 'OWNER', ownerUsername: 'alice', personal: true,
+      inviteCode: "", role: 'OWNER', ownerUsername: 'alice', isPersonal: true,
     })
     vi.mocked(agentApi.listAgentConversations).mockResolvedValue([])
 
@@ -190,7 +190,7 @@ describe('ChatPanel', () => {
   it('cross-space: send includes crossSpace=true and anchors at personal space id', async () => {
     vi.mocked(spacesApi.getPersonalSpace).mockResolvedValue({
       id: 99, name: 'Personal', description: null, coverImage: null,
-      inviteCode: null, role: 'OWNER', ownerUsername: 'alice', personal: true,
+      inviteCode: "", role: 'OWNER', ownerUsername: 'alice', isPersonal: true,
     })
     vi.mocked(agentApi.listAgentConversations).mockResolvedValue([])
     vi.mocked(agentApi.streamAgentChat).mockImplementation((_req, handlers) => {
