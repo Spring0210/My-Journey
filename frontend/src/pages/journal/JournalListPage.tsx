@@ -92,12 +92,14 @@ export default function JournalListPage() {
       .catch(() => setPersonalSpace(null))
   }, [])
 
-  // Load doc page from personal space.
+  // Load doc page from personal space. Lists all doc types -- both JOURNAL
+  // entries (date-anchored, calendar-visible) AND NOTE docs (free-form,
+  // typically created via the AI agent's "save a private note" flow). The
+  // calendar and heatmap stay JOURNAL-only via their dedicated endpoints.
   const loadDocs = useCallback(async (spaceId: number, page: number, dateParam: string) => {
     setLoading(true)
     try {
       const res = await listDocuments(spaceId, {
-        type: 'JOURNAL',
         date: dateParam || undefined,
         page,
         size: PAGE_SIZE,
@@ -131,7 +133,8 @@ export default function JournalListPage() {
     setAiMeta('')
     setLoading(true)
     listDocuments(personalSpace.id, {
-      type: 'JOURNAL',
+      // No type filter -- search across JOURNAL + NOTE so notes saved by the
+      // AI agent are findable from the same search bar.
       keyword: keyword.trim() || undefined,
       date: date || undefined,
       page: 0,
