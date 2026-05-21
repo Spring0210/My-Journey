@@ -235,7 +235,7 @@ class AgentServiceLoopTest {
                 LocalDateTime.of(2026, 5, 20, 10, 0),  // createdAt
                 LocalDateTime.of(2026, 5, 20, 10, 0),  // updatedAt
                 List.of(), List.of());
-        when(toolset.createDocument(any(), eq("x"), eq("y"), any(), any(), any(), any()))
+        when(toolset.createDocument(any(), eq("x"), eq("y"), any(), any(), any()))
                 .thenReturn(detail);
 
         StringBuilder out = new StringBuilder();
