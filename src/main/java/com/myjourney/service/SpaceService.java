@@ -277,6 +277,18 @@ public class SpaceService {
 
     // Auto-create the user's personal space on signup.
     // Called by UserService.register and CustomOAuth2UserService for new accounts.
+    // Resolves the caller's personal-space id. Used by the agent toolset when
+    // a write tool is invoked without an explicit space_id (personal-space
+    // default per spec section 4.2).
+    public Integer findPersonalSpaceId(Integer userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "User not found"));
+        return spaceRepository.findFirstByOwnerAndPersonalTrue(user)
+                .map(Space::getId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND,
+                        "Personal space not found for user " + userId));
+    }
+
     // Idempotent: returns the existing personal space if one already exists.
     @Transactional
     public Space createPersonalSpace(User owner) {

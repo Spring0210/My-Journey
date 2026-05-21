@@ -25,9 +25,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private JwtUtil jwtUtil;
 
     // Separate bucket maps for each limit tier
-    private final ConcurrentHashMap<String, Bucket> loginBuckets    = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Bucket> registerBuckets = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Bucket> aiBuckets       = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Bucket> loginBuckets      = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Bucket> registerBuckets   = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Bucket> aiBuckets         = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Bucket> agentChatBuckets  = new ConcurrentHashMap<>();
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -36,7 +37,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
         return !path.equals("/api/login")
             && !path.equals("/api/register")
             && !path.equals("/api/forgot-password")
-            && !path.startsWith("/api/entries/ai-");
+            && !path.startsWith("/api/entries/ai-")
+            && !path.equals("/api/agent/chat");
     }
 
     @Override
@@ -55,6 +57,16 @@ public class RateLimitFilter extends OncePerRequestFilter {
                 return;
             }
             bucket = aiBuckets.computeIfAbsent(userId, k -> newBucket(5, Duration.ofMinutes(1)));
+        } else if (path.equals("/api/agent/chat")) {
+            // Agent chat: 20 messages / hour / user (spec section 5.5). Each
+            // bucket consumption covers a full LLM turn including any tool
+            // calls the agent makes internally.
+            String userId = extractUserId(request);
+            if (userId == null) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+            bucket = agentChatBuckets.computeIfAbsent(userId, k -> newBucket(20, Duration.ofHours(1)));
         } else if (path.equals("/api/login")) {
             // Login — 10 attempts per minute per IP
             bucket = loginBuckets.computeIfAbsent(getClientIp(request), k -> newBucket(10, Duration.ofMinutes(1)));

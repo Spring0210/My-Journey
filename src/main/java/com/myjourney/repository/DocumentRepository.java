@@ -96,4 +96,28 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
             @Param("keyword") String keyword);
 
     long countByAuthor(User author);
+
+    // Cross-space keyword search used by the agent toolset's searchDocuments
+    // when spaceId is null. Caller restricts spaceIds to spaces the user is
+    // a member of. Date filters are optional. Both JOURNAL and NOTE docs are
+    // returned; ordering matches the per-space search (entry_date desc for
+    // JOURNAL, created_at desc otherwise).
+    @Query("""
+        SELECT d FROM Document d
+        WHERE d.space.id IN :spaceIds
+          AND (LOWER(d.title)   LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(d.content) LIKE LOWER(CONCAT('%', :keyword, '%')))
+          AND (:from IS NULL OR d.entryDate >= :from)
+          AND (:to   IS NULL OR d.entryDate <= :to)
+        ORDER BY
+            CASE WHEN d.docType = com.myjourney.model.Document.DocType.JOURNAL
+                 THEN d.entryDate END DESC,
+            d.createdAt DESC
+        """)
+    List<Document> searchAcrossSpaces(
+            @Param("spaceIds") List<Integer> spaceIds,
+            @Param("keyword") String keyword,
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to,
+            Pageable pageable);
 }

@@ -11,6 +11,8 @@ import type {
 import { useAuth } from '@/context/AuthContext'
 import Icon from '@/components/ui/Icon'
 import PageTopBar from '@/components/ui/PageTopBar'
+import ChatPanel from '@/pages/agent/ChatPanel'
+import ChatDrawer from '@/pages/agent/ChatDrawer'
 import { useToast, useConfirm } from '@/components/feedback'
 import { Skeleton, SkeletonCircle } from '@/components/ui/Skeleton'
 import { formatRelativeTime, formatEntryDate, stripMarkdown } from './docCardUtils'
@@ -67,6 +69,10 @@ export default function SpaceDetailPage() {
 
   // Controls info sheet (used on both mobile and desktop)
   const [showInfoSheet, setShowInfoSheet] = useState(false)
+
+  // Agent chat. Desktop opens the drawer in-place; mobile navigates to the
+  // /spaces/:id/chat full-page route (drawer ergonomics are bad on a phone).
+  const [chatOpen, setChatOpen] = useState(false)
 
   const isOwner = space?.ownerUsername === username
 
@@ -243,6 +249,21 @@ export default function SpaceDetailPage() {
         backLabel="Spaces"
         actions={
           <>
+            {/* Ask AI — desktop opens drawer, mobile routes to full page */}
+            <button
+              className="sdetail-btn sdetail-btn--topbar"
+              onClick={() => {
+                if (window.matchMedia('(max-width: 767px)').matches) {
+                  navigate(`/spaces/${spaceId}/chat`)
+                } else {
+                  setChatOpen(v => !v)
+                }
+              }}
+              aria-label="Ask AI"
+            >
+              <Icon name="ai" size={15} />
+              <span className="sdetail-btn-label">Ask AI</span>
+            </button>
             {/* Info button — hidden on desktop, visible on mobile */}
             <button
               className="sdetail-btn sdetail-btn--topbar sdetail-info-toggle"
@@ -588,6 +609,18 @@ export default function SpaceDetailPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Right-side chat drawer (desktop only -- ChatDrawer hides itself on
+          mobile via CSS; the mobile entry navigates to /spaces/:id/chat). */}
+      {chatOpen && (
+        <ChatDrawer onClose={() => setChatOpen(false)}>
+          <ChatPanel
+            spaceId={Number(spaceId)}
+            spaceName={space.name}
+            onClose={() => setChatOpen(false)}
+          />
+        </ChatDrawer>
       )}
     </div>
   )

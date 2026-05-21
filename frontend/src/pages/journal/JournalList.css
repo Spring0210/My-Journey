@@ -157,9 +157,12 @@
   padding: 0 12px;
 }
 
-/* On mobile the topbar only shows the primary New Entry button */
-@media (max-width: 768px) {
-  .jlist-btn--topbar:not(.jlist-btn--primary) { display: none; }
+/* On very small screens, collapse topbar buttons to icon-only so two
+   actions (Ask AI + New entry) fit comfortably side-by-side. Matches
+   the SpaceDetail .sdetail-btn-label pattern. */
+@media (max-width: 480px) {
+  .jlist-btn-label { display: none; }
+  .jlist-btn--topbar { padding: 0 10px; }
 }
 
 /* Active variant — tinted when a toggle button is on */
@@ -978,3 +981,6 @@
 }
 .jlist-load-more:hover:not(:disabled) { background: var(--fill-secondary); }
 .jlist-load-more:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Chat drawer styles live with the shared ChatDrawer component
+   (frontend/src/pages/agent/ChatDrawer.css). */

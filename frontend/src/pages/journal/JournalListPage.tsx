@@ -8,6 +8,8 @@ import type {
 } from '@/types/api'
 import Icon from '@/components/ui/Icon'
 import PageTopBar from '@/components/ui/PageTopBar'
+import ChatPanel from '@/pages/agent/ChatPanel'
+import ChatDrawer from '@/pages/agent/ChatDrawer'
 import { Skeleton } from '@/components/ui/Skeleton'
 import EmptyState from '@/components/ui/EmptyState'
 import EmptyJournal from '@/components/ui/illustrations/EmptyJournal'
@@ -73,6 +75,11 @@ export default function JournalListPage() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [aiOpen, setAiOpen]         = useState(false)
 
+  // Agent chat. Desktop opens the drawer in-place scoped to the personal
+  // space; mobile navigates to /journal/chat (drawer ergonomics are bad on
+  // a phone -- a full-page route gives the composer the room it needs).
+  const [chatOpen, setChatOpen] = useState(false)
+
   // ── Modal state ───────────────────────────────────────
   const [showPrompts, setShowPrompts]       = useState(false)
   const [prompts, setPrompts]               = useState<string[]>([])
@@ -92,12 +99,14 @@ export default function JournalListPage() {
       .catch(() => setPersonalSpace(null))
   }, [])
 
-  // Load doc page from personal space.
+  // Load doc page from personal space. Lists all doc types -- both JOURNAL
+  // entries (date-anchored, calendar-visible) AND NOTE docs (free-form,
+  // typically created via the AI agent's "save a private note" flow). The
+  // calendar and heatmap stay JOURNAL-only via their dedicated endpoints.
   const loadDocs = useCallback(async (spaceId: number, page: number, dateParam: string) => {
     setLoading(true)
     try {
       const res = await listDocuments(spaceId, {
-        type: 'JOURNAL',
         date: dateParam || undefined,
         page,
         size: PAGE_SIZE,
@@ -131,7 +140,8 @@ export default function JournalListPage() {
     setAiMeta('')
     setLoading(true)
     listDocuments(personalSpace.id, {
-      type: 'JOURNAL',
+      // No type filter -- search across JOURNAL + NOTE so notes saved by the
+      // AI agent are findable from the same search bar.
       keyword: keyword.trim() || undefined,
       date: date || undefined,
       page: 0,
@@ -223,13 +233,30 @@ export default function JournalListPage() {
       <PageTopBar
         title="Journal"
         actions={
-          <button
-            className="jlist-btn jlist-btn--primary jlist-btn--topbar"
-            onClick={() => navigate('/journal/new')}
-          >
-            <Icon name="plus" size={16} />
-            New entry
-          </button>
+          <>
+            <button
+              className="jlist-btn jlist-btn--topbar"
+              onClick={() => {
+                if (window.matchMedia('(max-width: 767px)').matches) {
+                  navigate('/journal/chat')
+                } else {
+                  setChatOpen(v => !v)
+                }
+              }}
+              aria-label="Ask AI"
+            >
+              <Icon name="ai" size={16} />
+              <span className="jlist-btn-label">Ask AI</span>
+            </button>
+            <button
+              className="jlist-btn jlist-btn--primary jlist-btn--topbar"
+              onClick={() => navigate('/journal/new')}
+              aria-label="New entry"
+            >
+              <Icon name="plus" size={16} />
+              <span className="jlist-btn-label">New entry</span>
+            </button>
+          </>
         }
       />
 
@@ -635,6 +662,18 @@ export default function JournalListPage() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Right-side chat drawer (desktop only -- ChatDrawer hides itself on
+          mobile via CSS; the mobile entry navigates to /journal/chat). */}
+      {chatOpen && personalSpace && (
+        <ChatDrawer onClose={() => setChatOpen(false)}>
+          <ChatPanel
+            spaceId={personalSpace.id}
+            spaceName={personalSpace.name}
+            onClose={() => setChatOpen(false)}
+          />
+        </ChatDrawer>
       )}
     </div>
   )

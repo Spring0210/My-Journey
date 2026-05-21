@@ -18,6 +18,9 @@ import SpacesListPage      from '@/pages/spaces/SpacesListPage'
 import SpaceDetailPage     from '@/pages/spaces/SpaceDetailPage'
 import DocumentDetailPage  from '@/pages/spaces/DocumentDetailPage'
 import DocumentEditPage    from '@/pages/spaces/DocumentEditPage'
+import AgentChatPage       from '@/pages/agent/AgentChatPage'
+import AiAssistantPage     from '@/pages/agent/AiAssistantPage'
+import JournalChatPage     from '@/pages/journal/JournalChatPage'
 import NotificationsPage   from '@/pages/notifications/NotificationsPage'
 import ProfilePage         from '@/pages/profile/ProfilePage'
 import DashboardPage       from '@/pages/dashboard/DashboardPage'
@@ -67,6 +70,7 @@ function AppRoutes() {
             search / AI-search hits until those endpoints migrate to the
             document model. */}
         <Route path="/journal"                element={<JournalListPage />} />
+        <Route path="/journal/chat"           element={<JournalChatPage />} />
         <Route path="/journal/new"            element={<DocumentEditPage />} />
         <Route path="/journal/legacy/:id"     element={<JournalDetailPage />} />
         <Route path="/journal/:docId"         element={<DocumentDetailPage />} />
@@ -76,9 +80,11 @@ function AppRoutes() {
         <Route path="/calendar"      element={<CalendarPage />} />
         <Route path="/spaces"        element={<SpacesListPage />} />
         <Route path="/spaces/:id"    element={<SpaceDetailPage />} />
+        <Route path="/spaces/:id/chat"                  element={<AgentChatPage />} />
         <Route path="/spaces/:id/documents/new"         element={<DocumentEditPage />} />
         <Route path="/spaces/:id/documents/:docId"      element={<DocumentDetailPage />} />
         <Route path="/spaces/:id/documents/:docId/edit" element={<DocumentEditPage />} />
+        <Route path="/ai"            element={<AiAssistantPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/profile"       element={<ProfilePage />} />
       </Route>

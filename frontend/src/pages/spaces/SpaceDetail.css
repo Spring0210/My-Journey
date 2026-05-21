@@ -1693,3 +1693,7 @@
   .sdetail-doc-thumb,
   .sdetail-doc-thumb-more { width: 48px; height: 48px; }
 }
+
+/* Chat drawer styles moved to the shared ChatDrawer component
+   (frontend/src/pages/agent/ChatDrawer.css) when JournalList grew its
+   own Ask-AI button. */
