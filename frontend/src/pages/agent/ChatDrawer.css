@@ -1,0 +1,36 @@
+/* ── Shared agent chat drawer ──────────────────────────────
+   The right-side slide-in container that wraps ChatPanel on
+   desktop. Mounted from SpaceDetailPage and JournalListPage
+   today; any future module-scoped Ask-AI entry should use
+   this component too so the visual feels identical across
+   surfaces. Mobile (<=767 px) hides the overlay because the
+   parent surface navigates to a dedicated full-page route. */
+
+.chat-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 50;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.chat-drawer-aside {
+  width: min(420px, 90vw);
+  height: 100%;
+  background: var(--bg-primary);
+  box-shadow: -2px 0 24px rgba(0, 0, 0, 0.18);
+  animation: chat-drawer-slidein 220ms ease-out;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+@keyframes chat-drawer-slidein {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@media (max-width: 767px) {
+  .chat-drawer-overlay { display: none; }
+}

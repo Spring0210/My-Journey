@@ -9,6 +9,7 @@ import type {
 import Icon from '@/components/ui/Icon'
 import PageTopBar from '@/components/ui/PageTopBar'
 import ChatPanel from '@/pages/agent/ChatPanel'
+import ChatDrawer from '@/pages/agent/ChatDrawer'
 import { Skeleton } from '@/components/ui/Skeleton'
 import EmptyState from '@/components/ui/EmptyState'
 import EmptyJournal from '@/components/ui/illustrations/EmptyJournal'
@@ -250,9 +251,10 @@ export default function JournalListPage() {
             <button
               className="jlist-btn jlist-btn--primary jlist-btn--topbar"
               onClick={() => navigate('/journal/new')}
+              aria-label="New entry"
             >
               <Icon name="plus" size={16} />
-              New entry
+              <span className="jlist-btn-label">New entry</span>
             </button>
           </>
         }
@@ -662,22 +664,16 @@ export default function JournalListPage() {
         </div>
       )}
 
-      {/* Right-side ChatPanel drawer (desktop only). Mobile uses the
-          dedicated /journal/chat route -- the drawer is hidden via CSS at
-          <= 767 px to avoid two competing surfaces. */}
+      {/* Right-side chat drawer (desktop only -- ChatDrawer hides itself on
+          mobile via CSS; the mobile entry navigates to /journal/chat). */}
       {chatOpen && personalSpace && (
-        <div
-          className="jlist-chat-overlay"
-          onClick={e => { if (e.target === e.currentTarget) setChatOpen(false) }}
-        >
-          <aside className="jlist-chat-drawer">
-            <ChatPanel
-              spaceId={personalSpace.id}
-              spaceName={personalSpace.name}
-              onClose={() => setChatOpen(false)}
-            />
-          </aside>
-        </div>
+        <ChatDrawer onClose={() => setChatOpen(false)}>
+          <ChatPanel
+            spaceId={personalSpace.id}
+            spaceName={personalSpace.name}
+            onClose={() => setChatOpen(false)}
+          />
+        </ChatDrawer>
       )}
     </div>
   )

@@ -157,9 +157,12 @@
   padding: 0 12px;
 }
 
-/* On mobile the topbar only shows the primary New Entry button */
-@media (max-width: 768px) {
-  .jlist-btn--topbar:not(.jlist-btn--primary) { display: none; }
+/* On very small screens, collapse topbar buttons to icon-only so two
+   actions (Ask AI + New entry) fit comfortably side-by-side. Matches
+   the SpaceDetail .sdetail-btn-label pattern. */
+@media (max-width: 480px) {
+  .jlist-btn-label { display: none; }
+  .jlist-btn--topbar { padding: 0 10px; }
 }
 
 /* Active variant — tinted when a toggle button is on */
@@ -979,36 +982,5 @@
 .jlist-load-more:hover:not(:disabled) { background: var(--fill-secondary); }
 .jlist-load-more:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ── Agent chat drawer ─────────────────────────────────────
-   Mounted via JournalListPage's "Ask AI" button on desktop only.
-   Mobile (<=767 px) navigates to /journal/chat instead, so the
-   overlay is hidden at that breakpoint. Mirrors the SpaceDetail
-   drawer's geometry so the two surfaces feel identical. */
-.jlist-chat-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  z-index: 50;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.jlist-chat-drawer {
-  width: min(420px, 90vw);
-  height: 100%;
-  background: var(--bg-primary);
-  box-shadow: -2px 0 24px rgba(0, 0, 0, 0.18);
-  animation: jlist-chat-slidein 220ms ease-out;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-@keyframes jlist-chat-slidein {
-  from { transform: translateX(100%); }
-  to   { transform: translateX(0); }
-}
-
-@media (max-width: 767px) {
-  .jlist-chat-overlay { display: none; }
-}
+/* Chat drawer styles live with the shared ChatDrawer component
+   (frontend/src/pages/agent/ChatDrawer.css). */

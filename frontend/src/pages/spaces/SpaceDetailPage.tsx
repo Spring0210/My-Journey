@@ -12,6 +12,7 @@ import { useAuth } from '@/context/AuthContext'
 import Icon from '@/components/ui/Icon'
 import PageTopBar from '@/components/ui/PageTopBar'
 import ChatPanel from '@/pages/agent/ChatPanel'
+import ChatDrawer from '@/pages/agent/ChatDrawer'
 import { useToast, useConfirm } from '@/components/feedback'
 import { Skeleton, SkeletonCircle } from '@/components/ui/Skeleton'
 import { formatRelativeTime, formatEntryDate, stripMarkdown } from './docCardUtils'
@@ -610,22 +611,16 @@ export default function SpaceDetailPage() {
         </div>
       )}
 
-      {/* Right-side ChatPanel drawer (desktop only). Mobile uses the dedicated
-          /spaces/:id/chat route -- the drawer overlay is hidden via CSS at
-          ≤767 px to avoid two competing surfaces. */}
+      {/* Right-side chat drawer (desktop only -- ChatDrawer hides itself on
+          mobile via CSS; the mobile entry navigates to /spaces/:id/chat). */}
       {chatOpen && (
-        <div
-          className="sdetail-chat-overlay"
-          onClick={e => { if (e.target === e.currentTarget) setChatOpen(false) }}
-        >
-          <aside className="sdetail-chat-drawer">
-            <ChatPanel
-              spaceId={Number(spaceId)}
-              spaceName={space.name}
-              onClose={() => setChatOpen(false)}
-            />
-          </aside>
-        </div>
+        <ChatDrawer onClose={() => setChatOpen(false)}>
+          <ChatPanel
+            spaceId={Number(spaceId)}
+            spaceName={space.name}
+            onClose={() => setChatOpen(false)}
+          />
+        </ChatDrawer>
       )}
     </div>
   )
