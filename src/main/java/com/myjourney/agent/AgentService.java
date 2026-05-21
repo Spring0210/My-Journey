@@ -57,6 +57,22 @@ public class AgentService {
             markdown markers will appear as literal characters to the user.
             """;
 
+    private static final String SYSTEM_PROMPT_CROSS_SPACE = """
+            You are an assistant for the My Journey knowledge base.
+            The user is in cross-space mode: their request can reference any
+            document in any space they belong to. When you call
+            search_documents, leave space_id null so the search runs across
+            every accessible space. Use list_spaces if you need to know which
+            spaces the user is in. When you create a document without an
+            explicit space, it lands in the user's personal space.
+            Use the provided tools to find relevant documents before answering.
+            Always cite documents by id like [doc:123] when you reference them.
+            Be concise. Reply in plain text only -- no markdown formatting of
+            any kind (no headers, no **bold**, no *italic*, no bullet lists,
+            no numbered lists). The UI does not render markdown, so any
+            markdown markers will appear as literal characters to the user.
+            """;
+
     @Autowired private AnthropicChatClient anthropic;
     @Autowired private ToolDispatcher dispatcher;
     @Autowired private AgentConversationRepository convRepo;
@@ -190,12 +206,15 @@ public class AgentService {
      *
      * `userContentBlocks` lets the controller pass multimodal blocks (image,
      * document) that the user attached. When null/empty, a single text block
-     * is built from `userText`.
+     * is built from `userText`. `crossSpace` switches the system prompt into
+     * "all my spaces" mode so the model knows to call search_documents with
+     * a null space_id; the conversation row still lives in `conv.space`.
      */
     @Transactional
     public void runTurn(AgentConversation conv,
                          String userText,
                          List<JsonNode> userContentBlocks,
+                         boolean crossSpace,
                          Consumer<String> sink) {
         // 1) Persist the USER turn verbatim. The content column carries the
         //    content-block array Anthropic expects so we can replay it directly.
@@ -211,7 +230,9 @@ public class AgentService {
         persistMessage(conv, AgentMessage.Role.USER, userContent);
         renameConversationFromFirstMessage(conv, userText);
 
-        String systemPrompt = String.format(SYSTEM_PROMPT_TEMPLATE, conv.getSpace().getName());
+        String systemPrompt = crossSpace
+                ? SYSTEM_PROMPT_CROSS_SPACE
+                : String.format(SYSTEM_PROMPT_TEMPLATE, conv.getSpace().getName());
 
         // 2) Load the last HISTORY_WINDOW turns and rebuild them in Anthropic's
         //    message shape. We re-query rather than appending in-memory so

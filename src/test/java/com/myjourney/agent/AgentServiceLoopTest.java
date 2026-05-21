@@ -91,7 +91,7 @@ class AgentServiceLoopTest {
                 .thenReturn(new ToolSearchResult(List.of()));
 
         StringBuilder out = new StringBuilder();
-        service.runTurn(conv, "what about onboarding?", List.of(), out::append);
+        service.runTurn(conv, "what about onboarding?", List.of(), false, out::append);
 
         assertThat(out.toString()).contains("Here is what I found");
         verify(anthropic, times(2)).complete(anyString(), anyList(), any());
@@ -107,6 +107,54 @@ class AgentServiceLoopTest {
     }
 
     @Test
+    void runTurn_crossSpace_systemPromptInstructsModelToSearchAllSpaces() throws Exception {
+        // Cross-space mode swaps in a different system prompt so the model
+        // knows to call search_documents without a space_id. Verify by
+        // capturing the first positional arg to anthropic.complete().
+        JsonNode finalResp = mapper.readTree("""
+                {
+                  "stop_reason": "end_turn",
+                  "content": [
+                    {"type":"text","text":"ok"}
+                  ]
+                }
+                """);
+        when(anthropic.complete(anyString(), anyList(), any())).thenReturn(finalResp);
+
+        StringBuilder out = new StringBuilder();
+        service.runTurn(conv, "what did I write last week?", List.of(), true, out::append);
+
+        org.mockito.ArgumentCaptor<String> promptCaptor =
+                org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(anthropic).complete(promptCaptor.capture(), anyList(), any());
+        String prompt = promptCaptor.getValue();
+        assertThat(prompt).contains("cross-space");
+        assertThat(prompt).contains("space_id null");
+        // The single-space prompt's space-name interpolation must NOT appear.
+        assertThat(prompt).doesNotContain("The user's current scope is the space");
+    }
+
+    @Test
+    void runTurn_singleSpace_systemPromptNamesTheSpace() throws Exception {
+        JsonNode finalResp = mapper.readTree("""
+                {
+                  "stop_reason": "end_turn",
+                  "content": [{"type":"text","text":"ok"}]
+                }
+                """);
+        when(anthropic.complete(anyString(), anyList(), any())).thenReturn(finalResp);
+
+        service.runTurn(conv, "hi", List.of(), false, s -> {});
+
+        org.mockito.ArgumentCaptor<String> promptCaptor =
+                org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(anthropic).complete(promptCaptor.capture(), anyList(), any());
+        String prompt = promptCaptor.getValue();
+        assertThat(prompt).contains("The user's current scope is the space");
+        assertThat(prompt).contains(conv.getSpace().getName());
+    }
+
+    @Test
     void runTurn_returnsImmediately_whenAnthropicEndsWithoutTools() throws Exception {
         JsonNode finalResp = mapper.readTree("""
                 {
@@ -119,7 +167,7 @@ class AgentServiceLoopTest {
         when(anthropic.complete(anyString(), anyList(), any())).thenReturn(finalResp);
 
         StringBuilder out = new StringBuilder();
-        service.runTurn(conv, "hi", List.of(), out::append);
+        service.runTurn(conv, "hi", List.of(), false, out::append);
 
         assertThat(out.toString()).isEqualTo("hi back");
         verify(anthropic, times(1)).complete(anyString(), anyList(), any());
@@ -142,7 +190,7 @@ class AgentServiceLoopTest {
         when(toolset.listSpaces(any())).thenReturn(List.of());
 
         StringBuilder out = new StringBuilder();
-        service.runTurn(conv, "loop forever", List.of(), out::append);
+        service.runTurn(conv, "loop forever", List.of(), false, out::append);
 
         assertThat(out.toString()).contains("had to stop");
         // Exactly MAX_TOOL_ITERATIONS Anthropic calls before the cap kicked in.
@@ -191,7 +239,7 @@ class AgentServiceLoopTest {
                 .thenReturn(detail);
 
         StringBuilder out = new StringBuilder();
-        service.runTurn(conv, "make a doc", List.of(), out::append);
+        service.runTurn(conv, "make a doc", List.of(), false, out::append);
 
         // The tool turn must record is_error=false. Per Anthropic's API
         // contract, tool_result.content must be a string (not a raw JSON
@@ -237,7 +285,7 @@ class AgentServiceLoopTest {
                 .thenThrow(new RuntimeException("doc missing"));
 
         StringBuilder out = new StringBuilder();
-        service.runTurn(conv, "show me doc 42", List.of(), out::append);
+        service.runTurn(conv, "show me doc 42", List.of(), false, out::append);
 
         // The loop swallows the toolset exception into an is_error tool_result;
         // the test verifies persistence captured the error block.

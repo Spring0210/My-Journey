@@ -141,7 +141,9 @@ public class AgentChatController {
                 List<JsonNode> userBlocks = MultimodalBuilder.fromAttachmentUrls(
                         req.attachmentUrls(), req.message());
 
-                agentService.runTurn(conv, req.message(), userBlocks, chunk -> {
+                boolean crossSpace = Boolean.TRUE.equals(req.crossSpace());
+
+                agentService.runTurn(conv, req.message(), userBlocks, crossSpace, chunk -> {
                     try {
                         emitter.send(SseEmitter.event()
                                 .name("delta")

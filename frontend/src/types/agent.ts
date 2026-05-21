@@ -23,10 +23,15 @@ export interface AgentMessage {
 }
 
 export interface AgentChatRequest {
+  // The conversation row always anchors to a concrete space (agent_conversation
+  // requires a non-null space_id). In cross-space mode the caller still
+  // supplies a real space id -- typically the user's personal space -- and
+  // sets crossSpace=true so the backend swaps in the cross-space system prompt.
   spaceId: number
   conversationId?: number
   message: string
   attachmentUrls?: string[]
+  crossSpace?: boolean
 }
 
 // SSE event payloads emitted by POST /api/agent/chat.

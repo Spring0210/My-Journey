@@ -193,10 +193,11 @@ class AgentChatControllerTest {
         // with the final assistant text, mirroring AgentService's actual
         // single-call streaming behaviour today.
         doAnswer(inv -> {
-            java.util.function.Consumer<String> sink = inv.getArgument(3);
+            // runTurn signature: (conv, userText, blocks, crossSpace, sink)
+            java.util.function.Consumer<String> sink = inv.getArgument(4);
             sink.accept("hi back");
             return null;
-        }).when(agentService).runTurn(any(), anyString(), anyList(), any());
+        }).when(agentService).runTurn(any(), anyString(), anyList(), eq(false), any());
 
         String body = "{\"spaceId\":" + space.getId() + ",\"message\":\"hi\"}";
 

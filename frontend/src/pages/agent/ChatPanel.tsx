@@ -5,6 +5,7 @@ import {
   getAgentMessages,
   streamAgentChat,
 } from '@/api/agent'
+import { getPersonalSpace } from '@/api/spaces'
 import type { AgentConversation, AgentMessage } from '@/types/agent'
 import './ChatPanel.css'
 
@@ -13,10 +14,15 @@ import './ChatPanel.css'
 // (mounted from SpaceDetailPage) and the mobile full-page route
 // (/spaces/:id/chat). The parent owns the chrome (drawer overlay vs
 // PageTopBar); this component owns the conversation thread + composer.
+//
+// Pass spaceId={null} to render in "all my spaces" cross-space mode --
+// the panel resolves the user's personal space as the conversation
+// anchor and sets crossSpace=true on the wire so the agent switches its
+// system prompt accordingly. spaceName is then ignored.
 // ─────────────────────────────────────────────────────────
 
 interface Props {
-  spaceId: number
+  spaceId: number | null
   spaceName: string
   // Optional close callback. The drawer wires this; the full-page mobile
   // wrapper leaves it undefined and uses PageTopBar's back button instead.
@@ -30,6 +36,14 @@ interface UiMessage {
 
 export default function ChatPanel({ spaceId, spaceName, onClose }: Props) {
   const navigate = useNavigate()
+  const crossSpace = spaceId === null
+  // In cross-space mode the conversation row still needs a real space anchor;
+  // we resolve the user's personal space once and reuse it. anchorSpaceId is
+  // undefined until that resolution completes (so we don't fire half-formed
+  // requests against an unknown space).
+  const [anchorSpaceId, setAnchorSpaceId] = useState<number | undefined>(
+    crossSpace ? undefined : (spaceId as number),
+  )
   const [conversationId, setConversationId] = useState<number | undefined>()
   const [messages, setMessages] = useState<UiMessage[]>([])
   const [input, setInput] = useState('')
@@ -37,10 +51,21 @@ export default function ChatPanel({ spaceId, spaceName, onClose }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const ctrlRef   = useRef<AbortController | null>(null)
 
-  // Load the most recent conversation for this space on mount.
+  // In cross-space mode, resolve the user's personal space once.
   useEffect(() => {
+    if (!crossSpace) return
     let cancelled = false
-    listAgentConversations(spaceId)
+    getPersonalSpace()
+      .then(s => { if (!cancelled) setAnchorSpaceId(s.id) })
+      .catch(() => { /* leave undefined; sends are guarded below */ })
+    return () => { cancelled = true }
+  }, [crossSpace])
+
+  // Load the most recent conversation for the anchor space on mount.
+  useEffect(() => {
+    if (anchorSpaceId === undefined) return
+    let cancelled = false
+    listAgentConversations(anchorSpaceId)
       .then(async (convs: AgentConversation[]) => {
         if (cancelled || convs.length === 0) return
         const c = convs[0]
@@ -62,7 +87,7 @@ export default function ChatPanel({ spaceId, spaceName, onClose }: Props) {
       cancelled = true
       ctrlRef.current?.abort()
     }
-  }, [spaceId])
+  }, [anchorSpaceId])
 
   // Auto-scroll to bottom on new messages. `scrollTo` is missing in jsdom
   // (where unit tests run), so guard the call to keep the test environment
@@ -77,6 +102,7 @@ export default function ChatPanel({ spaceId, spaceName, onClose }: Props) {
   function handleSend() {
     const text = input.trim()
     if (!text || sending) return
+    if (anchorSpaceId === undefined) return  // cross-space mode still resolving
     setInput('')
     // Optimistically append the user turn AND an empty assistant placeholder
     // that gets filled as deltas stream in.
@@ -86,7 +112,12 @@ export default function ChatPanel({ spaceId, spaceName, onClose }: Props) {
     let assistantBuf = ''
     ctrlRef.current?.abort()
     ctrlRef.current = streamAgentChat(
-      { spaceId, conversationId, message: text },
+      {
+        spaceId: anchorSpaceId,
+        conversationId,
+        message: text,
+        crossSpace: crossSpace ? true : undefined,
+      },
       {
         onMeta:  m => setConversationId(m.conversationId),
         onDelta: d => {
@@ -116,7 +147,9 @@ export default function ChatPanel({ spaceId, spaceName, onClose }: Props) {
   return (
     <div className="chat-panel">
       <div className="chat-panel__topbar">
-        <span className="chat-panel__scope">Searching: {spaceName}</span>
+        <span className="chat-panel__scope">
+          Searching: {crossSpace ? 'All my spaces' : spaceName}
+        </span>
         {onClose && (
           <button
             type="button"
