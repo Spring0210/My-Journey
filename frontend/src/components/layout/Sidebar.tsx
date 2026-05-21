@@ -58,6 +58,16 @@ export default function Sidebar({ isOpen, onClose, notificationCount = 0 }: Side
     navigate('/login')
   }
 
+  // AI Assistant lives in its own section because it's cross-cutting
+  // (searches across personal + shared spaces) rather than belonging to
+  // either "Personal" or "Social". Matches the placement convention used
+  // by Cursor / Slack / Notion: a dedicated, prominent AI entry.
+  const assistantItem: NavItem = {
+    to: '/ai',
+    icon: 'ai',
+    label: 'AI Assistant',
+  }
+
   const navItems: NavItem[] = [
     { to: '/dashboard',     icon: 'home',     label: 'Dashboard' },
     { to: '/journal',       icon: 'journal',  label: 'Journal' },
@@ -86,6 +96,11 @@ export default function Sidebar({ isOpen, onClose, notificationCount = 0 }: Side
 
       {/* Navigation */}
       <nav style={styles.nav}>
+        <p style={styles.sectionLabel}>Assistant</p>
+        <ul style={styles.navList}>
+          <NavItem item={assistantItem} onClose={onClose} />
+        </ul>
+
         <p style={styles.sectionLabel}>Personal</p>
         <ul style={styles.navList}>
           {/* Dashboard, Journal, Media, Calendar */}
