@@ -89,15 +89,16 @@ class ToolDispatcherTest {
 
     @Test
     void createDocument_routesAllFields() throws Exception {
+        // doc_type is intentionally absent from the schema -- the server
+        // derives it from the target space, not from the LLM.
         JsonNode args = mapper.readTree("""
                 {"title":"T","content":"C","space_id":3,
-                 "doc_type":"JOURNAL","entry_date":"2026-05-20",
-                 "tags":["x"]}
+                 "entry_date":"2026-05-20","tags":["x"]}
                 """);
 
         dispatcher.dispatch(42, "create_document", args);
 
-        verify(toolset).createDocument(42, "T", "C", 3, "JOURNAL",
+        verify(toolset).createDocument(42, "T", "C", 3,
                 LocalDate.parse("2026-05-20"), List.of("x"));
     }
 

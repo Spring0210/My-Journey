@@ -43,7 +43,6 @@ public class ToolDispatcher {
             case ToolSchemas.NAME_LIST_DOCUMENTS -> toolset.listDocuments(
                     userId,
                     intOrNull(args, "space_id"),
-                    strOrNull(args, "doc_type"),
                     date(args, "since"),
                     strOrNull(args, "tag"),
                     intOrDefault(args, "limit", 10),
@@ -56,7 +55,6 @@ public class ToolDispatcher {
                     str(args, "title"),
                     str(args, "content"),
                     intOrNull(args, "space_id"),
-                    strOrNull(args, "doc_type"),
                     date(args, "entry_date"),
                     strList(args, "tags"));
             case ToolSchemas.NAME_UPDATE_DOCUMENT -> toolset.updateDocument(
