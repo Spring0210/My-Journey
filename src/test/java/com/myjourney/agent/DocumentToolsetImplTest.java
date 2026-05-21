@@ -97,30 +97,69 @@ class DocumentToolsetImplTest {
     }
 
     @Test
-    void createDocument_inExplicitSpace_returnsDetailWithMatchingFields() {
+    void createDocument_inSharedSpace_isNoteWithNoEntryDate() {
         AgentTestFixture f = AgentTestFixture.createTwoUsersTwoSpacesAlpha(
                 userRepository, spaceRepository, spaceMemberRepository, documentRepository);
 
+        // Shared space -> always NOTE, regardless of what the LLM said.
+        // The entry_date arg below is intentionally non-null to prove it
+        // gets dropped server-side (entry_date is JOURNAL-only).
         ToolDocumentDetail d = toolset.createDocument(
-                f.user1.getId(), "new note", "body", f.space1.getId(),
-                "NOTE", null, List.of("topic-a", "topic-b"));
+                f.user1.getId(), "team update", "body",
+                f.space1.getId(), java.time.LocalDate.of(2026, 5, 20),
+                List.of("topic-a", "topic-b"));
 
         assertThat(d.id()).isNotNull();
-        assertThat(d.title()).isEqualTo("new note");
-        assertThat(d.content()).isEqualTo("body");
         assertThat(d.spaceId()).isEqualTo(f.space1.getId());
+        assertThat(d.docType()).isEqualTo("NOTE");
+        assertThat(d.entryDate()).isNull();
         assertThat(d.tags()).containsExactly("topic-a", "topic-b");
     }
 
     @Test
-    void createDocument_unknownDocType_throws() {
-        AgentTestFixture f = AgentTestFixture.createTwoUsersTwoSpacesAlpha(
-                userRepository, spaceRepository, spaceMemberRepository, documentRepository);
+    void createDocument_inPersonalSpace_isJournalWithTodayWhenEntryDateOmitted() {
+        var alice = AgentTestFixture.saveUser(userRepository, "alice");
+        var personal = AgentTestFixture.savePersonalSpace(spaceRepository, alice);
+        AgentTestFixture.saveOwnerMember(spaceMemberRepository, personal, alice);
 
-        assertThatThrownBy(() -> toolset.createDocument(
-                f.user1.getId(), "x", "y", f.space1.getId(),
-                "BOGUS", null, null))
-                .isInstanceOf(AppException.class);
+        ToolDocumentDetail d = toolset.createDocument(
+                alice.getId(), "today reflection", "body",
+                personal.getId(), null, null);
+
+        assertThat(d.docType()).isEqualTo("JOURNAL");
+        assertThat(d.entryDate()).isEqualTo(java.time.LocalDate.now());
+    }
+
+    @Test
+    void createDocument_inPersonalSpace_honorsExplicitEntryDate() {
+        var alice = AgentTestFixture.saveUser(userRepository, "alice");
+        var personal = AgentTestFixture.savePersonalSpace(spaceRepository, alice);
+        AgentTestFixture.saveOwnerMember(spaceMemberRepository, personal, alice);
+
+        // User said "log this for 2026-05-15" -> the LLM passes that date.
+        java.time.LocalDate userDate = java.time.LocalDate.of(2026, 5, 15);
+        ToolDocumentDetail d = toolset.createDocument(
+                alice.getId(), "backdated", "body",
+                personal.getId(), userDate, null);
+
+        assertThat(d.docType()).isEqualTo("JOURNAL");
+        assertThat(d.entryDate()).isEqualTo(userDate);
+    }
+
+    @Test
+    void createDocument_omittedSpaceId_routesToPersonalSpace() {
+        var alice = AgentTestFixture.saveUser(userRepository, "alice");
+        var personal = AgentTestFixture.savePersonalSpace(spaceRepository, alice);
+        AgentTestFixture.saveOwnerMember(spaceMemberRepository, personal, alice);
+
+        // space_id omitted -> personal space -> JOURNAL invariant still holds.
+        ToolDocumentDetail d = toolset.createDocument(
+                alice.getId(), "untagged thought", "body",
+                null, null, null);
+
+        assertThat(d.spaceId()).isEqualTo(personal.getId());
+        assertThat(d.docType()).isEqualTo("JOURNAL");
+        assertThat(d.entryDate()).isEqualTo(java.time.LocalDate.now());
     }
 
     @Test

@@ -32,11 +32,10 @@ public interface DocumentToolset {
 
     List<ToolSpaceSummary> listSpaces(Integer callerUserId);
 
-    // Paginated listing inside one space. docType: "JOURNAL" | "NOTE" | null.
+    // Paginated listing inside one space.
     ToolSearchResult listDocuments(
             Integer callerUserId,
             Integer spaceId,
-            String docType,
             LocalDate since,
             String tag,
             int limit,
@@ -48,13 +47,14 @@ public interface DocumentToolset {
     // -- Write tools -----------------------------------------------
 
     // spaceId=null routes to the caller's personal space.
-    // entryDate is required when docType=JOURNAL.
+    // doc_type is derived server-side from space.isPersonal (the LLM has no
+    // say). entryDate is only meaningful for personal-space docs (defaults
+    // to today when null); it's ignored in shared spaces.
     ToolDocumentDetail createDocument(
             Integer callerUserId,
             String title,
             String content,
             Integer spaceId,
-            String docType,
             LocalDate entryDate,
             List<String> tags
     );

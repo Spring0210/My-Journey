@@ -116,17 +116,16 @@ public class DocumentToolsetImpl implements DocumentToolset {
     @Override
     public ToolSearchResult listDocuments(Integer userId,
                                           Integer spaceId,
-                                          String docType,
                                           LocalDate since,
                                           String tag,
                                           int limit,
                                           int offset) {
         int capped = Math.min(Math.max(limit, 1), 25);
-        Document.DocType type = parseDocType(docType);
         // The underlying service paginates by (page, size); translate the agent's
-        // (offset, limit) the simplest way that still respects both.
+        // (offset, limit) the simplest way that still respects both. doc_type
+        // is left null -- the LLM scopes by space_id instead of by type.
         Page<Document> p = documentService.listDocumentsInSpace(
-                userId, spaceId, type, null, offset / Math.max(capped, 1), capped);
+                userId, spaceId, null, null, offset / Math.max(capped, 1), capped);
 
         // `since` and `tag` filters aren't expressible via the existing repo
         // signatures, so apply them in memory on the already-capped page.
@@ -156,14 +155,35 @@ public class DocumentToolsetImpl implements DocumentToolset {
                                               String title,
                                               String content,
                                               Integer spaceId,
-                                              String docType,
                                               LocalDate entryDate,
                                               List<String> tags) {
-        Integer effectiveSpaceId = spaceId != null ? spaceId : spaceService.findPersonalSpaceId(userId);
-        Document.DocType type = parseDocType(docType);
-        if (type == null) type = Document.DocType.NOTE;
+        // doc_type is derived from the target space, NOT from the LLM:
+        // personal space -> JOURNAL (with today's entry_date if none given);
+        // shared space   -> NOTE   (entry_date forced to null, since the
+        // /journal heatmap and per-day grouping only apply to JOURNALs).
+        // This keeps the invariant "JOURNAL <=> personal space" hard.
+        Integer effectiveSpaceId;
+        boolean inPersonalSpace;
+        if (spaceId == null) {
+            effectiveSpaceId = spaceService.findPersonalSpaceId(userId);
+            inPersonalSpace  = true;
+        } else {
+            effectiveSpaceId = spaceId;
+            inPersonalSpace  = spaceRepository.findById(spaceId)
+                    .map(com.myjourney.model.Space::isPersonal)
+                    .orElse(false);
+        }
+        Document.DocType type;
+        LocalDate effectiveEntryDate;
+        if (inPersonalSpace) {
+            type = Document.DocType.JOURNAL;
+            effectiveEntryDate = entryDate != null ? entryDate : LocalDate.now();
+        } else {
+            type = Document.DocType.NOTE;
+            effectiveEntryDate = null;
+        }
         Document d = documentService.createDocument(
-                userId, effectiveSpaceId, title, content, type, entryDate, tags);
+                userId, effectiveSpaceId, title, content, type, effectiveEntryDate, tags);
         return getDocument(userId, d.getId());
     }
 
@@ -225,13 +245,4 @@ public class DocumentToolsetImpl implements DocumentToolset {
                 c.getCreatedAt());
     }
 
-    private Document.DocType parseDocType(String raw) {
-        if (raw == null || raw.isBlank()) return null;
-        try {
-            return Document.DocType.valueOf(raw.trim().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new AppException(HttpStatus.BAD_REQUEST,
-                    "Unknown docType '" + raw + "'. Expected JOURNAL or NOTE.");
-        }
-    }
 }

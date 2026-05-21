@@ -60,12 +60,11 @@ public final class ToolSchemas {
               },
               {
                 "name": "list_documents",
-                "description": "Paginate documents inside a specific space, optionally filtered by docType (JOURNAL or NOTE), creation date, or a single tag.",
+                "description": "Paginate documents inside a specific space, optionally filtered by creation date or a single tag.",
                 "input_schema": {
                   "type": "object",
                   "properties": {
                     "space_id": {"type": "integer"},
-                    "doc_type": {"type": ["string","null"], "enum": ["JOURNAL", "NOTE", null]},
                     "since":    {"type": ["string","null"], "format": "date"},
                     "tag":      {"type": ["string","null"]},
                     "limit":    {"type": "integer", "default": 10, "maximum": 25},
@@ -85,14 +84,13 @@ public final class ToolSchemas {
               },
               {
                 "name": "create_document",
-                "description": "Create a new document. If space_id is omitted, creates in the user's personal space. entry_date is required when doc_type is JOURNAL.",
+                "description": "Create a new document. If space_id is omitted, creates in the user's personal space. The server decides whether the doc is a journal entry (personal space) or a note (shared space) -- you do not choose. entry_date only applies to personal-space docs (defaults to today); set it only when the user explicitly names a different day such as 'log this for yesterday'.",
                 "input_schema": {
                   "type": "object",
                   "properties": {
                     "title":      {"type": "string"},
                     "content":    {"type": "string"},
                     "space_id":   {"type": ["integer","null"]},
-                    "doc_type":   {"type": ["string","null"], "enum": ["JOURNAL", "NOTE", null], "default": "NOTE"},
                     "entry_date": {"type": ["string","null"], "format": "date"},
                     "tags":       {"type": ["array","null"], "items": {"type": "string"}}
                   },

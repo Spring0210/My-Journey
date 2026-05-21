@@ -51,7 +51,3 @@ src/main/resources/static/icon-192.png
 src/main/resources/static/icon-512.png
 src/main/resources/static/favicon.svg
 src/main/resources/static/icons.svg
-
-# Internal planning docs from the superpowers brainstorming/plan workflow.
-# Kept locally as session context; not part of the product or portfolio.
-docs/superpowers/
