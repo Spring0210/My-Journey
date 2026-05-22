@@ -26,6 +26,8 @@ export default function McpAccessPage() {
   const [reveal, setReveal]           = useState<McpTokenCreated | null>(null)
   const [confirmId, setConfirmId]     = useState<number | null>(null)
   const [revoking, setRevoking]       = useState(false)
+  const [activeClient, setActiveClient] =
+    useState<'desktop' | 'code' | 'test'>('desktop')
 
   useEffect(() => { void refresh() }, [])
 
@@ -78,14 +80,39 @@ export default function McpAccessPage() {
     )
   }
 
-  const claudeDesktopSnippet = JSON.stringify({
-    mcpServers: {
-      'my-journey': {
-        url: 'https://myjourneycloud.com/mcp',
-        headers: { Authorization: 'Bearer mj_<your token here>' },
-      },
+  // Three connection presets shown in the "Connect your client" section.
+  // The desktop snippet path is macOS; Windows users open
+  // %APPDATA%\Claude\claude_desktop_config.json instead.
+  const clientSnippets = {
+    desktop: {
+      label: 'Claude Desktop',
+      hint: 'Paste into ~/Library/Application Support/Claude/claude_desktop_config.json, then restart Claude Desktop.',
+      code: JSON.stringify({
+        mcpServers: {
+          'my-journey': {
+            url: 'https://myjourneycloud.com/mcp',
+            headers: { Authorization: 'Bearer mj_<your token>' },
+          },
+        },
+      }, null, 2),
     },
-  }, null, 2)
+    code: {
+      label: 'Claude Code',
+      hint: 'Run in your terminal. Use --scope user for personal use, or --scope project to share with collaborators (keep the raw token in an env var if so).',
+      code: `claude mcp add --transport http my-journey https://myjourneycloud.com/mcp \\
+  --header "Authorization: Bearer mj_<your token>" \\
+  --scope user`,
+    },
+    test: {
+      label: 'Test',
+      hint: 'Quick sanity check after creating a token — should return the available tools.',
+      code: `curl -sS https://myjourneycloud.com/mcp \\
+  -H "Authorization: Bearer mj_<your token>" \\
+  -H "Content-Type: application/json" \\
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'`,
+    },
+  } as const
+  const currentSnippet = clientSnippets[activeClient]
 
   return (
     <div className="prof-page">
@@ -150,20 +177,39 @@ export default function McpAccessPage() {
           </div>
         </div>
 
-        {/* Claude Desktop config snippet */}
+        {/* Connect your client — Claude Desktop / Claude Code / curl test */}
         <div className="prof-section">
-          <p className="prof-section-label">Claude Desktop config</p>
+          <p className="prof-section-label">Connect your client</p>
           <div className="prof-rows-card" style={{ padding: '12px 16px' }}>
+            <div className="prof-segctl" role="tablist" aria-label="Client type">
+              {(['desktop', 'code', 'test'] as const).map(key => (
+                <button
+                  key={key}
+                  role="tab"
+                  aria-selected={activeClient === key}
+                  className={`prof-segctl-btn${activeClient === key ? ' is-active' : ''}`}
+                  onClick={() => setActiveClient(key)}
+                >
+                  {clientSnippets[key].label}
+                </button>
+              ))}
+            </div>
+
+            <p style={{ margin: '12px 0 8px', fontSize: 13, color: 'var(--label-secondary)' }}>
+              {currentSnippet.hint}
+            </p>
+
             <pre style={{
               margin: 0, padding: '10px 12px',
               background: 'var(--surface-secondary)', borderRadius: 8,
               fontSize: 12, overflowX: 'auto',
               color: 'var(--label-primary)',
-            }}>{claudeDesktopSnippet}</pre>
+            }}>{currentSnippet.code}</pre>
+
             <button
               className="prof-btn prof-btn--ghost"
               style={{ marginTop: 8 }}
-              onClick={() => copyToClipboard(claudeDesktopSnippet)}
+              onClick={() => copyToClipboard(currentSnippet.code)}
             >
               <Icon name="copy" size={14} /> Copy snippet
             </button>

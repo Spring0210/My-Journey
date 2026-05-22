@@ -47,8 +47,10 @@ describe('McpAccessPage', () => {
 
     renderPage()
 
+    // "Claude Desktop" also appears as a tab label in the Connect-your-client
+     // section, so scope this match to the token row (a <div>, not a button).
     await waitFor(() => {
-      expect(screen.getByText('Claude Desktop')).toBeInTheDocument()
+      expect(screen.getByText('Claude Desktop', { selector: 'div' })).toBeInTheDocument()
       expect(screen.getByText(/mj_abcde/)).toBeInTheDocument()
     })
   })
@@ -79,6 +81,28 @@ describe('McpAccessPage', () => {
     // Dismiss the reveal panel; the raw token should no longer be in the DOM
     await userEvent.click(screen.getByRole('button', { name: /i've copied it/i }))
     expect(screen.queryByText('mj_xyz12_RAW_SECRET')).not.toBeInTheDocument()
+  })
+
+  it('switches the connection snippet when changing client type', async () => {
+    vi.mocked(mcpApi.listMcpTokens).mockResolvedValue([])
+    vi.mocked(mcpApi.listMcpActivity).mockResolvedValue([])
+
+    renderPage()
+
+    // Default tab is Claude Desktop — JSON snippet should be visible
+    await screen.findByRole('tab', { name: /claude desktop/i })
+    expect(screen.getByText(/"mcpServers"/)).toBeInTheDocument()
+
+    // Switch to Claude Code — CLI command appears, JSON gone
+    await userEvent.click(screen.getByRole('tab', { name: /claude code/i }))
+    expect(screen.getByText(/claude mcp add --transport http/)).toBeInTheDocument()
+    expect(screen.queryByText(/"mcpServers"/)).not.toBeInTheDocument()
+
+    // Switch to Test — curl command appears
+    await userEvent.click(screen.getByRole('tab', { name: /^test$/i }))
+    expect(
+      screen.getByText(/curl -sS https:\/\/myjourneycloud\.com\/mcp/),
+    ).toBeInTheDocument()
   })
 
   it('revokes a token when the revoke button is clicked', async () => {
