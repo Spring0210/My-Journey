@@ -1,93 +1,94 @@
 # MyJourney
 
-> **An AI-native reflection companion that turns a lifetime of private thoughts into compounding insight — solo, or with the people who matter.**
+> **One Java toolset, three surfaces.** A personal and team knowledge base where every document is reachable by an AI agent — from the web, from the REST API, or from any external MCP client (Claude Desktop, Cursor) over Anthropic's open Model Context Protocol.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Live](https://img.shields.io/badge/live-myjourneycloud.com-success)](https://myjourneycloud.com)
 [![Java](https://img.shields.io/badge/Java-21-orange.svg)](#)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4-6db33f.svg)](#)
 [![React](https://img.shields.io/badge/React-18-61dafb.svg)](#)
-[![Anthropic](https://img.shields.io/badge/AI-Claude%204.x-8a3ffc.svg)](#)
+[![MCP](https://img.shields.io/badge/MCP-2025--03--26-8a3ffc.svg)](#)
 
-**Live**: [myjourneycloud.com](https://myjourneycloud.com)  ·  **Design**: [System Design Document](docs/system-design.md)
-
----
-
-## The Pitch
-
-Most journals die because users never re-read them. MyJourney is built on the opposite premise: **every entry should compound**. A multi-agent system reads your past, asks Socratic follow-ups, surfaces patterns you can't see yourself, and recalls the right moment from years ago — all from a private corpus that never leaves the server.
-
-You can keep it solo, or invite the people who matter into shared **Spaces** with their own AI-curated reports — for couples, families, accountability partners.
-
-The product is the agent system that lives on top of the corpus, not a UI for writing.
-
-## Screenshots
-
-> Screenshots coming soon. Try the live app at [myjourneycloud.com](https://myjourneycloud.com).
+**Live**: [myjourneycloud.com](https://myjourneycloud.com)
 
 ---
 
-## Architecture at a Glance
+## What it is
+
+MyJourney started as a personal journaling app and grew into an AI-native knowledge base for small teams. Every user gets a Personal Space; teams collaborate in Shared Spaces. The same documents you write in the browser are also reachable by an in-app AI agent and — as of the latest release — by any external LLM client speaking the **Model Context Protocol**, Anthropic's open spec for letting language models use external tools.
+
+The interesting part is what's *not* duplicated. The web chat agent, the REST API, and the MCP server all delegate to a single `DocumentToolset` interface in Java. Adding a tenth tool means writing one method; all three surfaces pick it up automatically, with the same access checks and the same audit story.
+
+---
+
+## How it works
 
 ```
-React (PWA)  ─→  Spring Boot (JWT, WebSocket, Rate Limit)
-                    ├─→ MySQL 8           Relational: users, entries, spaces
-                    ├─→ Qdrant            Vector store + payload filters   [Phase 8]
-                    ├─→ Redis             Hot cache, queue, quotas         [Phase 8]
-                    ├─→ BGE-M3 sidecar    Local multilingual embedding     [Phase 8]
-                    ├─→ Anthropic Claude  Haiku 4.5 / Sonnet 4.6 / Opus 4.7
-                    └─→ Cloudinary, Resend
+React PWA              React PWA              Claude Desktop, Cursor,
+(chat drawer)          (rest of app)          and other MCP clients
+     │                       │                          │
+     ▼                       ▼                          ▼
+ AgentService          REST controllers           McpJsonRpcController
+ (Anthropic            (JWT + OAuth2 +            (JSON-RPC 2.0, mj_
+  tool-use loop,        refresh-token             bearer tokens, rate
+  SSE streaming,        rotation)                  limited + audited)
+  multimodal)
+     │                       │                          │
+     └───────────────────────┼──────────────────────────┘
+                             ▼
+                  ┌────────────────────────┐
+                  │   DocumentToolset      │
+                  │   9 tools — single     │
+                  │   Java interface for   │
+                  │   read / write logic   │
+                  └────────────────────────┘
+                             │
+                             ▼
+              MySQL 8 (FULLTEXT) · Cloudinary · Anthropic Claude
 ```
 
-What makes this interesting to an engineer:
-
-- **Polyglot persistence.** MySQL for relational data, Qdrant for vectors, Redis for hot state — each store optimized for its workload, not one stretched across all of them.
-- **Custom multi-agent orchestrator.** Five specialized agents (Reflection / Memory / Pattern / Goal / Recap) coordinated by a state machine with per-step cost accounting, tool dispatch, and streaming + cancellation.
-- **Three-tier memory hierarchy.** L1 Redis (last 7 days, full text) · L2 MySQL (last 90 days, full + summary) · L3 Qdrant (all time, embedding + summary). Nightly compaction cascades entries down the tiers. Inspired by OS memory hierarchies and the MemGPT paper.
-- **Cost-engineered LLM pipeline.** Anthropic prompt caching (~90% off cached inputs), model tier routing, Batch API (50% off) for non-interactive agents, per-user monthly token quota, global daily spend ceiling — hard cap of **$10/month at ~100 users**.
-- **Privacy-first.** AES-256-GCM at-rest encryption on entry content, PII scrubber before embedding, embedding model runs locally (BGE-M3 multilingual). No plaintext, no PII ever leaves the server.
-- **Async embedding pipeline.** Entries embed asynchronously via a Redis-backed queue with retry/janitor for stuck jobs; idempotent on point IDs so duplicate consumes are safe.
-
-Full design with ADRs, data model, scalability path to 100k users, threat model, observability, and cost analysis: **[`docs/system-design.md`](docs/system-design.md)**.
+The nine tools cover the entire read/write surface for documents, spaces, and comments: `search_documents`, `get_document`, `list_documents`, `list_spaces`, `get_comments`, `create_document`, `update_document`, `add_comment`, `create_space`. Same JSON shape, same membership checks, three transports.
 
 ---
 
-## Features
+## Three surfaces
 
-### Live today
+### 1. Web agent (`AgentService`)
 
-- **Journal** — dated entries with multi-image uploads, calendar view, AI-assisted monthly recap, personalized writing prompts, natural-language search, PDF export
-- **Shared Spaces** — invite-only shared timelines (8-char invite code), posts with images/videos, reactions, threaded comments, real-time notifications via WebSocket
-- **Account** — JWT auth (24h access + 30-day rotating refresh), Google OAuth 2.0, password reset via email (Resend), avatar upload
-- **Mobile** — installable PWA (iOS Add to Home Screen), responsive design verified at 390px, light/dark mode
+The in-app chat drawer on every Space page. A single Anthropic tool-use loop over Haiku 4.5, streaming partial responses back to the React client over SSE. Multimodal — paste an image or a PDF into the chat and the agent reads it through Anthropic's vision and document-input modes. Conversations persist per `(user, space)` so threads can be resumed.
 
-### Phase 8 — AI-Native Reflection (in development)
+### 2. REST API (`/api/**`)
 
-- **"Past You" agent** — on the anniversary of any entry, automatically surface what you wrote then and what AI noticed about it
-- **Multi-agent reflection** — five agents coordinated by a state machine, triggered by entry creation, scheduled cron, or explicit user request
-- **Semantic recall** — search a lifetime of entries by meaning, not keywords; bilingual (English + Chinese) via BGE-M3
-- **Pattern detection** — nightly batch agent surfaces recurring themes, mood shifts, behavioral signals
-- **Goal accountability** — agent extracts goals from entries and proactively follows up
-- **Hierarchical recap** — weekly / monthly / yearly summaries that cascade from finer to coarser grain
-- **Shared-Space AI reports** — monthly AI-curated summaries per Space (couples / family / accountability templates)
+JWT access token (24h) plus a 30-day refresh token (DB-backed, rotated on use). Google OAuth2 sign-in. All `/api/entries/**` and `/api/spaces/**` are authenticated and rate-limited per endpoint with Bucket4j. Consumed exclusively by the React PWA — the MCP path uses a different bearer scheme so a leaked browser token never grants tool access.
 
-Full sub-phase plan A–K: [`docs/roadmap.md`](docs/roadmap.md).
+### 3. MCP server (`POST /mcp`)
+
+A hand-rolled JSON-RPC 2.0 endpoint implementing the slice of MCP Streamable HTTP that tool-only servers actually need: `initialize`, `tools/list`, `tools/call`, `ping`, and the `notifications/initialized` no-op. External LLM clients authenticate with a long-lived `mj_` bearer token created in `Profile → MCP Access` (raw token shown exactly once; only its SHA-256 is stored). Two rate-limit tiers — 60 req/min/token and 1000 req/day/user — with `Retry-After` on 429. Every tool call is recorded to `mcp_access_log` with a 30-day retention sweep.
+
+Wiring it into Claude Desktop is a single config-file paste:
+
+```json
+{
+  "mcpServers": {
+    "my-journey": {
+      "url": "https://myjourneycloud.com/mcp",
+      "headers": { "Authorization": "Bearer mj_<your token>" }
+    }
+  }
+}
+```
 
 ---
 
 ## Tech Stack
 
-### Backend
-**Java 21** · Spring Boot 3.4 · Spring Security (JWT + OAuth2) · Spring Data JPA · MySQL 8 · WebSocket (STOMP) · Bucket4j (rate limit) · Cloudinary · Resend · Anthropic Claude SDK · **Qdrant** *(Phase 8)* · **Redis** *(Phase 8)*
+**Backend** — Java 21 · Spring Boot 3.4 · Spring Security (JWT + OAuth2) · Spring Data JPA · Flyway · MySQL 8 · WebSocket (STOMP) · Bucket4j · Anthropic Java SDK · Cloudinary · Resend
 
-### Frontend
-**React 18** · TypeScript · Vite · Tailwind CSS v4 · Apple HIG design tokens · React Context (auth/theme) · Installable PWA
+**Frontend** — React 18 · TypeScript · Vite · Tailwind CSS v4 · Apple HIG design tokens · Installable PWA
 
-### AI / Embedding
-Anthropic Claude — **Haiku 4.5 / Sonnet 4.6 / Opus 4.7** with tier routing · **BGE-M3** multilingual embeddings via a local Python sidecar *(Phase 8)*
+**AI** — Anthropic Claude Haiku 4.5 (vision + PDF + tool-use). Tool-use loop, no orchestrator, no embeddings, no vector DB — designed to run comfortably on a 2 GB VPS.
 
-### Infrastructure
-Docker + Docker Compose · GitHub Actions CI/CD · GitHub Container Registry · Nginx (HTTPS via Let's Encrypt) · DigitalOcean (single droplet, 2 GB RAM)
+**Infra** — Docker + Docker Compose · GitHub Actions CI/CD · GitHub Container Registry · Nginx (HTTPS via Let's Encrypt) · DigitalOcean (single droplet)
 
 ---
 
@@ -95,13 +96,13 @@ Docker + Docker Compose · GitHub Actions CI/CD · GitHub Container Registry · 
 
 | File | Contents |
 |---|---|
-| [`docs/system-design.md`](docs/system-design.md) | **Target architecture (Phase 8)** — multi-agent system, RAG, memory hierarchy, scalability, threat model, cost model |
-| [`docs/architecture.md`](docs/architecture.md) | Current as-deployed architecture |
-| [`docs/roadmap.md`](docs/roadmap.md) | Phase-by-phase feature history (1–6 shipped) and upcoming work (7, 8) |
+| [`docs/architecture.md`](docs/architecture.md) | As-deployed architecture |
+| [`docs/roadmap.md`](docs/roadmap.md) | Phase-by-phase history and the team-KB + MCP pivot |
 | [`docs/api-spec.md`](docs/api-spec.md) | REST API reference |
 | [`docs/conventions.md`](docs/conventions.md) | Naming, architecture, UX, and coding conventions |
 | [`docs/design-system.md`](docs/design-system.md) | Apple HIG design spec — colors, typography, components |
 | [`docs/deploy.md`](docs/deploy.md) | CI/CD setup, branch workflow, troubleshooting |
+| [`docs/system-design.md`](docs/system-design.md) | Aspirational deep-dive — how I would scale this to 100k users with a vector store, agent orchestrator, and memory hierarchy |
 
 ---
 
@@ -114,7 +115,7 @@ Docker + Docker Compose · GitHub Actions CI/CD · GitHub Container Registry · 
 - MySQL 8 (or use Docker)
 
 ### Run backend
-1. Copy `application.properties.example` and fill in secrets (Cloudinary, Resend, Anthropic, Google OAuth, JWT)
+1. Copy `application.properties.example` and fill in secrets (Cloudinary, Resend, Anthropic, Google OAuth, JWT).
 2. `mvn spring-boot:run`
 
 ### Run frontend (dev server with hot reload)
