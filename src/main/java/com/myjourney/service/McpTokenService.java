@@ -19,6 +19,7 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Base64;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Optional;
 
@@ -78,11 +79,12 @@ public class McpTokenService {
     }
 
     public void revokeToken(Integer userId, Long tokenId) {
+        // Return 404 (not 403) when the token exists but belongs to someone
+        // else -- otherwise an attacker can enumerate other users' token ids
+        // by watching for the 403 vs 404 distinction.
         McpApiToken t = tokenRepo.findById(tokenId)
+                .filter(x -> x.getUser().getId().equals(userId))
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Token not found"));
-        if (!t.getUser().getId().equals(userId)) {
-            throw new AppException(HttpStatus.FORBIDDEN, "Token not yours");
-        }
         tokenRepo.delete(t);
     }
 
@@ -91,12 +93,15 @@ public class McpTokenService {
         String trimmed = rawToken.trim();
         if (!trimmed.startsWith(TOKEN_PREFIX)) return Optional.empty();
         Optional<McpApiToken> hit = tokenRepo.findByTokenHash(sha256Hex(trimmed));
-        return hit.filter(t -> t.getExpiredAt().isAfter(LocalDateTime.now(ZoneOffset.UTC)));
+        return hit.filter(t -> t.getExpiredAt() != null
+                && t.getExpiredAt().isAfter(LocalDateTime.now(ZoneOffset.UTC)));
     }
 
     // Issued async from McpToolBridge after every successful tool call. Kept
     // as a separate @Transactional method so it can run on a different thread
-    // without dragging the calling tx along.
+    // without dragging the calling tx along. NOTE: Spring's AOP proxy only
+    // intercepts cross-bean calls -- do not self-invoke from inside this
+    // class or the @Async/@Transactional advice will silently no-op.
     @Async
     @Transactional
     public void touchLastUsed(Long tokenId) {
@@ -125,10 +130,7 @@ public class McpTokenService {
     private static String sha256Hex(String input) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] digest = md.digest(input.getBytes(StandardCharsets.UTF_8));
-            StringBuilder sb = new StringBuilder(digest.length * 2);
-            for (byte b : digest) sb.append(String.format("%02x", b));
-            return sb.toString();
+            return HexFormat.of().formatHex(md.digest(input.getBytes(StandardCharsets.UTF_8)));
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("SHA-256 not available", e);
         }

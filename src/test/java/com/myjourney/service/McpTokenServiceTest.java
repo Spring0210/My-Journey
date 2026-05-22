@@ -15,6 +15,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -101,10 +102,8 @@ class McpTokenServiceTest {
     @Test
     void touchLastUsed_callsRepository() {
         service.touchLastUsed(42L);
-        verify(tokenRepo).touchLastUsedAt(eqLong(42L), any(LocalDateTime.class));
+        verify(tokenRepo).touchLastUsedAt(eq(42L), any(LocalDateTime.class));
     }
-
-    private static long eqLong(long v) { return org.mockito.ArgumentMatchers.eq(v); }
 
     @Test
     void revokeToken_deletesWhenOwnedByCaller() {
@@ -120,7 +119,9 @@ class McpTokenServiceTest {
     }
 
     @Test
-    void revokeToken_throwsWhenNotOwner() {
+    void revokeToken_returnsNotFoundWhenSomeoneElsesToken() {
+        // Same error as a missing id -- otherwise an attacker can enumerate
+        // other users' token ids by watching for 403 vs 404.
         McpApiToken stored = new McpApiToken();
         stored.setId(42L);
         User owner = new User(); owner.setId(99);
@@ -128,8 +129,14 @@ class McpTokenServiceTest {
         when(tokenRepo.findById(42L)).thenReturn(Optional.of(stored));
 
         assertThatThrownBy(() -> service.revokeToken(7, 42L))
-                .hasMessageContaining("not yours");
+                .hasMessageContaining("not found");
         verify(tokenRepo, never()).delete(any());
+    }
+
+    @Test
+    void createToken_rejectsInvalidExpiryDays() {
+        assertThatThrownBy(() -> service.createToken(7, "x", 60))
+                .hasMessageContaining("expiryDays");
     }
 
     @Test
