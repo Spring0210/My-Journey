@@ -179,11 +179,21 @@
 
 ---
 
-## Phase 8 — Smart Journaling
+## Phase 8 — Team Knowledge Base + MCP
 
-> Repositioned from the original "AI-Native Reflection Companion" plan (Qdrant + multi-agent orchestrator + L1/L2/L3 memory hierarchy) to a **lighter, product-driven phase** that fits a **2GB VPS** and a real user base of tens, not hundreds.
+> **2026-05-19 pivot:** Phase 8 was repositioned again from "Smart Journaling" (mood / tags / on-this-day / reflection-on-save) to a **team knowledge base** with the same backend tools exposed over **MCP** for external clients (Claude Desktop, Cursor). Same 2GB-VPS constraint as before; same "single Claude call per feature" complexity ceiling. Smart-Journaling items below are kept for historical reference but are not on the active backlog.
 >
-> The original ambitious architecture is preserved in **[`docs/system-design.md`](system-design.md)** and in [Phase 9 — Deferred](#phase-9--deferred--future) below — to be revisited when actual usage signals demand it.
+> Sub-projects (in implementation order, per `docs/superpowers/specs/2026-05-19-team-kb-mcp-design.md` §9):
+> 1. [x] **Phase 7 closure** — Flyway V1 baseline landed; remaining hardening items (Sentry, UptimeRobot) tracked above
+> 2. [x] **Document model migration** — V2/V3 migrations, `Document`/`Comment`/`Attachment` entities + CRUD, legacy tables retired
+> 3. [x] **Frontend doc UI** — doc list / detail / editor in spaces + journal redesign on top of new data model
+> 4. [x] **Internal AI agent** — `DocumentToolset`, `AgentService` tool-use loop, ChatPanel/ChatDrawer, conversation persistence
+> 5. [x] **MCP server** — Streamable-HTTP `POST /mcp`, `mj_<token>` auth, per-token + per-user rate limits, Profile → MCP Access page, audit log, daily maintenance sweep
+> 6. [ ] **Polish + docs** — landing page update, README "MCP setup" section (shipped — 530a72d), demo video for portfolio
+>
+> The original "AI-Native Reflection Companion" architecture (Qdrant + multi-agent orchestrator + L1/L2/L3 memory hierarchy) is preserved in **[`docs/system-design.md`](system-design.md)** and in [Phase 9 — Deferred](#phase-9--deferred--future) below — to be revisited when actual usage signals demand it.
+
+### Original Smart Journaling scope (deprecated 2026-05-19, kept for history)
 
 ### 8A — Core product features (no new infrastructure)
 - [ ] **Mood selector** — 5–7 emoji moods on entry create; stored as enum on `journal_entry`; powers later trend visualizations
