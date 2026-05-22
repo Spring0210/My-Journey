@@ -55,7 +55,8 @@ class McpJsonRpcControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.tools.length()").value(9))
                 .andExpect(jsonPath("$.result.tools[0].name").exists())
-                .andExpect(jsonPath("$.result.tools[0].input_schema").exists());
+                .andExpect(jsonPath("$.result.tools[0].inputSchema").exists())
+                .andExpect(jsonPath("$.result.tools[0].input_schema").doesNotExist());
     }
 
     @Test

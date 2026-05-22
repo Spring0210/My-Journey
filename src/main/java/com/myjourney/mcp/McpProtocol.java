@@ -81,7 +81,20 @@ public final class McpProtocol {
     public static ObjectNode toolsListResult(ObjectMapper m, JsonNode allSchemas) {
         ObjectNode result = m.createObjectNode();
         ArrayNode arr = m.createArrayNode();
-        for (JsonNode t : allSchemas) arr.add(t);
+        for (JsonNode t : allSchemas) {
+            // Convert Anthropic's `input_schema` (used by ToolSchemas because
+            // the in-app agent talks to Anthropic's tool-use API) to MCP's
+            // `inputSchema`. Same JSON Schema body, different field name --
+            // rename only at the MCP wire boundary so ToolSchemas stays shared.
+            if (t.isObject() && t.has("input_schema")) {
+                ObjectNode copy = t.deepCopy();
+                JsonNode schema = copy.remove("input_schema");
+                copy.set("inputSchema", schema);
+                arr.add(copy);
+            } else {
+                arr.add(t);
+            }
+        }
         result.set("tools", arr);
         return result;
     }
