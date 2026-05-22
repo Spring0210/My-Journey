@@ -1,8 +1,11 @@
 package com.myjourney.filter;
 
+import com.myjourney.model.McpApiToken;
+import com.myjourney.service.McpTokenService;
 import com.myjourney.util.JwtUtil;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
+import io.github.bucket4j.ConsumptionProbe;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,6 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
@@ -24,11 +28,17 @@ public class RateLimitFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private McpTokenService mcpTokenService;
+
     // Separate bucket maps for each limit tier
     private final ConcurrentHashMap<String, Bucket> loginBuckets      = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Bucket> registerBuckets   = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Bucket> aiBuckets         = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Bucket> agentChatBuckets  = new ConcurrentHashMap<>();
+    // MCP: 60 req/min/token and 1000 req/day/user (spec §6.4).
+    private final ConcurrentHashMap<Long,    Bucket> mcpPerTokenBuckets = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Integer, Bucket> mcpPerUserBuckets  = new ConcurrentHashMap<>();
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -38,13 +48,22 @@ public class RateLimitFilter extends OncePerRequestFilter {
             && !path.equals("/api/register")
             && !path.equals("/api/forgot-password")
             && !path.startsWith("/api/entries/ai-")
-            && !path.equals("/api/agent/chat");
+            && !path.equals("/api/agent/chat")
+            && !path.equals("/mcp")
+            && !path.startsWith("/mcp/");
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         String path = request.getRequestURI();
+
+        // MCP path is metered against two buckets (token + user). It owns
+        // its own consumption and short-circuits the rest of this method.
+        if (path.equals("/mcp") || path.startsWith("/mcp/")) {
+            handleMcpRateLimit(request, response, filterChain);
+            return;
+        }
 
         Bucket bucket;
 
@@ -92,6 +111,49 @@ public class RateLimitFilter extends OncePerRequestFilter {
                         .refillGreedy(limit, period)
                         .build())
                 .build();
+    }
+
+    // MCP path is metered per-token (60/min) and per-user (1000/day). The
+    // auth filter runs after this one, so we re-resolve the bearer here.
+    // Missing/invalid bearer skips metering entirely and lets the auth
+    // filter return the 401 — we don't want unauth requests to occupy a
+    // bucket slot.
+    private void handleMcpRateLimit(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain chain) throws IOException, ServletException {
+        String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith("Bearer ")) {
+            chain.doFilter(request, response);
+            return;
+        }
+        Optional<McpApiToken> maybe = mcpTokenService.verifyToken(header.substring(7).trim());
+        if (maybe.isEmpty()) {
+            chain.doFilter(request, response);
+            return;
+        }
+        McpApiToken token = maybe.get();
+
+        Bucket perToken = mcpPerTokenBuckets.computeIfAbsent(
+                token.getId(), k -> newBucket(60, Duration.ofMinutes(1)));
+        Bucket perUser  = mcpPerUserBuckets.computeIfAbsent(
+                token.getUser().getId(), k -> newBucket(1000, Duration.ofDays(1)));
+
+        ConsumptionProbe perTokenProbe = perToken.tryConsumeAndReturnRemaining(1);
+        ConsumptionProbe perUserProbe  = perUser.tryConsumeAndReturnRemaining(1);
+        if (!perTokenProbe.isConsumed() || !perUserProbe.isConsumed()) {
+            // Spec §6.4 — 429 must include Retry-After. Pick the longer of the
+            // two wait times so the client backs off enough to clear both buckets.
+            long waitNanos = Math.max(
+                    perTokenProbe.isConsumed() ? 0 : perTokenProbe.getNanosToWaitForRefill(),
+                    perUserProbe.isConsumed()  ? 0 : perUserProbe.getNanosToWaitForRefill());
+            long retrySeconds = Math.max(1, waitNanos / 1_000_000_000L);
+            response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+            response.setHeader("Retry-After", String.valueOf(retrySeconds));
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\":\"MCP rate limit exceeded\"}");
+            return;
+        }
+        chain.doFilter(request, response);
     }
 
     // Extract real client IP, respecting the X-Forwarded-For header from Nginx

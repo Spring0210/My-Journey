@@ -23,6 +23,7 @@ import AiAssistantPage     from '@/pages/agent/AiAssistantPage'
 import JournalChatPage     from '@/pages/journal/JournalChatPage'
 import NotificationsPage   from '@/pages/notifications/NotificationsPage'
 import ProfilePage         from '@/pages/profile/ProfilePage'
+import McpAccessPage       from '@/pages/profile/McpAccessPage'
 import DashboardPage       from '@/pages/dashboard/DashboardPage'
 import PrivacyPage         from '@/pages/legal/PrivacyPage'
 import TermsPage           from '@/pages/legal/TermsPage'
@@ -87,6 +88,7 @@ function AppRoutes() {
         <Route path="/ai"            element={<AiAssistantPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/profile"       element={<ProfilePage />} />
+        <Route path="/profile/mcp"   element={<McpAccessPage />} />
       </Route>
 
       {/* Fallback */}

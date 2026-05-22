@@ -420,6 +420,25 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        {/* ── Integrations section ──────────────────────── */}
+        <div className="prof-section">
+          <p className="prof-section-label">Integrations</p>
+          <div className="prof-rows-card">
+            <div
+              className="prof-row prof-row--expandable"
+              onClick={() => navigate('/profile/mcp')}
+              role="button"
+              tabIndex={0}
+              onKeyDown={e => { if (e.key === 'Enter') navigate('/profile/mcp') }}
+            >
+              <span style={{ flex: 1, fontSize: 15, color: 'var(--label-primary)' }}>
+                MCP Access
+              </span>
+              <Icon name="chevron-right" size={16} className="prof-row-chevron" />
+            </div>
+          </div>
+        </div>
+
         {/* ── Sign out — standalone danger button ────────── */}
         <button className="prof-signout-btn" onClick={handleLogout}>
           <Icon name="logout" size={16} />
