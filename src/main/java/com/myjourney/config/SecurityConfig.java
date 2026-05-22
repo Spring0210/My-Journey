@@ -25,6 +25,9 @@ public class SecurityConfig {
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Autowired
+    private com.myjourney.filter.McpAuthenticationFilter mcpAuthenticationFilter;
+
+    @Autowired
     private CustomOAuth2UserService customOAuth2UserService;
 
     @Autowired
@@ -65,6 +68,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/media/**").authenticated()
                 .requestMatchers("/api/documents/**").authenticated()
                 .requestMatchers("/api/agent/**").authenticated()
+                .requestMatchers("/mcp", "/mcp/**").permitAll()
                 .anyRequest().permitAll()
             )
             .exceptionHandling(ex -> ex
@@ -83,6 +87,7 @@ public class SecurityConfig {
                 .successHandler(oAuth2SuccessHandler)
                 .failureUrl("/login?error=oauth2")
             )
+            .addFilterBefore(mcpAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         
         return http.build();

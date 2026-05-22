@@ -29,6 +29,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                path.startsWith("/uploads/") ||
                path.startsWith("/static/") ||
                path.startsWith("/ws/") ||        // WebSocket handshake — auth handled by handler
+               path.equals("/mcp") ||
+               path.startsWith("/mcp/") ||
                path.equals("/") ||
                path.endsWith(".html") ||
                path.startsWith("/api/login") ||
