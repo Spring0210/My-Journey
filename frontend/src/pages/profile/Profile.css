@@ -545,3 +545,39 @@
     height: 44px;
   }
 }
+
+/* ── MCP Access page additions ───────────────────────────── */
+/* Section header row: label on the left, action button on the right */
+.prof-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 0 4px;
+}
+
+/* Modal backdrop -- click outside to dismiss */
+.prof-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+}
+
+/* Modal panel -- caps at 420px, but fits the viewport on mobile */
+.prof-modal {
+  background: var(--surface-card);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  width: min(420px, calc(100vw - 32px));
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
