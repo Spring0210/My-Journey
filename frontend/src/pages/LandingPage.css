@@ -52,7 +52,7 @@
 }
 
 .landing-hero-content {
-  max-width: 720px;
+  max-width: 760px;
   margin: 0 auto;
   position: relative;
   z-index: 1;
@@ -82,7 +82,7 @@
   font-weight: 400;
   line-height: 1.47;
   color: var(--label-secondary);
-  max-width: 540px;
+  max-width: 580px;
   margin: 0 auto 48px;
 }
 
@@ -99,23 +99,27 @@
 
 /* ── Hero visual wrapper ─────────────────────────────────── */
 .landing-hero-img-wrap {
-  max-width: 680px;
+  max-width: 720px;
   margin: 0 auto;
   position: relative;
   z-index: 1;
   /* Fade the bottom into the next section */
-  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 72%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 72%, transparent 100%);
 }
 
-/* ── Hero mockup — CSS app window, adapts to dark/light ──── */
-.hero-mockup {
+/* ──────────────────────────────────────────────────────────
+   HERO MOCKUP — CSS knowledge-base window, adapts to dark/light.
+   A team space with a document list and an AI exchange that cites
+   the document it read. No images — all colors use var(--*) tokens.
+   ────────────────────────────────────────────────────────── */
+.kb-mockup {
   position: relative;
   padding: 32px 28px 48px;  /* room around card for floating badges */
 }
 
 /* Radial glow behind the card */
-.hero-mockup-glow {
+.kb-mockup-glow {
   position: absolute;
   inset: 0;
   background: radial-gradient(
@@ -128,7 +132,7 @@
 }
 
 /* App window card */
-.hero-mockup-card {
+.kb-mockup-card {
   position: relative;
   z-index: 1;
   background: var(--surface-card);
@@ -140,10 +144,11 @@
     0 24px 56px -8px rgba(0, 0, 0, 0.18),
     0 8px 20px -4px rgba(0, 0, 0, 0.10);
   overflow: hidden;
+  text-align: left;
 }
 
 /* macOS traffic lights */
-.hero-chrome {
+.kb-chrome {
   display: flex;
   align-items: center;
   gap: 7px;
@@ -152,111 +157,258 @@
   background: var(--surface-secondary);
 }
 
-.hero-chrome-dot {
+.kb-chrome-dot {
   width: 12px;
   height: 12px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
-.hero-chrome-dot--red    { background: #ff5f57; }
-.hero-chrome-dot--yellow { background: #febc2e; }
-.hero-chrome-dot--green  { background: #28c840; }
+.kb-chrome-dot--red    { background: #ff5f57; }
+.kb-chrome-dot--yellow { background: #febc2e; }
+.kb-chrome-dot--green  { background: #28c840; }
 
-/* Fake page top bar */
-.hero-topbar {
+/* Space header */
+.kb-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 11px 20px;
+  padding: 11px 18px;
   border-bottom: 1px solid var(--separator);
   background: var(--surface-card);
 }
 
-.hero-topbar-back {
+.kb-topbar-space {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 9px;
   font-size: 14px;
-  font-weight: 500;
-  color: var(--accent);
-}
-
-.hero-topbar-chevron {
-  font-size: 20px;
-  line-height: 1;
-  margin-top: -1px;
-}
-
-.hero-topbar-save {
-  font-size: 13px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--label-primary);
+}
+
+/* Team avatar — accent square with a single initial */
+.kb-topbar-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
   background: var(--accent);
-  padding: 4px 14px;
-  border-radius: 980px;
-  letter-spacing: -0.01em;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Entry content */
-.hero-entry {
-  padding: 24px 28px 22px;
-}
-
-.hero-entry-date {
+.kb-topbar-badge {
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.07em;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-card));
+  border-radius: var(--radius-pill);
+  padding: 3px 10px;
+}
+
+/* Two-column body */
+.kb-body {
+  display: flex;
+  min-height: 0;
+}
+
+/* Sidebar — document list */
+.kb-sidebar {
+  width: 42%;
+  max-width: 184px;
+  border-right: 1px solid var(--separator);
+  background: var(--surface-secondary);
+  padding: 14px 12px;
+}
+
+.kb-sidebar-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--label-tertiary);
+  margin-bottom: 10px;
+  padding-inline: 4px;
+}
+
+.kb-doc {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--label-secondary);
+  margin-bottom: 2px;
+}
+
+/* Selected document — accent tint, stronger weight */
+.kb-doc--active {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-card));
+  color: var(--label-primary);
+  font-weight: 600;
+}
+
+.kb-doc-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Tiny page glyph — a tinted rounded rectangle, no emoji */
+.kb-doc-glyph {
+  width: 11px;
+  height: 14px;
+  flex-shrink: 0;
+  border-radius: 2.5px;
+  background: color-mix(in srgb, currentColor 20%, transparent);
+  border: 1px solid color-mix(in srgb, currentColor 38%, transparent);
+}
+
+.kb-doc-glyph--cite {
+  color: var(--accent);
+}
+
+/* Main — AI chat grounded in the docs */
+.kb-chat {
+  flex: 1;
+  min-width: 0;
+  padding: 16px;
+  background: var(--surface-card);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.kb-bubble {
+  font-size: 13px;
+  line-height: 1.5;
+  border-radius: 14px;
+  padding: 10px 13px;
+  max-width: 92%;
+}
+
+.kb-bubble--user {
+  background: var(--accent);
+  color: #ffffff;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+  margin-left: auto;
+}
+
+.kb-bubble--ai {
+  background: var(--surface-secondary);
+  color: var(--label-primary);
+  border: 1px solid var(--separator);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+.kb-bubble-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--accent);
-  margin-bottom: 8px;
+  margin-bottom: 5px;
 }
 
-.hero-entry-title {
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
-  color: var(--label-primary);
-  margin-bottom: 14px;
-}
-
-.hero-entry-sep {
-  height: 1px;
-  background: var(--separator);
-  margin-bottom: 14px;
-}
-
-.hero-entry-body {
-  font-size: 14px;
-  line-height: 1.75;
-  color: var(--label-secondary);
-  margin-bottom: 18px;
-}
-
-/* Fake photo strip — gradient blocks simulate photos */
-.hero-entry-photos {
+/* Citation chip — breaks onto its own line beneath the answer */
+.kb-cite {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  margin-top: 9px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-card));
+  border-radius: 7px;
+  padding: 4px 9px;
 }
 
-.hero-entry-photo {
-  width: 80px;
-  height: 60px;
-  border-radius: 10px;
+/* ── Agent tool-call step ─────────────────────────────────── */
+/* Shows the agent invoking a tool (create_document / update_document) and the
+   result — the mechanism that sets the agent apart from a plain chatbot. */
+.kb-tool {
+  align-self: flex-start;
+  max-width: 94%;
+  background: var(--surface-secondary);
+  border: 1px solid var(--separator);
+  border-radius: 12px;
+  padding: 9px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.kb-tool-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* Pulsing accent dot signalling agent activity */
+.kb-tool-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  animation: kb-pulse 2.4s ease-in-out infinite;
+}
+
+.kb-tool-caption {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--label-tertiary);
+}
+
+/* Tool name — monospace pill so it reads as a real function call */
+.kb-tool-name {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-card));
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  border-radius: 6px;
+  padding: 2px 7px;
+}
+
+.kb-tool-result {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--system-green);
+}
+
+/* "New" tag on a freshly created document */
+.kb-doc-new {
+  margin-left: auto;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--system-green);
+  background: color-mix(in srgb, var(--system-green) 16%, var(--surface-card));
+  border-radius: 5px;
+  padding: 2px 6px;
   flex-shrink: 0;
 }
 
-.hero-entry-photo--a { background: var(--gradient-icon-orange); }
-.hero-entry-photo--b { background: var(--gradient-icon-blue);   }
-.hero-entry-photo--c { background: var(--gradient-icon-purple); }
-
 /* ── Floating badges ─────────────────────────────────────── */
-.hero-float {
+.kb-float {
   position: absolute;
   background: var(--surface-card);
   border: 1px solid var(--separator);
-  border-radius: 980px;
+  border-radius: var(--radius-pill);
   padding: 8px 14px 8px 11px;
   font-size: 13px;
   font-weight: 500;
@@ -268,47 +420,46 @@
   z-index: 3;
   white-space: nowrap;
   /* Subtle entrance animation */
-  animation: hero-float-in 600ms var(--ease-spring) both;
+  animation: kb-float-in 600ms var(--ease-spring) both;
 }
 
-@keyframes hero-float-in {
+@keyframes kb-float-in {
   from { opacity: 0; transform: translateY(8px) scale(0.94); }
   to   { opacity: 1; transform: translateY(0)   scale(1); }
 }
 
-/* AI Recap — top right, floats above the card */
-.hero-float--ai {
+/* AI-cited badge — top right, floats above the card */
+.kb-float--cited {
   top: 16px;
   right: 0;
   animation-delay: 200ms;
 }
 
-/* Entry saved — bottom right */
-.hero-float--saved {
-  bottom: 20px;
+/* Synced badge — bottom right, kept above the bottom fade */
+.kb-float--synced {
+  bottom: 56px;
   right: 0;
   animation-delay: 400ms;
 }
 
-/* Pulsing accent dot in AI badge */
-.hero-float-dot {
+/* Pulsing accent dot in the cited badge */
+.kb-float-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--accent);
   flex-shrink: 0;
-  animation: hero-pulse 2.4s ease-in-out infinite;
+  animation: kb-pulse 2.4s ease-in-out infinite;
 }
 
-@keyframes hero-pulse {
+@keyframes kb-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50%       { opacity: 0.35; transform: scale(0.85); }
 }
 
-/* Green check in saved toast */
-.hero-float-check {
-  font-size: 13px;
-  font-weight: 700;
+/* Green check in the synced badge */
+.kb-float-check {
+  display: inline-flex;
   color: var(--system-green);
 }
 
@@ -480,18 +631,19 @@
 }
 
 /* ──────────────────────────────────────────────────────────
-   AI HIGHLIGHT SECTION
+   BRING-YOUR-OWN-AI (MCP) SECTION
+   Point list on the left, connection-config panel on the right.
    ────────────────────────────────────────────────────────── */
 .landing-ai {
   background: var(--surface-primary);
 }
 
-/* Two-column: feature list left, chat panel right */
+/* Two-column: point list left, config panel right */
 .landing-ai-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 72px;
-  align-items: start;
+  align-items: center;
 }
 
 .landing-ai-list {
@@ -506,7 +658,7 @@
   gap: 18px;
 }
 
-/* Icon container — subtle blue tint, accent icon color */
+/* Icon container — subtle fill, accent icon color */
 .landing-ai-icon {
   width: 46px;
   height: 46px;
@@ -537,58 +689,64 @@
   color: var(--label-secondary);
 }
 
-/* ── AI chat demo panel ───────────────────────────────────── */
-.landing-ai-panel {
-  background: var(--surface-secondary);
-  border-radius: var(--radius-xl);  /* 22px */
-  padding: 28px;
-  border: 1px solid var(--separator);
+/* ── MCP connection panel ─────────────────────────────────── */
+.landing-mcp-panel {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
-/* Section label inside panel */
-.landing-ai-panel-title {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--label-tertiary);
-  margin-bottom: 4px;
-}
-
-/* Chat bubbles — user (right) and AI (left) */
-.landing-ai-bubble {
-  padding: 11px 15px;
-  font-size: 14px;
-  line-height: 1.50;
-  max-width: 88%;
-}
-
-.landing-ai-bubble--user {
-  background: var(--accent);
-  color: #ffffff;
-  align-self: flex-end;
-  border-radius: 18px 18px 4px 18px;
-  margin-left: auto;
-}
-
-.landing-ai-bubble--ai {
-  background: var(--surface-card);
-  color: var(--label-primary);
+/* Editor-style window holding the config snippet */
+.landing-mcp-window {
+  background: var(--surface-secondary);
   border: 1px solid var(--separator);
-  border-radius: 18px 18px 18px 4px;
-  align-self: flex-start;
+  border-radius: var(--radius-xl);  /* 22px */
+  overflow: hidden;
+  box-shadow: var(--shadow-raised);
 }
 
-.landing-ai-bubble-label {
-  font-size: 11px;
+.landing-mcp-bar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--separator);
+  background: var(--surface-tertiary);
+}
+
+.landing-mcp-bar-name {
+  margin-left: 8px;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 4px;
+  color: var(--label-secondary);
+}
+
+/* Claude Desktop conversation — reuses the .kb-bubble / .kb-tool styles */
+.landing-mcp-chat {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Connection status row */
+.landing-mcp-status {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding-left: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--label-secondary);
+}
+
+.landing-mcp-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--system-green);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--system-green) 18%, transparent);
+  flex-shrink: 0;
 }
 
 /* ──────────────────────────────────────────────────────────
@@ -768,27 +926,27 @@
     padding: 28px;
   }
 
-  /* Hero mockup — tighter padding and hide floating badges on mobile */
-  .hero-mockup {
+  /* Hero mockup — tighter padding, hide floats and the doc sidebar on mobile */
+  .kb-mockup {
     padding: 16px 12px 32px;
   }
 
-  .hero-float {
+  .kb-float {
     display: none;
   }
 
-  .hero-entry-photos {
+  .kb-sidebar {
     display: none;
   }
 
-  /* On mobile, stack AI section — hide the chat panel */
+  /* On mobile, stack the MCP section; panel sits below the point list */
   .landing-ai-grid {
     grid-template-columns: 1fr;
     gap: 40px;
   }
 
-  .landing-ai-panel {
-    display: none;
+  .landing-mcp-chat {
+    padding: 16px;
   }
 
   .landing-cta {
