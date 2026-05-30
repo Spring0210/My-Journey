@@ -218,8 +218,8 @@
 
 /* Sidebar — document list */
 .kb-sidebar {
-  width: 40%;
-  max-width: 160px;
+  width: 42%;
+  max-width: 184px;
   border-right: 1px solid var(--separator);
   background: var(--surface-secondary);
   padding: 14px 12px;
@@ -330,6 +330,77 @@
   background: color-mix(in srgb, var(--accent) 12%, var(--surface-card));
   border-radius: 7px;
   padding: 4px 9px;
+}
+
+/* ── Agent tool-call step ─────────────────────────────────── */
+/* Shows the agent invoking a tool (create_document / update_document) and the
+   result — the mechanism that sets the agent apart from a plain chatbot. */
+.kb-tool {
+  align-self: flex-start;
+  max-width: 94%;
+  background: var(--surface-secondary);
+  border: 1px solid var(--separator);
+  border-radius: 12px;
+  padding: 9px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.kb-tool-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* Pulsing accent dot signalling agent activity */
+.kb-tool-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  animation: kb-pulse 2.4s ease-in-out infinite;
+}
+
+.kb-tool-caption {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--label-tertiary);
+}
+
+/* Tool name — monospace pill so it reads as a real function call */
+.kb-tool-name {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-card));
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  border-radius: 6px;
+  padding: 2px 7px;
+}
+
+.kb-tool-result {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--system-green);
+}
+
+/* "New" tag on a freshly created document */
+.kb-doc-new {
+  margin-left: auto;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--system-green);
+  background: color-mix(in srgb, var(--system-green) 16%, var(--surface-card));
+  border-radius: 5px;
+  padding: 2px 6px;
+  flex-shrink: 0;
 }
 
 /* ── Floating badges ─────────────────────────────────────── */
@@ -644,22 +715,18 @@
 }
 
 .landing-mcp-bar-name {
-  margin-left: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--label-tertiary);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  margin-left: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--label-secondary);
 }
 
-.landing-mcp-code {
-  margin: 0;
-  padding: 20px 22px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 13px;
-  line-height: 1.7;
-  color: var(--label-secondary);
-  white-space: pre;
-  overflow-x: auto;
+/* Claude Desktop conversation — reuses the .kb-bubble / .kb-tool styles */
+.landing-mcp-chat {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 /* Connection status row */
@@ -878,9 +945,8 @@
     gap: 40px;
   }
 
-  .landing-mcp-code {
-    font-size: 11.5px;
-    padding: 16px 18px;
+  .landing-mcp-chat {
+    padding: 16px;
   }
 
   .landing-cta {

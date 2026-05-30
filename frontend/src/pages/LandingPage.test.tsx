@@ -34,18 +34,27 @@ describe('LandingPage', () => {
 
   it('renders all four core value props', () => {
     renderPage()
-    expect(screen.getByText('Personal + team spaces')).toBeInTheDocument()
+    expect(screen.getByText('Personal & team spaces')).toBeInTheDocument()
     expect(screen.getByText('Write & organize docs')).toBeInTheDocument()
     expect(screen.getByText('In-app AI chat')).toBeInTheDocument()
     expect(screen.getByText('Reachable by any AI')).toBeInTheDocument()
   })
 
-  it('shows the bring-your-own-AI (MCP) section with the connection config', () => {
+  it('highlights the in-app agent generating a document', () => {
+    renderPage()
+    // Hero shows the agent invoking create_document and the resulting doc.
+    expect(screen.getByText('create_document')).toBeInTheDocument()
+    expect(screen.getByText(/Created "Launch Plan"/)).toBeInTheDocument()
+  })
+
+  it('shows the MCP section with an external AI updating a document', () => {
     renderPage()
     expect(
       screen.getByText('Reachable from the tools you already use'),
     ).toBeInTheDocument()
-    // The config snippet exposes the public MCP endpoint.
+    // External Claude updates real document content via update_document.
+    expect(screen.getByText('update_document')).toBeInTheDocument()
+    // The status row still exposes the public MCP endpoint.
     expect(screen.getByText(/myjourneycloud\.com\/mcp/)).toBeInTheDocument()
   })
 

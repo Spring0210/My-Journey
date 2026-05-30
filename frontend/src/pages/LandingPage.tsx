@@ -15,7 +15,7 @@ const features = [
   {
     icon: 'spaces' as const,
     iconColor: 'blue',
-    title: 'Personal + team spaces',
+    title: 'Personal & team spaces',
     description:
       'A private space of your own and shared spaces for your team. Comment, react, and build a knowledge base together.',
   },
@@ -31,7 +31,7 @@ const features = [
     iconColor: 'orange',
     title: 'In-app AI chat',
     description:
-      'Ask, search, and draft in natural language. Multimodal — drop in an image or a PDF and the agent reads it.',
+      'Chat with the agent to search, draft, or generate a whole document from a few notes. Multimodal — drop in an image or a PDF and it reads it.',
   },
   {
     icon: 'link' as const,
@@ -56,8 +56,8 @@ const mcpPoints = [
   },
   {
     icon: 'ai' as const,
-    label: 'One toolset, every surface',
-    desc: 'Your AI uses the exact same tools as the in-app agent — search, read, write docs, spaces, and comments.',
+    label: 'View and update from outside',
+    desc: 'Your external AI reads and edits real document content through the same nine tools the in-app agent uses.',
   },
 ] as const
 
@@ -65,10 +65,12 @@ type Feature = typeof features[number]
 type McpPoint = typeof mcpPoints[number]
 
 // ── Documents shown in the hero mockup sidebar ──────────────────────────────
+// "Launch Plan" is the doc the agent generates in the demo, so it is flagged
+// as freshly created.
 const mockDocs = [
-  { title: 'Onboarding', active: false },
-  { title: 'Q2 Roadmap', active: false },
-  { title: 'API Notes', active: true },
+  { title: 'Onboarding', active: false, isNew: false },
+  { title: 'Q2 Roadmap', active: false, isNew: false },
+  { title: 'Launch Plan', active: true, isNew: true },
 ] as const
 
 // ── Wrapper components for staggered scroll-driven fade-up ──────────────────
@@ -102,9 +104,29 @@ function FadeInMcpPoint({ point, index }: { point: McpPoint; index: number }) {
   )
 }
 
+// ── Tool-call step — reused by the hero and the MCP panel ───────────────────
+// Shows the agent invoking one of its tools and the result, so visitors see
+// the mechanism (tool use), not just a chat reply.
+function ToolStep({ tool, result }: { tool: string; result: string }) {
+  return (
+    <div className="kb-tool">
+      <div className="kb-tool-row">
+        <span className="kb-tool-dot" aria-hidden="true" />
+        <span className="kb-tool-caption">Tool</span>
+        <span className="kb-tool-name">{tool}</span>
+      </div>
+      <div className="kb-tool-result">
+        <Icon name="check" size={13} strokeWidth={2.5} />
+        {result}
+      </div>
+    </div>
+  )
+}
+
 // ── Hero mockup — CSS-based app preview, adapts to dark/light mode ──────────
-// Renders a team space: a document list on the left and an AI exchange on the
-// right that cites the document it read. No images — all colors use var(--*).
+// Renders the in-app agent generating a document from the user's notes: the
+// agent calls create_document and the new doc appears in the sidebar.
+// No images — all colors use var(--*) tokens.
 function HeroMockup() {
   return (
     <div className="kb-mockup">
@@ -132,7 +154,7 @@ function HeroMockup() {
 
         {/* Two-column body: document list + AI chat */}
         <div className="kb-body">
-          {/* Sidebar — document list */}
+          {/* Sidebar — document list (Launch Plan was just created by the AI) */}
           <div className="kb-sidebar">
             <p className="kb-sidebar-label">Documents</p>
             {mockDocs.map((doc) => (
@@ -142,31 +164,29 @@ function HeroMockup() {
               >
                 <span className="kb-doc-glyph" aria-hidden="true" />
                 <span className="kb-doc-title">{doc.title}</span>
+                {doc.isNew && <span className="kb-doc-new">New</span>}
               </div>
             ))}
           </div>
 
-          {/* Main — AI exchange grounded in the docs */}
+          {/* Main — agent generating a document from the user's idea */}
           <div className="kb-chat">
             <div className="kb-bubble kb-bubble--user">
-              Where do we deploy the app?
+              Turn my notes into a launch plan doc
             </div>
+            <ToolStep tool="create_document" result={'Created "Launch Plan" · 5 sections'} />
             <div className="kb-bubble kb-bubble--ai">
               <p className="kb-bubble-label">MyJourney AI</p>
-              Deploys run on DigitalOcean via GitHub Actions.
-              <span className="kb-cite">
-                <span className="kb-doc-glyph kb-doc-glyph--cite" aria-hidden="true" />
-                API Notes
-              </span>
+              Done — I drafted "Launch Plan" with goals, a timeline, and owners.
             </div>
           </div>
         </div>
       </div>
 
-      {/* Floating badge — top right: AI grounded its answer in real docs */}
+      {/* Floating badge — top right: the agent authored a real document */}
       <div className="kb-float kb-float--cited">
         <span className="kb-float-dot" />
-        AI cited 3 docs
+        Document written by AI
       </div>
 
       {/* Floating toast — bottom right: reachable from external clients */}
@@ -179,18 +199,6 @@ function HeroMockup() {
     </div>
   )
 }
-
-// ── MCP config snippet shown in the "Bring your own AI" panel ───────────────
-const MCP_CONFIG_SNIPPET = `{
-  "mcpServers": {
-    "my-journey": {
-      "url": "https://myjourneycloud.com/mcp",
-      "headers": {
-        "Authorization": "Bearer mj_..."
-      }
-    }
-  }
-}`
 
 export default function LandingPage() {
   // Single-instance fade-up targets (the multi-instance ones are wrapped above)
@@ -255,20 +263,30 @@ export default function LandingPage() {
               ))}
             </div>
 
-            {/* Visual panel — the one-paste connection config */}
+            {/* Visual panel — an external AI (Claude) updating a document
+                over MCP, proving "view or update from your own tools" */}
             <div ref={mcpPanelRef} className="landing-mcp-panel fade-up">
               <div className="landing-mcp-window">
                 <div className="landing-mcp-bar">
                   <span className="kb-chrome-dot kb-chrome-dot--red" />
                   <span className="kb-chrome-dot kb-chrome-dot--yellow" />
                   <span className="kb-chrome-dot kb-chrome-dot--green" />
-                  <span className="landing-mcp-bar-name">claude_desktop_config.json</span>
+                  <span className="landing-mcp-bar-name">Claude Desktop</span>
                 </div>
-                <pre className="landing-mcp-code">{MCP_CONFIG_SNIPPET}</pre>
+                <div className="landing-mcp-chat">
+                  <div className="kb-bubble kb-bubble--user">
+                    In MyJourney, mark "MCP server" as shipped in the Q2 Roadmap
+                  </div>
+                  <ToolStep tool="update_document" result="Q2 Roadmap updated" />
+                  <div className="kb-bubble kb-bubble--ai">
+                    <p className="kb-bubble-label">Claude</p>
+                    Done — I marked "MCP server" as Shipped in your Q2 Roadmap.
+                  </div>
+                </div>
               </div>
               <div className="landing-mcp-status">
                 <span className="landing-mcp-status-dot" />
-                Connected · 9 tools available
+                Connected to myjourneycloud.com/mcp · 9 tools
               </div>
             </div>
           </div>
