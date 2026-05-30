@@ -51,3 +51,6 @@ src/main/resources/static/icon-192.png
 src/main/resources/static/icon-512.png
 src/main/resources/static/favicon.svg
 src/main/resources/static/icons.svg
+
+# Superpowers brainstorm scratch files
+.superpowers/
