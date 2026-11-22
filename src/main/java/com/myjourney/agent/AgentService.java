@@ -210,7 +210,17 @@ public class AgentService {
      * "all my spaces" mode so the model knows to call search_documents with
      * a null space_id; the conversation row still lives in `conv.space`.
      */
-    @Transactional
+    // Deliberately NOT @Transactional. A turn spends most of its time waiting
+    // on the Anthropic API (up to MAX_TOOL_ITERATIONS round-trips); an outer
+    // transaction would hold a pooled DB connection for that whole time, so a
+    // handful of concurrent chats could exhaust HikariCP and stall the app.
+    // Instead every write commits on its own (repository saves) and every
+    // tool call gets its own short transaction in ToolDispatcher.dispatch.
+    // Trade-off: a turn is no longer atomic -- a mid-turn failure leaves the
+    // messages persisted so far, which is what a chat transcript should show.
+    //
+    // `conv` is detached here (loaded by startOrLoadConversation in its own
+    // transaction), so never navigate its lazy associations beyond getId().
     public void runTurn(AgentConversation conv,
                          String userText,
                          List<JsonNode> userContentBlocks,
@@ -232,11 +242,11 @@ public class AgentService {
 
         String systemPrompt = crossSpace
                 ? SYSTEM_PROMPT_CROSS_SPACE
-                : String.format(SYSTEM_PROMPT_TEMPLATE, conv.getSpace().getName());
+                : String.format(SYSTEM_PROMPT_TEMPLATE, spaceNameOf(conv));
 
         // 2) Load the last HISTORY_WINDOW turns and rebuild them in Anthropic's
         //    message shape. We re-query rather than appending in-memory so
-        //    persistMessage's @Transactional flush is reflected.
+        //    the USER turn committed above is included.
         List<AgentMessage> prior = msgRepo.findByConversationOrderByCreatedAtAsc(conv);
         int from = Math.max(0, prior.size() - HISTORY_WINDOW);
         List<JsonNode> history = new ArrayList<>();
@@ -317,5 +327,15 @@ public class AgentService {
         //    silently abandoning the user.
         sink.accept("(I had to stop after " + MAX_TOOL_ITERATIONS
                 + " tool calls -- let me know if you want me to keep going.)");
+    }
+
+    // Resolve the space name without touching conv.getSpace()'s lazy proxy
+    // (runTurn runs outside a transaction). getId() on a Hibernate proxy
+    // returns the identifier without initializing it, so only the explicit
+    // repository lookup hits the database.
+    private String spaceNameOf(AgentConversation conv) {
+        return spaceRepo.findById(conv.getSpace().getId())
+                .map(Space::getName)
+                .orElse("this space");
     }
 }

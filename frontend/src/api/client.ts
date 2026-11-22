@@ -12,9 +12,27 @@ function getToken(): string | null {
   return localStorage.getItem('token')
 }
 
+// In-flight refresh shared by every caller ("single flight").
+// Refresh tokens are rotated on use: the server deletes the old one when it
+// issues a new one. If several requests hit 401 at once and each refreshed on
+// its own, the first would succeed and every other would present the
+// already-deleted token, fail, and log the user out. Sharing one promise
+// means N concurrent 401s trigger exactly one POST /auth/refresh.
+let refreshInFlight: Promise<string | null> | null = null
+
 // Attempt a silent token refresh using the stored refresh token.
 // Returns the new access token on success, or null on failure.
-async function refreshAccessToken(): Promise<string | null> {
+function refreshAccessToken(): Promise<string | null> {
+  if (!refreshInFlight) {
+    refreshInFlight = doRefresh().finally(() => {
+      refreshInFlight = null
+    })
+  }
+  return refreshInFlight
+}
+
+// Performs the actual refresh call. Only refreshAccessToken() should call this.
+async function doRefresh(): Promise<string | null> {
   const refreshToken = localStorage.getItem('refreshToken')
   if (!refreshToken) return null
 

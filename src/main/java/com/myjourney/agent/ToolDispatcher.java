@@ -5,6 +5,7 @@ import com.myjourney.exception.AppException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -26,6 +27,15 @@ public class ToolDispatcher {
         this.toolset = toolset;
     }
 
+    // One short transaction per tool call. The toolset maps lazy associations
+    // (document.space, document.author) into DTOs, so it needs an open session,
+    // but callers must NOT hold a transaction across the whole agent loop:
+    // that would pin a DB connection for the seconds spent waiting on the LLM.
+    // Scoping it here also means a failed tool rolls back only its own work
+    // instead of marking an outer transaction rollback-only.
+    // Both callers (AgentService, McpToolBridge) are other beans, so the
+    // proxy applies; do not self-invoke dispatch from inside this class.
+    @Transactional
     public Object dispatch(Integer userId, String toolName, JsonNode args) {
         return switch (toolName) {
             case ToolSchemas.NAME_SEARCH_DOCUMENTS -> toolset.searchDocuments(
